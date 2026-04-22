@@ -1,0 +1,722 @@
+# 校园教务系统需求文档
+
+## 1. 系统概述
+
+校园教务系统是一个为学校提供全方位教学管理功能的信息系统，旨在提高教学管理效率，优化教学资源配置，为师生提供便捷的教学管理服务。系统涵盖学生管理、教师管理、课程管理、成绩管理、排课管理等核心功能，实现教学管理的数字化、自动化和智能化。
+
+### 1.1 系统目标
+
+- 提高教学管理效率，减少人工操作
+- 优化教学资源配置，合理安排课程和教师
+- 为师生提供便捷的信息查询和管理功能
+- 实现教学数据的集中管理和分析
+- 支持学校教学管理的规范化和标准化
+
+### 1.2 系统范围
+
+本系统适用于各类大中专院校，支持多校区、多院系、多专业的教学管理。系统主要覆盖以下范围：
+
+- 学生信息管理
+- 教师信息管理
+- 课程信息管理
+- 成绩管理
+- 排课管理
+- 教学计划管理
+- 考勤管理
+- 毕业管理
+
+## 2. 功能需求
+
+### 2.1 用户角色
+
+| 角色 | 描述 |
+|------|------|
+| 系统管理员 | 负责系统配置、用户管理、权限分配等系统级功能 |
+| 教务处管理员 | 负责教学计划、课程管理、排课管理等教务管理功能 |
+| 院系管理员 | 负责本院系的学生、教师、课程等管理功能 |
+| 教师 | 负责课程教学、成绩录入、考勤管理等功能 |
+| 学生 | 负责课程选择、成绩查询、个人信息管理等功能 |
+
+### 2.2 功能模块
+
+#### 2.2.1 系统管理模块
+
+| 功能点 | 描述 | 角色 |
+|--------|------|------|
+| 用户管理 | 添加、编辑、删除用户，设置用户角色和权限 | 系统管理员 |
+| 角色管理 | 创建、编辑、删除角色，分配角色权限 | 系统管理员 |
+| 权限管理 | 配置系统功能权限，分配给不同角色 | 系统管理员 |
+| 系统配置 | 配置系统参数、数据备份、日志管理 | 系统管理员 |
+
+#### 2.2.2 学生管理模块
+
+| 功能点 | 描述 | 角色 |
+|--------|------|------|
+| 学生信息管理 | 添加、编辑、删除学生信息，包括基本信息、联系方式、家庭信息等 | 教务处管理员、院系管理员 |
+| 学生注册管理 | 处理新生注册、学籍管理、休学、复学、退学等 | 教务处管理员、院系管理员 |
+| 学生档案管理 | 管理学生的学籍档案、奖惩记录、综合素质评价等 | 教务处管理员、院系管理员 |
+| 学生信息查询 | 支持按学号、姓名、专业等条件查询学生信息 | 教师、学生、管理员 |
+
+#### 2.2.3 教师管理模块
+
+| 功能点 | 描述 | 角色 |
+|--------|------|------|
+| 教师信息管理 | 添加、编辑、删除教师信息，包括基本信息、联系方式、专业背景等 | 教务处管理员、院系管理员 |
+| 教师职称管理 | 管理教师的职称评定、晋升等信息 | 教务处管理员、院系管理员 |
+| 教师工作量管理 | 记录和统计教师的教学工作量、科研工作量等 | 教务处管理员、院系管理员 |
+| 教师信息查询 | 支持按工号、姓名、专业等条件查询教师信息 | 教师、管理员 |
+
+#### 2.2.4 课程管理模块
+
+| 功能点 | 描述 | 角色 |
+|--------|------|------|
+| 课程信息管理 | 添加、编辑、删除课程信息，包括课程名称、课程代码、学分、课时等 | 教务处管理员、院系管理员 |
+| 教学计划管理 | 制定和管理各专业的教学计划，包括课程设置、学分要求等 | 教务处管理员、院系管理员 |
+| 课程资源管理 | 管理课程的教学资料、课件、参考资料等 | 教师 |
+| 课程查询 | 支持按课程名称、课程代码、专业等条件查询课程信息 | 教师、学生、管理员 |
+
+#### 2.2.5 排课管理模块
+
+| 功能点 | 描述 | 角色 |
+|--------|------|------|
+| 学期设置 | 设置学期信息，包括开学时间、放假时间、教学周数等 | 教务处管理员 |
+| 教室管理 | 管理教室信息，包括教室编号、容量、设备情况等 | 教务处管理员 |
+| 排课规则设置 | 设置排课规则，包括教师偏好、课程时间冲突规则等 | 教务处管理员 |
+| 自动排课 | 根据课程、教师、教室等信息自动生成课表 | 教务处管理员 |
+| 手动调课 | 手动调整课程安排，处理调课、代课等情况 | 教务处管理员、院系管理员 |
+| 课表查询 | 支持按教师、班级、教室等条件查询课表 | 教师、学生、管理员 |
+
+#### 2.2.6 成绩管理模块
+
+| 功能点 | 描述 | 角色 |
+|--------|------|------|
+| 成绩录入 | 教师录入学生的课程成绩，支持平时成绩、考试成绩等 | 教师 |
+| 成绩审核 | 院系管理员审核教师录入的成绩 | 院系管理员 |
+| 成绩查询 | 学生查询个人成绩，教师查询所教课程的成绩，管理员查询所有成绩 | 教师、学生、管理员 |
+| 成绩统计 | 统计分析学生成绩，生成成绩报表、绩点计算等 | 教务处管理员、院系管理员 |
+| 成绩预警 | 对成绩异常的学生进行预警，如挂科、学分不足等 | 教务处管理员、院系管理员 |
+
+#### 2.2.7 考勤管理模块
+
+| 功能点 | 描述 | 角色 |
+|--------|------|------|
+| 考勤记录 | 教师记录学生的考勤情况，包括迟到、早退、旷课等 | 教师 |
+| 考勤统计 | 统计学生的考勤情况，生成考勤报表 | 教师、院系管理员 |
+| 考勤查询 | 学生查询个人考勤记录，管理员查询班级考勤情况 | 学生、管理员 |
+| 考勤预警 | 对考勤异常的学生进行预警，如旷课次数过多等 | 院系管理员 |
+
+#### 2.2.8 毕业管理模块
+
+| 功能点 | 描述 | 角色 |
+|--------|------|------|
+| 毕业资格审核 | 审核学生的毕业资格，包括学分要求、成绩要求等 | 院系管理员、教务处管理员 |
+| 学位授予 | 管理学生的学位授予情况 | 院系管理员、教务处管理员 |
+| 毕业证书管理 | 管理毕业证书的发放、补办等 | 教务处管理员 |
+| 毕业统计 | 统计毕业生的相关数据，如就业率、继续深造率等 | 教务处管理员 |
+
+#### 2.2.9 系统集成模块
+
+| 功能点 | 描述 | 角色 |
+|--------|------|------|
+| 与学工系统集成 | 与学生工作系统集成，共享学生信息 | 系统管理员 |
+| 与财务系统集成 | 与财务系统集成，处理学费、奖学金等财务信息 | 系统管理员 |
+| 与图书馆系统集成 | 与图书馆系统集成，共享学生借阅信息 | 系统管理员 |
+| 与就业系统集成 | 与就业系统集成，共享毕业生信息 | 系统管理员 |
+
+## 3. 非功能需求
+
+### 3.1 性能需求
+
+- **响应时间**：系统页面加载时间不超过3秒，数据查询响应时间不超过2秒
+- **并发处理**：支持至少1000个并发用户同时访问系统
+- **数据处理**：能够处理至少10万学生、1万教师、5万课程的数据量
+- **系统稳定性**：系统连续运行时间不低于30天，无故障
+
+### 3.2 安全需求
+
+- **身份认证**：采用基于角色的访问控制（RBAC），确保用户只能访问授权的功能
+- **数据加密**：敏感数据（如密码）采用加密存储
+- **访问控制**：对系统功能和数据进行细粒度的权限控制
+- **审计日志**：记录系统操作日志，便于安全审计和问题追溯
+- **防SQL注入**：系统应采取措施防止SQL注入攻击
+- **防XSS攻击**：系统应采取措施防止跨站脚本攻击
+
+### 3.3 可靠性需求
+
+- **数据备份**：定期自动备份系统数据，确保数据安全
+- **故障恢复**：系统出现故障时，能够在30分钟内恢复正常运行
+- **数据一致性**：确保系统数据的一致性和完整性
+- **错误处理**：系统应具备完善的错误处理机制，确保系统稳定运行
+
+### 3.4 可用性需求
+
+- **系统可用性**：系统工作时间的可用性应达到99.9%
+- **界面友好**：系统界面应简洁、直观，易于操作
+- **响应式设计**：系统应支持不同设备（PC、平板、手机）的访问
+- **帮助文档**：提供详细的系统使用帮助文档
+
+### 3.5 可扩展性需求
+
+- **模块化设计**：系统采用模块化设计，便于功能扩展和维护
+- **接口标准化**：系统应提供标准化的API接口，便于与其他系统集成
+- **数据结构可扩展**：系统数据结构应具备良好的扩展性，以适应未来业务需求的变化
+
+## 4. 数据需求
+
+### 4.1 数据实体
+
+#### 4.1.1 学生（Student）
+
+| 字段名 | 数据类型 | 约束 | 描述 |
+|-------|---------|------|------|
+| student_id | VARCHAR(20) | PRIMARY KEY | 学号 |
+| name | VARCHAR(50) | NOT NULL | 姓名 |
+| gender | ENUM('male', 'female') | NOT NULL | 性别 |
+| birthdate | DATE | NOT NULL | 出生日期 |
+| phone | VARCHAR(20) | | 电话 |
+| email | VARCHAR(100) | | 邮箱 |
+| department_id | VARCHAR(20) | NOT NULL, FOREIGN KEY | 院系ID |
+| major_id | VARCHAR(20) | NOT NULL, FOREIGN KEY | 专业ID |
+| class_id | VARCHAR(20) | NOT NULL, FOREIGN KEY | 班级ID |
+| enrollment_date | DATE | NOT NULL | 入学日期 |
+| status | ENUM('active', 'suspended', 'graduated', 'dropped') | NOT NULL | 状态 |
+| created_at | DATETIME | NOT NULL | 创建时间 |
+| updated_at | DATETIME | NOT NULL | 更新时间 |
+
+#### 4.1.2 教师（Teacher）
+
+| 字段名 | 数据类型 | 约束 | 描述 |
+|-------|---------|------|------|
+| teacher_id | VARCHAR(20) | PRIMARY KEY | 工号 |
+| name | VARCHAR(50) | NOT NULL | 姓名 |
+| gender | ENUM('male', 'female') | NOT NULL | 性别 |
+| birthdate | DATE | NOT NULL | 出生日期 |
+| phone | VARCHAR(20) | | 电话 |
+| email | VARCHAR(100) | | 邮箱 |
+| department_id | VARCHAR(20) | NOT NULL, FOREIGN KEY | 院系ID |
+| title | VARCHAR(50) | | 职称 |
+| specialty | VARCHAR(100) | | 专业方向 |
+| status | ENUM('active', 'leave', 'resigned') | NOT NULL | 状态 |
+| created_at | DATETIME | NOT NULL | 创建时间 |
+| updated_at | DATETIME | NOT NULL | 更新时间 |
+
+#### 4.1.3 院系（Department）
+
+| 字段名 | 数据类型 | 约束 | 描述 |
+|-------|---------|------|------|
+| department_id | VARCHAR(20) | PRIMARY KEY | 院系ID |
+| name | VARCHAR(100) | NOT NULL, UNIQUE | 院系名称 |
+| description | TEXT | | 院系描述 |
+| created_at | DATETIME | NOT NULL | 创建时间 |
+| updated_at | DATETIME | NOT NULL | 更新时间 |
+
+#### 4.1.4 专业（Major）
+
+| 字段名 | 数据类型 | 约束 | 描述 |
+|-------|---------|------|------|
+| major_id | VARCHAR(20) | PRIMARY KEY | 专业ID |
+| name | VARCHAR(100) | NOT NULL, UNIQUE | 专业名称 |
+| department_id | VARCHAR(20) | NOT NULL, FOREIGN KEY | 院系ID |
+| description | TEXT | | 专业描述 |
+| created_at | DATETIME | NOT NULL | 创建时间 |
+| updated_at | DATETIME | NOT NULL | 更新时间 |
+
+#### 4.1.5 班级（Class）
+
+| 字段名 | 数据类型 | 约束 | 描述 |
+|-------|---------|------|------|
+| class_id | VARCHAR(20) | PRIMARY KEY | 班级ID |
+| name | VARCHAR(100) | NOT NULL, UNIQUE | 班级名称 |
+| major_id | VARCHAR(20) | NOT NULL, FOREIGN KEY | 专业ID |
+| grade | VARCHAR(10) | NOT NULL | 年级 |
+| created_at | DATETIME | NOT NULL | 创建时间 |
+| updated_at | DATETIME | NOT NULL | 更新时间 |
+
+#### 4.1.6 课程（Course）
+
+| 字段名 | 数据类型 | 约束 | 描述 |
+|-------|---------|------|------|
+| course_id | VARCHAR(20) | PRIMARY KEY | 课程ID |
+| name | VARCHAR(100) | NOT NULL | 课程名称 |
+| code | VARCHAR(20) | NOT NULL, UNIQUE | 课程代码 |
+| credits | DECIMAL(3,1) | NOT NULL | 学分 |
+| hours | INTEGER | NOT NULL | 课时 |
+| type | ENUM('compulsory', 'elective') | NOT NULL | 课程类型 |
+| department_id | VARCHAR(20) | NOT NULL, FOREIGN KEY | 院系ID |
+| description | TEXT | | 课程描述 |
+| created_at | DATETIME | NOT NULL | 创建时间 |
+| updated_at | DATETIME | NOT NULL | 更新时间 |
+
+#### 4.1.7 学期（Semester）
+
+| 字段名 | 数据类型 | 约束 | 描述 |
+|-------|---------|------|------|
+| semester_id | VARCHAR(20) | PRIMARY KEY | 学期ID |
+| name | VARCHAR(50) | NOT NULL, UNIQUE | 学期名称 |
+| start_date | DATE | NOT NULL | 开始日期 |
+| end_date | DATE | NOT NULL | 结束日期 |
+| teaching_weeks | INTEGER | NOT NULL | 教学周数 |
+| status | ENUM('upcoming', 'current', 'completed') | NOT NULL | 状态 |
+| created_at | DATETIME | NOT NULL | 创建时间 |
+| updated_at | DATETIME | NOT NULL | 更新时间 |
+
+#### 4.1.8 课程安排（CourseSchedule）
+
+| 字段名 | 数据类型 | 约束 | 描述 |
+|-------|---------|------|------|
+| schedule_id | VARCHAR(20) | PRIMARY KEY | 课程安排ID |
+| mode | ENUM('class_based', 'open_selection') | NOT NULL, DEFAULT 'class_based' | 排课模式：class_based-按班级排课，open_selection-开放选课 |
+| max_students | INTEGER | NULL | 选课容量上限（仅开放选课模式有效） |
+| current_students | INTEGER | NOT NULL, DEFAULT 0 | 当前已选人数（仅开放选课模式有效） |
+| course_id | VARCHAR(20) | NOT NULL, FOREIGN KEY | 课程ID |
+| teacher_id | VARCHAR(20) | NOT NULL, FOREIGN KEY | 教师ID |
+| class_id | VARCHAR(20) | NULL, FOREIGN KEY | 班级ID（按班级排课时必填，开放选课时为空） |
+| semester_id | VARCHAR(20) | NOT NULL, FOREIGN KEY | 学期ID |
+| classroom_id | VARCHAR(20) | NOT NULL, FOREIGN KEY | 教室ID |
+| day_of_week | INTEGER | NOT NULL | 星期几（1=周一，7=周日） |
+| start_period | INTEGER | NOT NULL | 开始节次 |
+| end_period | INTEGER | NOT NULL | 结束节次 |
+| created_at | DATETIME | NOT NULL | 创建时间 |
+| updated_at | DATETIME | NOT NULL | 更新时间 |
+
+> **排课模式说明**：必修课采用 class_based 模式，按班级整体排课，class_id 必填；选修课采用 open_selection 模式，学生跨班选课，class_id 为空，通过选课记录表关联学生。
+
+> **排课冲突约束**：同一学期内，同一教师/教室/班级在同一 day_of_week 的 start_period~end_period 不可重复排课。冲突检测索引：idx_teacher_time、idx_classroom_time、idx_class_time。
+
+#### 4.1.9 成绩（Grade）
+
+| 字段名 | 数据类型 | 约束 | 描述 |
+|-------|---------|------|------|
+| grade_id | VARCHAR(20) | PRIMARY KEY | 成绩ID |
+| student_id | VARCHAR(20) | NOT NULL, FOREIGN KEY | 学号 |
+| course_id | VARCHAR(20) | NOT NULL, FOREIGN KEY | 课程ID |
+| semester_id | VARCHAR(20) | NOT NULL, FOREIGN KEY | 学期ID |
+| teacher_id | VARCHAR(20) | NOT NULL, FOREIGN KEY | 教师ID |
+| usual_score | DECIMAL(5,2) | NULL | 平时成绩（0~100） |
+| exam_score | DECIMAL(5,2) | NULL | 考试成绩（0~100） |
+| total_score | DECIMAL(5,2) | NOT NULL | 总成绩（0~100） |
+| status | ENUM('pending', 'approved', 'rejected') | NOT NULL | 成绩状态：pending-待审核，approved-审核通过，rejected-审核驳回 |
+| created_at | DATETIME | NOT NULL | 创建时间 |
+| updated_at | DATETIME | NOT NULL | 更新时间 |
+
+> **成绩审核流程**：教师录入成绩 → 状态为 pending → 院系管理员审核通过 → 状态为 approved（系统自动根据 total_score 判定及格/不及格）→ 院系管理员审核驳回 → 状态为 rejected → 教师修改后重新提交 → 状态为 pending。
+
+> **成绩计算规则**：必修课 total_score = usual_score × 30% + exam_score × 70%；专业选修课 total_score = usual_score × 40% + exam_score × 60%；公共选修课 total_score = usual_score × 50% + exam_score × 50%。权重可在系统配置中按课程维度覆盖。考试成绩缺考时 total_score = 0。
+
+#### 4.1.10 考勤（Attendance）
+
+| 字段名 | 数据类型 | 约束 | 描述 |
+|-------|---------|------|------|
+| attendance_id | VARCHAR(20) | PRIMARY KEY | 考勤ID |
+| student_id | VARCHAR(20) | NOT NULL, FOREIGN KEY | 学号 |
+| course_id | VARCHAR(20) | NOT NULL, FOREIGN KEY | 课程ID |
+| semester_id | VARCHAR(20) | NOT NULL, FOREIGN KEY | 学期ID |
+| date | DATE | NOT NULL | 考勤日期 |
+| status | ENUM('present', 'absent', 'late', 'leave') | NOT NULL | 考勤状态 |
+| created_at | DATETIME | NOT NULL | 创建时间 |
+| updated_at | DATETIME | NOT NULL | 更新时间 |
+
+#### 4.1.11 教室（Classroom）
+
+| 字段名 | 数据类型 | 约束 | 描述 |
+|-------|---------|------|------|
+| classroom_id | VARCHAR(20) | PRIMARY KEY | 教室ID |
+| name | VARCHAR(50) | NOT NULL, UNIQUE | 教室名称 |
+| capacity | INTEGER | NOT NULL | 容量 |
+| building | VARCHAR(50) | NOT NULL | 楼栋 |
+| type | ENUM('classroom', 'laboratory', 'lecture_hall') | NOT NULL | 类型 |
+| status | ENUM('available', 'maintenance', 'occupied') | NOT NULL | 状态 |
+| created_at | DATETIME | NOT NULL | 创建时间 |
+| updated_at | DATETIME | NOT NULL | 更新时间 |
+
+#### 4.1.12 用户（User）
+
+| 字段名 | 数据类型 | 约束 | 描述 |
+|-------|---------|------|------|
+| user_id | VARCHAR(20) | PRIMARY KEY | 用户ID |
+| username | VARCHAR(50) | NOT NULL, UNIQUE | 用户名 |
+| password | VARCHAR(100) | NOT NULL | 密码 |
+| name | VARCHAR(50) | NOT NULL | 姓名 |
+| role_id | VARCHAR(20) | NOT NULL, FOREIGN KEY | 角色ID |
+| related_id | VARCHAR(20) | | 关联ID（学生学号或教师工号） |
+| last_login | DATETIME | | 最后登录时间 |
+| login_ip | VARCHAR(50) | | 登录IP |
+| created_at | DATETIME | NOT NULL | 创建时间 |
+| updated_at | DATETIME | NOT NULL | 更新时间 |
+
+#### 4.1.13 角色（Role）
+
+| 字段名 | 数据类型 | 约束 | 描述 |
+|-------|---------|------|------|
+| role_id | VARCHAR(20) | PRIMARY KEY | 角色ID |
+| name | VARCHAR(50) | NOT NULL, UNIQUE | 角色名称 |
+| description | TEXT | | 角色描述 |
+| created_at | DATETIME | NOT NULL | 创建时间 |
+| updated_at | DATETIME | NOT NULL | 更新时间 |
+
+#### 4.1.14 权限（Permission）
+
+| 字段名 | 数据类型 | 约束 | 描述 |
+|-------|---------|------|------|
+| permission_id | VARCHAR(20) | PRIMARY KEY | 权限ID |
+| name | VARCHAR(50) | NOT NULL, UNIQUE | 权限名称 |
+| code | VARCHAR(50) | NOT NULL, UNIQUE | 权限代码 |
+| description | TEXT | | 权限描述 |
+| created_at | DATETIME | NOT NULL | 创建时间 |
+| updated_at | DATETIME | NOT NULL | 更新时间 |
+
+#### 4.1.15 选课记录（StudentCourseSelection）
+
+| 字段名 | 数据类型 | 约束 | 描述 |
+|-------|---------|------|------|
+| selection_id | VARCHAR(20) | PRIMARY KEY | 选课记录ID |
+| student_id | VARCHAR(20) | NOT NULL, FOREIGN KEY | 学号 |
+| course_id | VARCHAR(20) | NOT NULL, FOREIGN KEY | 课程ID |
+| schedule_id | VARCHAR(20) | NOT NULL, FOREIGN KEY | 课程安排ID（关联具体排课） |
+| semester_id | VARCHAR(20) | NOT NULL, FOREIGN KEY | 学期ID |
+| status | ENUM('selected', 'dropped', 'completed') | NOT NULL | 选课状态：selected-已选，dropped-已退选，completed-已完成 |
+| selection_time | DATETIME | NOT NULL | 选课操作时间 |
+| drop_time | DATETIME | NULL | 退选操作时间 |
+| created_at | DATETIME | NOT NULL | 创建时间 |
+| updated_at | DATETIME | NOT NULL | 更新时间 |
+
+> **唯一约束**：uk_student_schedule(student_id, schedule_id)，防止学生对同一排课重复选课。
+
+> **选课容量控制**：选课成功时，course_schedule.current_students +1；退选时 -1。当 current_students ≥ max_students 时，不允许再选。
+
+#### 4.1.16 教学计划（TeachingPlan）
+
+| 字段名 | 数据类型 | 约束 | 描述 |
+|-------|---------|------|------|
+| plan_id | VARCHAR(20) | PRIMARY KEY | 教学计划ID |
+| major_id | VARCHAR(20) | NOT NULL, FOREIGN KEY | 专业ID |
+| course_id | VARCHAR(20) | NOT NULL, FOREIGN KEY | 课程ID |
+| semester_type | TINYINT | NOT NULL | 建议修读学期（1~8，对应大一至大四各学期） |
+| course_nature | ENUM('compulsory', 'elective_public', 'elective_major') | NOT NULL | 课程性质：compulsory-必修，elective_public-公共选修，elective_major-专业选修 |
+| is_prerequisite | TINYINT(1) | NOT NULL, DEFAULT 0 | 是否为先修课程（0-否，1-是） |
+| prerequisite_ids | VARCHAR(200) | NULL | 先修课程ID列表（逗号分隔，如 CO001,CO002） |
+| created_at | DATETIME | NOT NULL | 创建时间 |
+| updated_at | DATETIME | NOT NULL | 更新时间 |
+
+> **唯一约束**：uk_major_course(major_id, course_id)，同一专业下同一课程只能出现一次。
+
+> **先修课程逻辑**：选课时系统检查 is_prerequisite=1 的记录，验证学生是否已通过先修课程（grade.status='approved' AND total_score≥60）。
+
+#### 4.1.17 审计日志（AuditLog）
+
+| 字段名 | 数据类型 | 约束 | 描述 |
+|-------|---------|------|------|
+| log_id | BIGINT | PRIMARY KEY, AUTO_INCREMENT | 日志ID |
+| user_id | VARCHAR(20) | NULL | 操作用户ID |
+| username | VARCHAR(50) | NULL | 操作用户名（冗余存储，防止用户删除后丢失） |
+| operation | VARCHAR(30) | NOT NULL | 操作类型：CREATE/UPDATE/DELETE/LOGIN/LOGOUT |
+| module | VARCHAR(50) | NOT NULL | 操作模块（如 student/course/grade） |
+| target_type | VARCHAR(50) | NULL | 操作对象类型（如 Student/Course） |
+| target_id | VARCHAR(20) | NULL | 操作对象ID |
+| detail | JSON | NULL | 操作详情（JSON格式，记录变更前后数据） |
+| ip | VARCHAR(50) | NULL | 操作IP地址 |
+| user_agent | VARCHAR(500) | NULL | 客户端User-Agent |
+| created_at | DATETIME | NOT NULL | 操作时间 |
+
+### 4.2 数据关系
+
+- 学生与院系：多对一关系（一个院系可以有多个学生，一个学生只能属于一个院系）
+- 学生与专业：多对一关系（一个专业可以有多个学生，一个学生只能属于一个专业）
+- 学生与班级：多对一关系（一个班级可以有多个学生，一个学生只能属于一个班级）
+- 教师与院系：多对一关系（一个院系可以有多个教师，一个教师只能属于一个院系）
+- 专业与院系：多对一关系（一个院系可以有多个专业，一个专业只能属于一个院系）
+- 班级与专业：多对一关系（一个专业可以有多个班级，一个班级只能属于一个专业）
+- 课程与院系：多对一关系（一个院系可以有多个课程，一个课程只能属于一个院系）
+- 课程安排与课程：多对一关系（一个课程可以有多个课程安排，一个课程安排只能对应一个课程）
+- 课程安排与教师：多对一关系（一个教师可以有多个课程安排，一个课程安排只能对应一个教师）
+- 课程安排与班级：多对一关系（一个班级可以有多个课程安排，一个课程安排只能对应一个班级，开放选课模式下班级可为空）
+- 课程安排与学期：多对一关系（一个学期可以有多个课程安排，一个课程安排只能对应一个学期）
+- 课程安排与教室：多对一关系（一个教室可以有多个课程安排，一个课程安排只能对应一个教室）
+- 成绩与学生：多对一关系（一个学生可以有多个成绩，一个成绩只能对应一个学生）
+- 成绩与课程：多对一关系（一个课程可以有多个成绩，一个成绩只能对应一个课程）
+- 成绩与学期：多对一关系（一个学期可以有多个成绩，一个成绩只能对应一个学期）
+- 成绩与教师：多对一关系（一个教师可以有多个成绩，一个成绩只能对应一个教师）
+- 考勤与学生：多对一关系（一个学生可以有多个考勤记录，一个考勤记录只能对应一个学生）
+- 考勤与课程：多对一关系（一个课程可以有多个考勤记录，一个考勤记录只能对应一个课程）
+- 考勤与学期：多对一关系（一个学期可以有多个考勤记录，一个考勤记录只能对应一个学期）
+- 用户与角色：多对一关系（一个角色可以有多个用户，一个用户只能属于一个角色）
+- 角色与权限：多对多关系（一个角色可以有多个权限，一个权限可以属于多个角色，通过 role_permission 关联表实现）
+- 选课记录与学生：多对一关系（一个学生可以有多条选课记录，一条选课记录只能对应一个学生）
+- 选课记录与课程：多对一关系（一个课程可以有多条选课记录，一条选课记录只能对应一个课程）
+- 选课记录与课程安排：多对一关系（一个课程安排可以有多条选课记录，一条选课记录只能对应一个课程安排）
+- 选课记录与学期：多对一关系（一个学期可以有多条选课记录，一条选课记录只能对应一个学期）
+- 教学计划与专业：多对一关系（一个专业可以有多条教学计划，一条教学计划只能对应一个专业）
+- 教学计划与课程：多对一关系（一个课程可以出现在多个专业的教学计划中，一条教学计划只能对应一个课程）
+
+## 5. 业务流程
+
+### 5.1 学生注册流程
+
+1. 新生提交注册信息
+2. 院系管理员审核注册信息
+3. 系统生成学号和学生档案
+4. 学生完成缴费
+5. 系统激活学生账号
+
+### 5.2 课程选报流程
+
+1. 教务处发布选课通知
+2. 学生登录系统选择课程
+3. 系统验证课程可选性（如先修课程、时间冲突等）
+4. 学生确认选课
+5. 系统生成学生个人课表
+
+### 5.3 排课流程
+
+1. 教务处设置学期和排课规则
+2. 院系提交课程和教师需求
+3. 系统自动生成初始课表
+4. 教务处和院系审核课表
+5. 系统发布最终课表
+
+### 5.4 成绩管理流程
+
+1. 课程结束后，教师录入学生成绩
+2. 院系管理员审核成绩
+3. 系统计算学生绩点和排名
+4. 学生查询个人成绩
+5. 系统生成成绩报表
+
+### 5.5 毕业审核流程
+
+1. 学生提交毕业申请
+2. 院系审核学生的学分和成绩
+3. 系统生成毕业资格审核报告
+4. 教务处最终审核
+5. 系统发放毕业证书和学位证书
+
+### 5.6 成绩审核流程
+
+1. 课程结束后，教师录入学生成绩（状态为 pending）
+2. 系统按课程类型自动计算总成绩（必修30%+70%，专业选修40%+60%，公共选修50%+50%）
+3. 院系管理员审核成绩（通过则状态变为 approved，系统自动判定及格/不及格；驳回则状态变为 rejected）
+4. 驳回的成绩由教师修改后重新提交
+5. 已 approved 的成绩不可直接修改，需走成绩更正流程（教务处审批）
+6. 系统根据已审核成绩计算学生绩点（GPA）
+
+### 5.7 选课流程
+
+1. 教务处发布选课通知，设定选课时间窗口
+2. 学生登录系统查看可选课程（根据教学计划和先修课程过滤）
+3. 学生选择课程安排（schedule_id），系统校验：
+   - 选课时间是否在窗口内
+   - 是否满足先修课程要求
+   - 选课容量是否已满（current_students < max_students）
+   - 是否与已选课程时间冲突
+4. 校验通过后，系统创建选课记录（status=selected），同时 course_schedule.current_students +1
+5. 学生可在退选期内退选（status=dropped），current_students -1
+6. 选课结束后，系统生成学生个人课表
+
+## 5B. 核心业务规则
+
+### 5B.1 成绩计算规则
+
+| 规则项 | 规则内容 |
+|-------|---------|
+| 必修课总成绩 | total_score = usual_score × 30% + exam_score × 70% |
+| 专业选修课总成绩 | total_score = usual_score × 40% + exam_score × 60% |
+| 公共选修课总成绩 | total_score = usual_score × 50% + exam_score × 50% |
+| 及格标准 | total_score ≥ 60 为及格，< 60 为不及格 |
+| 缺考处理 | exam_score 为 NULL 时，total_score = 0，自动判定不及格 |
+| 绩点计算 | score ≥ 60 时：绩点 = (score - 50) / 10；score < 60 时：绩点 = 0 |
+| GPA计算 | GPA = Σ(单科绩点 × 课程学分) / Σ课程学分 |
+| 权重覆盖 | 权重可在系统配置中按课程维度覆盖，以上为默认值 |
+
+### 5B.2 排课冲突规则
+
+| 冲突维度 | 判定条件 | 优先级 |
+|---------|---------|-------|
+| 教师时间冲突 | 同一学期 + 同一教师 + 同一天 + 时间段重叠 | P0（最高，不可违反） |
+| 教室容量冲突 | 教室容量 < 上课人数 | P1 |
+| 教室时间冲突 | 同一学期 + 同一教室 + 同一天 + 时间段重叠 | P2（可换教室解决） |
+| 班级时间冲突 | 同一学期 + 同一班级 + 同一天 + 时间段重叠 | P3（最低，可调时段） |
+
+> 时间段重叠判定：[start1, end1] 与 [start2, end2] 重叠条件为 start1 <= end2 AND start2 <= end1。
+
+### 5B.3 学籍流转规则
+
+| 当前状态 | 目标状态 | 流转条件 | 审批角色 |
+|---------|---------|---------|---------|
+| active | suspended | 学生提交休学申请 + 院系审核通过 | 院系管理员 |
+| suspended | active | 学生提交复学申请 + 院系审核通过 + 缴清欠费 | 院系管理员 |
+| suspended | dropped | 休学期满未复学（超过2年）或主动申请退学 | 教务处管理员 |
+| active | dropped | 学生申请退学 + 院系初审 + 教务处终审 | 教务处管理员 |
+| active | graduated | 满足毕业条件 + 院系审核 + 教务处审批 | 教务处管理员 |
+
+> 禁止流转：graduated → 任何状态（终态，不可逆）；dropped → active（需重新注册，生成新学号）。
+
+> 退学劝退条件：累计不及格课程学分 ≥ 20学分（可配置）。
+
+## 6. 系统架构
+
+### 6.1 技术架构
+
+- **前端**：Vue 3 + Element Plus + Vue Router + Axios
+- **后端**：Spring Boot + Spring Security + MyBatis Plus
+- **数据库**：MySQL
+- **缓存**：Redis
+- **认证**：JWT
+- **部署**：Docker + Nginx
+
+### 6.2 系统架构图
+
+```
+┌─────────────────────┐
+│    前端应用          │
+│  (Vue 3 + Element)  │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│    API 网关         │
+│  (Spring Cloud Gateway) │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│    微服务层         │
+│  (Spring Boot)      │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│    数据访问层        │
+│  (MyBatis Plus)     │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│    数据库            │
+│      (MySQL)        │
+└─────────────────────┘
+```
+
+### 6.3 模块划分
+
+- **认证模块**：处理用户登录、注册、权限验证等
+- **学生模块**：处理学生信息管理、课程选报、成绩查询等
+- **教师模块**：处理教师信息管理、课程管理、成绩录入等
+- **课程模块**：处理课程信息管理、教学计划管理等
+- **排课模块**：处理课表生成、调课管理等
+- **成绩模块**：处理成绩录入、审核、统计等
+- **考勤模块**：处理考勤记录、统计、预警等
+- **毕业模块**：处理毕业资格审核、学位授予等
+- **系统模块**：处理系统配置、用户管理、日志管理等
+
+## 7. 技术选型
+
+### 7.1 前端技术
+
+| 技术 | 版本 | 用途 |
+|------|------|------|
+| Vue | 3.x | 前端框架 |
+| Element Plus | 2.x | UI组件库 |
+| Vue Router | 4.x | 前端路由 |
+| Axios | 1.x | HTTP客户端 |
+| ECharts | 5.x | 数据可视化 |
+| Vuex | 4.x | 状态管理 |
+| Vite | 3.x | 构建工具 |
+
+### 7.2 后端技术
+
+| 技术 | 版本 | 用途 |
+|------|------|------|
+| Spring Boot | 3.x | 后端框架 |
+| Spring Security | 6.x | 安全框架 |
+| MyBatis Plus | 3.x | ORM框架 |
+| MySQL | 8.x | 数据库 |
+| Redis | 7.x | 缓存 |
+| JWT | - | 认证令牌 |
+| Spring Cloud Gateway | 3.x | API网关 |
+| Spring Cloud Config | 3.x | 配置中心 |
+| Spring Cloud Eureka | 3.x | 服务注册与发现 |
+
+### 7.3 开发工具
+
+| 工具 | 版本 | 用途 |
+|------|------|------|
+| IntelliJ IDEA | 2023.x | Java开发IDE |
+| Visual Studio Code | 1.80.x | 前端开发IDE |
+| MySQL Workbench | 8.x | 数据库管理工具 |
+| Postman | 10.x | API测试工具 |
+| Git | 2.x | 版本控制工具 |
+| Docker | 20.x | 容器化工具 |
+
+## 8. 实施计划
+
+### 8.1 项目阶段
+
+| 阶段 | 时间 | 主要任务 |
+|------|------|----------|
+| 需求分析 | 2周 | 需求收集、分析、文档编写 |
+| 系统设计 | 3周 | 架构设计、数据库设计、接口设计 |
+| 前端开发 | 6周 | 前端页面开发、组件开发、交互实现 |
+| 后端开发 | 8周 | 后端API开发、业务逻辑实现、数据库集成 |
+| 测试 | 4周 | 单元测试、集成测试、系统测试 |
+| 部署 | 2周 | 系统部署、性能优化、安全加固 |
+| 培训 | 1周 | 系统使用培训、文档编写 |
+| 上线 | 1周 | 系统上线、监控、问题处理 |
+
+### 8.2 项目团队
+
+| 角色 | 人数 | 职责 |
+|------|------|------|
+| 项目经理 | 1 | 项目管理、进度控制、资源协调 |
+| 系统架构师 | 1 | 系统架构设计、技术选型 |
+| 前端开发工程师 | 3 | 前端页面开发、交互实现 |
+| 后端开发工程师 | 4 | 后端API开发、业务逻辑实现 |
+| 数据库工程师 | 1 | 数据库设计、优化 |
+| 测试工程师 | 2 | 系统测试、质量保证 |
+| 文档工程师 | 1 | 文档编写、用户手册 |
+
+### 8.3 风险管理
+
+| 风险 | 影响 | 应对措施 |
+|------|------|----------|
+| 需求变更 | 项目延期、成本增加 | 建立变更管理流程，严格控制需求变更 |
+| 技术风险 | 系统性能、稳定性问题 | 进行技术选型评估，选择成熟稳定的技术 |
+| 资源风险 | 人力、设备不足 | 提前规划资源，确保资源充足 |
+| 时间风险 | 项目延期 | 制定详细的项目计划，定期监控进度 |
+| 质量风险 | 系统质量不达标 | 建立质量保证体系，严格测试流程 |
+
+## 9. 验收标准
+
+### 9.1 功能验收
+
+- 所有功能模块按照需求文档实现
+- 系统功能符合业务流程要求
+- 系统界面友好，操作便捷
+- 系统响应时间满足性能要求
+
+### 9.2 技术验收
+
+- 系统架构符合设计要求
+- 代码质量符合规范
+- 系统安全性符合要求
+- 系统稳定性满足要求
+
+### 9.3 文档验收
+
+- 需求文档完整、准确
+- 设计文档完整、详细
+- 用户手册完整、易懂
+- 测试文档完整、规范
+
+## 10. 总结
+
+本校园教务系统需求文档详细描述了系统的功能需求、非功能需求、数据需求、业务流程、系统架构和技术选型等内容。系统采用现代化的技术栈，实现了学生管理、教师管理、课程管理、成绩管理、排课管理等核心功能，旨在提高学校教学管理效率，为师生提供便捷的教学管理服务。
+
+系统具有以下特点：
+
+- **功能完整**：涵盖了校园教务管理的各个方面
+- **技术先进**：采用现代化的前后端技术
+- **架构合理**：采用微服务架构，易于扩展和维护
+- **安全可靠**：具备完善的安全机制和数据备份方案
+- **用户友好**：界面简洁直观，操作便捷
+
+本系统可以满足各类大中专院校的教学管理需求，为学校的教学管理工作提供有力支持。

@@ -1,0 +1,82 @@
+package com.campus.education.controller.course;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.campus.education.common.Result;
+import com.campus.education.entity.TeachingPlan;
+import com.campus.education.service.TeachingPlanService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/teaching-plan")
+public class TeachingPlanController {
+
+    @Autowired
+    private TeachingPlanService teachingPlanService;
+
+    @GetMapping("/page")
+    public Result<IPage<TeachingPlan>> page(
+            @RequestParam(defaultValue = "1") Integer current,
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam(required = false) String majorId,
+            @RequestParam(required = false) String courseId,
+            @RequestParam(required = false) String courseNature) {
+        Page<TeachingPlan> page = new Page<>(current, size);
+        LambdaQueryWrapper<TeachingPlan> wrapper = new LambdaQueryWrapper<>();
+        if (majorId != null && !majorId.trim().isEmpty()) {
+            wrapper.eq(TeachingPlan::getMajorId, majorId);
+        }
+        if (courseId != null && !courseId.trim().isEmpty()) {
+            wrapper.eq(TeachingPlan::getCourseId, courseId);
+        }
+        if (courseNature != null && !courseNature.trim().isEmpty()) {
+            wrapper.eq(TeachingPlan::getCourseNature, courseNature);
+        }
+        wrapper.orderByAsc(TeachingPlan::getMajorId, TeachingPlan::getSemesterType);
+        return Result.success(teachingPlanService.page(page, wrapper));
+    }
+
+    @GetMapping("/list")
+    public Result<List<TeachingPlan>> list(
+            @RequestParam(required = false) String majorId) {
+        LambdaQueryWrapper<TeachingPlan> wrapper = new LambdaQueryWrapper<>();
+        if (majorId != null && !majorId.trim().isEmpty()) {
+            wrapper.eq(TeachingPlan::getMajorId, majorId);
+        }
+        wrapper.orderByAsc(TeachingPlan::getSemesterType);
+        return Result.success(teachingPlanService.list(wrapper));
+    }
+
+    @GetMapping("/{id}")
+    public Result<TeachingPlan> getById(@PathVariable String id) {
+        return Result.success(teachingPlanService.getById(id));
+    }
+
+    @PostMapping
+    public Result<Void> add(@RequestBody TeachingPlan plan) {
+        LambdaQueryWrapper<TeachingPlan> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(TeachingPlan::getMajorId, plan.getMajorId());
+        wrapper.eq(TeachingPlan::getCourseId, plan.getCourseId());
+        if (teachingPlanService.count(wrapper) > 0) {
+            return Result.badRequest("该专业已存在此课程的教学计划");
+        }
+        teachingPlanService.save(plan);
+        return Result.success("添加成功", null);
+    }
+
+    @PutMapping
+    public Result<Void> update(@RequestBody TeachingPlan plan) {
+        teachingPlanService.updateById(plan);
+        return Result.success("更新成功", null);
+    }
+
+    @DeleteMapping("/{id}")
+    public Result<Void> delete(@PathVariable String id) {
+        teachingPlanService.removeById(id);
+        return Result.success("删除成功", null);
+    }
+}

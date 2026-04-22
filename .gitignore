@@ -1,0 +1,14 @@
+.idea/
+.vscode/
+node_modules/
+frontend/node_modules/
+frontend/dist/
+backend/target/
+*.log
+backend-run.out.log
+backend-run.err.log
+spring-run.out.log
+spring-run.err.log
+*.iml
+Thumbs.db
+.DS_Store
