@@ -4,13 +4,20 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.education.common.Result;
+import com.campus.education.entity.Course;
 import com.campus.education.entity.Grade;
+import com.campus.education.entity.Student;
+import com.campus.education.mapper.CourseMapper;
+import com.campus.education.mapper.StudentMapper;
 import com.campus.education.service.GradeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/grade")
@@ -18,6 +25,12 @@ public class GradeController {
 
     @Autowired
     private GradeService gradeService;
+
+    @Autowired
+    private StudentMapper studentMapper;
+
+    @Autowired
+    private CourseMapper courseMapper;
 
     @GetMapping("/page")
     public Result<IPage<Grade>> page(
@@ -42,7 +55,9 @@ public class GradeController {
             wrapper.eq(Grade::getStatus, status);
         }
         wrapper.orderByDesc(Grade::getCreatedAt);
-        return Result.success(gradeService.page(page, wrapper));
+        IPage<Grade> result = gradeService.page(page, wrapper);
+        enrichGrades(result.getRecords());
+        return Result.success(result);
     }
 
     @GetMapping("/{id}")
@@ -99,5 +114,40 @@ public class GradeController {
             @RequestParam(required = false) String courseId,
             @RequestParam(required = false) String classId) {
         return Result.success(gradeService.getStatistics(semesterId, courseId, classId));
+    }
+
+    private void enrichGrades(List<Grade> grades) {
+        if (grades == null || grades.isEmpty()) {
+            return;
+        }
+
+        Set<String> studentIds = grades.stream()
+                .map(Grade::getStudentId)
+                .filter(id -> id != null && !id.trim().isEmpty())
+                .collect(Collectors.toSet());
+        Set<String> courseIds = grades.stream()
+                .map(Grade::getCourseId)
+                .filter(id -> id != null && !id.trim().isEmpty())
+                .collect(Collectors.toSet());
+
+        Map<String, Student> studentMap = studentIds.isEmpty()
+                ? java.util.Collections.emptyMap()
+                : studentMapper.selectBatchIds(studentIds).stream()
+                .collect(Collectors.toMap(Student::getStudentId, Function.identity(), (left, right) -> left));
+        Map<String, Course> courseMap = courseIds.isEmpty()
+                ? java.util.Collections.emptyMap()
+                : courseMapper.selectBatchIds(courseIds).stream()
+                .collect(Collectors.toMap(Course::getCourseId, Function.identity(), (left, right) -> left));
+
+        for (Grade grade : grades) {
+            Student student = studentMap.get(grade.getStudentId());
+            if (student != null) {
+                grade.setStudentName(student.getName());
+            }
+            Course course = courseMap.get(grade.getCourseId());
+            if (course != null) {
+                grade.setCourseName(course.getName());
+            }
+        }
     }
 }

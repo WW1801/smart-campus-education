@@ -64,7 +64,7 @@
     </el-card>
 
     <el-dialog :title="editMode ? '编辑考勤' : '添加考勤'" v-model="dialogVisible" width="520px">
-      <el-form ref="recordForm" :model="recordForm" :rules="recordRules" label-width="90px">
+      <el-form ref="recordFormRef" :model="recordForm" :rules="recordRules" label-width="90px">
         <el-form-item label="学号" prop="studentId">
           <el-input v-model="recordForm.studentId" placeholder="请输入学号" />
         </el-form-item>
@@ -105,6 +105,7 @@ const loading = ref(false)
 const tableData = ref([])
 const dialogVisible = ref(false)
 const editMode = ref(false)
+const recordFormRef = ref(null)
 const recordForm = ref({ attendanceId: '', studentId: '', courseId: '', semesterId: '', date: '', status: '' })
 
 const searchForm = reactive({ studentId: '', courseId: '', date: '', status: '' })
@@ -148,8 +149,8 @@ const deleteRecord = async (id) => {
 }
 
 const saveRecord = async () => {
-  if (!recordForm.value) return
-  try { await recordForm.value.validate() } catch { return }
+  if (!recordFormRef.value) return
+  try { await recordFormRef.value.validate() } catch { return }
   try {
     if (editMode.value) await request.put('/attendance', recordForm.value)
     else await request.post('/attendance', recordForm.value)

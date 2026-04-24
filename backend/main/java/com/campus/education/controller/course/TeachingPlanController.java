@@ -3,6 +3,7 @@ package com.campus.education.controller.course;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.campus.education.common.BusinessIdGenerator;
 import com.campus.education.common.Result;
 import com.campus.education.entity.TeachingPlan;
 import com.campus.education.service.TeachingPlanService;
@@ -17,6 +18,9 @@ public class TeachingPlanController {
 
     @Autowired
     private TeachingPlanService teachingPlanService;
+
+    @Autowired
+    private BusinessIdGenerator businessIdGenerator;
 
     @GetMapping("/page")
     public Result<IPage<TeachingPlan>> page(
@@ -63,6 +67,9 @@ public class TeachingPlanController {
         wrapper.eq(TeachingPlan::getCourseId, plan.getCourseId());
         if (teachingPlanService.count(wrapper) > 0) {
             return Result.badRequest("该专业已存在此课程的教学计划");
+        }
+        if (plan.getPlanId() == null || plan.getPlanId().trim().isEmpty()) {
+            plan.setPlanId(businessIdGenerator.nextPrefixedId("teaching_plan", "plan_id", "TP", 3));
         }
         teachingPlanService.save(plan);
         return Result.success("添加成功", null);

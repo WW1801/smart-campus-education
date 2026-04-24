@@ -3,6 +3,7 @@ package com.campus.education.controller.system;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.campus.education.common.BusinessIdGenerator;
 import com.campus.education.common.Result;
 import com.campus.education.entity.Role;
 import com.campus.education.entity.RolePermission;
@@ -24,6 +25,9 @@ public class RoleController {
     @Autowired
     private RolePermissionMapper rolePermissionMapper;
 
+    @Autowired
+    private BusinessIdGenerator businessIdGenerator;
+
     @GetMapping("/list")
     public Result<List<Role>> list() {
         return Result.success(roleService.list());
@@ -43,6 +47,9 @@ public class RoleController {
 
     @PostMapping
     public Result<Void> add(@RequestBody Role role) {
+        if (role.getRoleId() == null || role.getRoleId().trim().isEmpty()) {
+            role.setRoleId(businessIdGenerator.nextNumericId("role", "role_id"));
+        }
         roleService.save(role);
         return Result.success("添加成功", null);
     }
@@ -55,8 +62,8 @@ public class RoleController {
 
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
-        roleService.removeById(id);
         rolePermissionMapper.delete(new LambdaQueryWrapper<RolePermission>().eq(RolePermission::getRoleId, id));
+        roleService.removeById(id);
         return Result.success("删除成功", null);
     }
 

@@ -3,6 +3,7 @@ package com.campus.education.controller.system;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.campus.education.common.BusinessIdGenerator;
 import com.campus.education.common.Result;
 import com.campus.education.entity.User;
 import com.campus.education.service.UserService;
@@ -21,6 +22,9 @@ public class UserController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private BusinessIdGenerator businessIdGenerator;
 
     @GetMapping("/page")
     public Result<IPage<User>> page(
@@ -63,6 +67,9 @@ public class UserController {
         User existing = userService.findByUsername(user.getUsername());
         if (existing != null) {
             return Result.badRequest("用户名已存在");
+        }
+        if (user.getUserId() == null || user.getUserId().trim().isEmpty()) {
+            user.setUserId(businessIdGenerator.nextNumericId("user", "user_id"));
         }
         user.setPassword(passwordEncoder.encode(user.getPassword() != null && !user.getPassword().trim().isEmpty() ? user.getPassword() : "123456"));
         userService.save(user);

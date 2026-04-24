@@ -32,7 +32,7 @@
     </el-card>
 
     <el-dialog :title="editMode ? '编辑权限' : '添加权限'" v-model="dialogVisible" width="520px">
-      <el-form ref="permissionForm" :model="permissionForm" :rules="permissionRules" label-width="100px">
+      <el-form ref="permissionFormRef" :model="permissionForm" :rules="permissionRules" label-width="100px">
         <el-form-item label="权限名称" prop="name">
           <el-input v-model="permissionForm.name" placeholder="请输入权限名称" />
         </el-form-item>
@@ -60,6 +60,7 @@ import { Lock, Plus } from '@element-plus/icons-vue'
 const permissionList = ref([])
 const dialogVisible = ref(false)
 const editMode = ref(false)
+const permissionFormRef = ref(null)
 const permissionForm = ref({ permissionId: '', name: '', code: '', description: '' })
 
 const permissionRules = {
@@ -84,6 +85,7 @@ const deletePermission = async (permissionId) => {
 
 const savePermission = async () => {
   try {
+    await permissionFormRef.value?.validate()
     if (editMode.value) { await request.put('/system/permission', permissionForm.value) }
     else { await request.post('/system/permission', permissionForm.value) }
     ElMessage.success(editMode.value ? '更新成功' : '添加成功'); dialogVisible.value = false; getPermissionList()

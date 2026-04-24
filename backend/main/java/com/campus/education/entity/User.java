@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Data
 @TableName("user")
 public class User {
-    @TableId(type = IdType.ASSIGN_ID)
+    @TableId(type = IdType.INPUT)
     private String userId;
     private String username;
     private String password;

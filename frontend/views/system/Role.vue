@@ -32,7 +32,7 @@
     </el-card>
 
     <el-dialog :title="editMode ? '编辑角色' : '添加角色'" v-model="dialogVisible" width="520px">
-      <el-form ref="roleForm" :model="roleForm" :rules="roleRules" label-width="100px">
+      <el-form ref="roleFormRef" :model="roleForm" :rules="roleRules" label-width="100px">
         <el-form-item label="角色名称" prop="name">
           <el-input v-model="roleForm.name" placeholder="请输入角色名称" />
         </el-form-item>
@@ -48,12 +48,13 @@
 
     <el-dialog title="权限设置" v-model="permissionDialogVisible" width="600px">
       <el-tree
+        ref="permissionTreeRef"
         :data="permissionTree"
+        :props="treeProps"
         show-checkbox
         node-key="permissionId"
         :default-expanded-keys="expandedKeys"
         :default-checked-keys="checkedKeys"
-        @check-change="handleCheckChange"
       />
       <template #footer>
         <el-button @click="permissionDialogVisible = false">取消</el-button>
@@ -64,7 +65,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { nextTick, ref, onMounted } from 'vue'
 import request from '../../utils/request'
 import { ElMessage } from 'element-plus'
 import { Setting, Plus } from '@element-plus/icons-vue'
@@ -73,6 +74,8 @@ const roleList = ref([])
 const dialogVisible = ref(false)
 const permissionDialogVisible = ref(false)
 const editMode = ref(false)
+const roleFormRef = ref(null)
+const permissionTreeRef = ref(null)
 const roleForm = ref({ roleId: '', name: '', description: '' })
 
 const roleRules = { name: [{ required: true, message: '请输入角色名称', trigger: 'blur' }] }
@@ -81,6 +84,7 @@ const permissionTree = ref([])
 const expandedKeys = ref([])
 const checkedKeys = ref([])
 const currentRole = ref(null)
+const treeProps = { label: 'name', children: 'children' }
 
 const buildPermissionTree = (permissions) => {
   const map = {}
@@ -121,6 +125,7 @@ const deleteRole = async (roleId) => {
 
 const saveRole = async () => {
   try {
+    await roleFormRef.value?.validate()
     if (editMode.value) { await request.put('/system/role', roleForm.value) }
     else { await request.post('/system/role', roleForm.value) }
     ElMessage.success(editMode.value ? '更新成功' : '添加成功'); dialogVisible.value = false; getRoleList()
@@ -132,22 +137,15 @@ const setPermission = async (role) => {
   try { const res = await request.get(`/system/role/${role.roleId}/permissions`); checkedKeys.value = res.data || [] }
   catch (error) { checkedKeys.value = [] }
   permissionDialogVisible.value = true
+  await nextTick()
+  permissionTreeRef.value?.setCheckedKeys(checkedKeys.value)
 }
-
-const handleCheckChange = (data, checked, indeterminate) => {}
 
 const savePermission = async () => {
   try {
-    const tree = permissionTree.value
-    const getCheckedIds = (nodes) => {
-      let ids = []
-      for (const node of nodes) {
-        if (checkedKeys.value.includes(node.permissionId)) { ids.push(node.permissionId) }
-        if (node.children) { ids = ids.concat(getCheckedIds(node.children)) }
-      }
-      return ids
-    }
-    const permissionIds = getCheckedIds(tree)
+    const permissionIds = permissionTreeRef.value
+      ? [...permissionTreeRef.value.getCheckedKeys(), ...permissionTreeRef.value.getHalfCheckedKeys()]
+      : checkedKeys.value
     await request.put(`/system/role/${currentRole.value.roleId}/permissions`, permissionIds)
     ElMessage.success('权限设置成功'); permissionDialogVisible.value = false
   } catch (error) { ElMessage.error('权限设置失败') }

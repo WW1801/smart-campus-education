@@ -21,7 +21,17 @@
 
       <el-table :data="tableData" stripe v-loading="loading">
         <el-table-column prop="studentId" label="学号" width="120" />
+        <el-table-column prop="studentName" label="姓名" width="120">
+          <template #default="{ row }">
+            <span>{{ row.studentName || '-' }}</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="courseId" label="课程ID" width="100" />
+        <el-table-column prop="courseName" label="课程名称" width="160" show-overflow-tooltip>
+          <template #default="{ row }">
+            <span>{{ row.courseName || '-' }}</span>
+          </template>
+        </el-table-column>
         <el-table-column label="平时成绩" width="130">
           <template #default="{ row }">
             <el-input-number

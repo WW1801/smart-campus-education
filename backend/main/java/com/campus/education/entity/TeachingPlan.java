@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Data
 @TableName("teaching_plan")
 public class TeachingPlan {
-    @TableId(type = IdType.ASSIGN_ID)
+    @TableId(type = IdType.INPUT)
     private String planId;
     private String majorId;
     private String courseId;

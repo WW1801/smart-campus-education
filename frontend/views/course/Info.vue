@@ -68,7 +68,7 @@
     </el-card>
 
     <el-dialog :title="editMode ? '编辑课程' : '添加课程'" v-model="dialogVisible" width="560px">
-      <el-form ref="courseForm" :model="courseForm" :rules="courseRules" label-width="100px">
+      <el-form ref="courseFormRef" :model="courseForm" :rules="courseRules" label-width="100px">
         <el-form-item label="课程代码" prop="code">
           <el-input v-model="courseForm.code" placeholder="请输入课程代码" />
         </el-form-item>
@@ -131,6 +131,7 @@ const pageSize = ref(10)
 const total = ref(100)
 const dialogVisible = ref(false)
 const editMode = ref(false)
+const courseFormRef = ref(null)
 const courseForm = ref({
   courseId: '', code: '', name: '', credits: null, hours: null, type: '', departmentId: '', description: ''
 })
@@ -174,8 +175,8 @@ const deleteCourse = async (courseId) => {
 }
 
 const saveCourse = async () => {
-  if (!courseForm.value) return
-  try { await courseForm.value.validate() } catch { return }
+  if (!courseFormRef.value) return
+  try { await courseFormRef.value.validate() } catch { return }
   try {
     if (editMode.value) { await request.put('/course', courseForm.value) }
     else { await request.post('/course', courseForm.value) }

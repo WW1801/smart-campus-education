@@ -66,7 +66,7 @@
     </el-card>
 
     <el-dialog :title="editMode ? '编辑教师' : '添加教师'" v-model="dialogVisible" width="600px">
-      <el-form ref="teacherForm" :model="teacherForm" :rules="teacherRules" label-width="100px">
+      <el-form ref="teacherFormRef" :model="teacherForm" :rules="teacherRules" label-width="100px">
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="工号" prop="teacherId">
@@ -160,6 +160,7 @@ const pageSize = ref(10)
 const total = ref(100)
 const dialogVisible = ref(false)
 const editMode = ref(false)
+const teacherFormRef = ref(null)
 const teacherForm = ref({
   teacherId: '', name: '', gender: '', birthdate: '', phone: '', email: '', departmentId: '', title: '', specialty: '', status: ''
 })
@@ -218,8 +219,8 @@ const deleteTeacher = async (teacherId) => {
 }
 
 const saveTeacher = async () => {
-  if (!teacherForm.value) return
-  try { await teacherForm.value.validate() } catch { return }
+  if (!teacherFormRef.value) return
+  try { await teacherFormRef.value.validate() } catch { return }
   try {
     if (editMode.value) { await request.put('/teacher', teacherForm.value) }
     else { await request.post('/teacher', teacherForm.value) }

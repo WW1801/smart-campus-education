@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Data
 @TableName("permission")
 public class Permission {
-    @TableId(type = IdType.ASSIGN_ID)
+    @TableId(type = IdType.INPUT)
     private String permissionId;
     private String name;
     private String code;
