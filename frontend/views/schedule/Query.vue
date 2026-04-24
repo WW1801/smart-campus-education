@@ -12,36 +12,67 @@
       </div>
     </div>
 
-    <el-card>
+    <el-card v-loading="loading">
       <div class="search-bar">
-        <el-select v-model="searchForm.semesterId" placeholder="选择学期" clearable style="width: 220px">
-          <el-option v-for="s in semesterList" :key="s.semesterId" :label="s.name" :value="s.semesterId" />
+        <el-select v-model="searchForm.semesterId" placeholder="选择学期" style="width: 220px">
+          <el-option
+            v-for="semester in semesterList"
+            :key="semester.semesterId"
+            :label="semester.name"
+            :value="semester.semesterId"
+          />
         </el-select>
-        <el-select v-model="searchForm.queryType" placeholder="查询类型" style="width: 130px">
+
+        <el-select v-model="searchForm.queryType" placeholder="查询类型" style="width: 140px" @change="handleQueryTypeChange">
           <el-option label="按教师" value="teacher" />
           <el-option label="按班级" value="class" />
           <el-option label="按学生" value="student" />
         </el-select>
-        <el-select v-if="searchForm.queryType === 'teacher'" v-model="searchForm.teacherId" placeholder="选择教师" style="width: 160px">
-          <el-option v-for="t in teacherList" :key="t.teacherId" :label="t.name" :value="t.teacherId" />
+
+        <el-select
+          v-if="searchForm.queryType === 'teacher'"
+          v-model="searchForm.teacherId"
+          placeholder="选择教师"
+          filterable
+          style="width: 180px"
+        >
+          <el-option v-for="teacher in teacherOptions" :key="teacher.teacherId" :label="teacher.name" :value="teacher.teacherId" />
         </el-select>
-        <el-select v-if="searchForm.queryType === 'class'" v-model="searchForm.classId" placeholder="选择班级" style="width: 160px">
-          <el-option v-for="c in classList" :key="c.classId" :label="c.name" :value="c.classId" />
+
+        <el-select
+          v-if="searchForm.queryType === 'class'"
+          v-model="searchForm.classId"
+          placeholder="选择班级"
+          filterable
+          style="width: 180px"
+        >
+          <el-option v-for="item in classOptions" :key="item.classId" :label="item.name" :value="item.classId" />
         </el-select>
-        <el-input v-if="searchForm.queryType === 'student'" v-model="searchForm.studentId" placeholder="输入学生ID" style="width: 160px" />
+
+        <el-select
+          v-if="searchForm.queryType === 'student'"
+          v-model="searchForm.studentId"
+          placeholder="选择学生"
+          filterable
+          style="width: 180px"
+        >
+          <el-option v-for="student in studentOptions" :key="student.studentId" :label="student.name" :value="student.studentId" />
+        </el-select>
+
         <el-button type="primary" @click="search">查询</el-button>
       </div>
 
       <div v-if="scheduleData.length > 0" class="schedule-grid-wrapper">
         <div class="schedule-grid">
           <div class="grid-header">
-            <div class="grid-cell header-cell">节次\星期</div>
-            <div class="grid-cell header-cell" v-for="day in weekDays" :key="day">{{ day }}</div>
+            <div class="grid-cell header-cell">节次/星期</div>
+            <div v-for="day in weekDays" :key="day.value" class="grid-cell header-cell">{{ day.label }}</div>
           </div>
-          <div class="grid-row" v-for="period in periods" :key="period">
-            <div class="grid-cell period-cell">{{ period }}-{{ period + 1 }}节</div>
-            <div class="grid-cell content-cell" v-for="day in weekDays" :key="day + period">
-              <div class="course-card" v-for="course in getCourseByDayAndPeriod(day, period)" :key="course.id">
+
+          <div v-for="period in periodGroups" :key="period.start" class="grid-row">
+            <div class="grid-cell period-cell">{{ period.label }}</div>
+            <div v-for="day in weekDays" :key="`${day.value}-${period.start}`" class="grid-cell content-cell">
+              <div v-for="course in getCourseByDayAndPeriod(day.value, period.start)" :key="course.scheduleId" class="course-card">
                 <div class="course-name">{{ course.courseName }}</div>
                 <div class="course-detail">{{ course.teacherName }}</div>
                 <div class="course-detail">{{ course.classroomName }}</div>
@@ -50,109 +81,232 @@
           </div>
         </div>
       </div>
-      <el-empty v-else description="请选择查询条件后查询课表" />
+
+      <el-empty v-else :description="searched ? '未查询到课表' : '暂无课表数据'" />
     </el-card>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { Calendar } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { useStore } from 'vuex'
 import request from '../../utils/request'
 
-const searchForm = ref({ semesterId: '', queryType: 'teacher', teacherId: '', classId: '', studentId: '' })
+const store = useStore()
+
+const loading = ref(false)
+const searched = ref(false)
 const scheduleData = ref([])
 const semesterList = ref([])
 const teacherList = ref([])
 const classList = ref([])
-const weekDays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
-const periods = [1, 3, 5, 7, 9]
+const studentList = ref([])
+const courseList = ref([])
+const classroomList = ref([])
 
-const dayOfWeekMap = { 1: '周一', 2: '周二', 3: '周三', 4: '周四', 5: '周五', 6: '周六', 7: '周日' }
-
-onMounted(() => {
-  loadBasicData()
+const searchForm = reactive({
+  semesterId: '',
+  queryType: 'teacher',
+  teacherId: '',
+  classId: '',
+  studentId: ''
 })
 
-const loadBasicData = async () => {
-  const [semRes, teacherRes, classRes] = await Promise.all([
+const weekDays = [
+  { label: '周一', value: 1 },
+  { label: '周二', value: 2 },
+  { label: '周三', value: 3 },
+  { label: '周四', value: 4 },
+  { label: '周五', value: 5 },
+  { label: '周六', value: 6 },
+  { label: '周日', value: 7 }
+]
+
+const periodGroups = [
+  { start: 1, end: 2, label: '1-2节' },
+  { start: 3, end: 4, label: '3-4节' },
+  { start: 5, end: 6, label: '5-6节' },
+  { start: 7, end: 8, label: '7-8节' },
+  { start: 9, end: 10, label: '9-10节' },
+  { start: 11, end: 12, label: '11-12节' }
+]
+
+const currentRoleId = computed(() => store.state.user?.roleId || '')
+const relatedId = computed(() => store.state.user?.relatedId || '')
+
+const teacherOptions = computed(() => teacherList.value)
+const classOptions = computed(() => classList.value)
+const studentOptions = computed(() => studentList.value)
+
+const courseMap = computed(() => Object.fromEntries(courseList.value.map(item => [item.courseId, item.name])))
+const teacherMap = computed(() => Object.fromEntries(teacherList.value.map(item => [item.teacherId, item.name])))
+const classroomMap = computed(() => Object.fromEntries(classroomList.value.map(item => [item.classroomId, item.name])))
+
+const getDefaultQueryType = () => {
+  if (currentRoleId.value === '5') {
+    return 'student'
+  }
+  if (currentRoleId.value === '4') {
+    return 'teacher'
+  }
+  return 'teacher'
+}
+
+const pickDefaultSemesterId = () => {
+  const activeSemester = semesterList.value.find(item => item.status === 'active')
+  return activeSemester?.semesterId || semesterList.value[0]?.semesterId || ''
+}
+
+const findDefaultOptionId = (type, preferredId = '') => {
+  if (type === 'teacher') {
+    if (preferredId && teacherList.value.some(item => item.teacherId === preferredId)) {
+      return preferredId
+    }
+    return teacherList.value[0]?.teacherId || ''
+  }
+
+  if (type === 'class') {
+    return classList.value[0]?.classId || ''
+  }
+
+  if (preferredId && studentList.value.some(item => item.studentId === preferredId)) {
+    return preferredId
+  }
+  return studentList.value[0]?.studentId || ''
+}
+
+const applyDefaultTarget = queryType => {
+  if (queryType === 'teacher') {
+    searchForm.teacherId = findDefaultOptionId('teacher', currentRoleId.value === '4' ? relatedId.value : '')
+    searchForm.classId = ''
+    searchForm.studentId = ''
+    return
+  }
+
+  if (queryType === 'class') {
+    searchForm.classId = findDefaultOptionId('class')
+    searchForm.teacherId = ''
+    searchForm.studentId = ''
+    return
+  }
+
+  searchForm.studentId = findDefaultOptionId('student', currentRoleId.value === '5' ? relatedId.value : '')
+  searchForm.teacherId = ''
+  searchForm.classId = ''
+}
+
+const enrichSchedules = rows =>
+  (rows || []).map(item => ({
+    ...item,
+    courseName: courseMap.value[item.courseId] || item.courseName || item.courseId,
+    teacherName: teacherMap.value[item.teacherId] || item.teacherName || item.teacherId,
+    classroomName: classroomMap.value[item.classroomId] || item.classroomName || item.classroomId || '-'
+  }))
+
+const loadLookupData = async () => {
+  const [semesterRes, teacherRes, classRes, studentRes, courseRes, classroomRes] = await Promise.all([
     request.get('/semester/list').catch(() => ({ data: [] })),
     request.get('/teacher/list').catch(() => ({ data: [] })),
-    request.get('/class/list').catch(() => ({ data: [] }))
+    request.get('/class/list').catch(() => ({ data: [] })),
+    request.get('/student/list').catch(() => ({ data: [] })),
+    request.get('/course/list').catch(() => ({ data: [] })),
+    request.get('/classroom/list').catch(() => ({ data: [] }))
   ])
-  semesterList.value = semRes.data || []
+
+  semesterList.value = semesterRes.data || []
   teacherList.value = teacherRes.data || []
   classList.value = classRes.data || []
+  studentList.value = studentRes.data || []
+  courseList.value = courseRes.data || []
+  classroomList.value = classroomRes.data || []
 }
 
 const search = async () => {
-  if (!searchForm.value.semesterId) {
+  if (!searchForm.semesterId) {
     ElMessage.warning('请选择学期')
     return
   }
-  const qType = searchForm.value.queryType
-  if (qType === 'teacher' && !searchForm.value.teacherId) { ElMessage.warning('请选择教师'); return }
-  if (qType === 'class' && !searchForm.value.classId) { ElMessage.warning('请选择班级'); return }
-  if (qType === 'student' && !searchForm.value.studentId) { ElMessage.warning('请输入学生ID'); return }
 
+  if (searchForm.queryType === 'teacher' && !searchForm.teacherId) {
+    ElMessage.warning('请选择教师')
+    return
+  }
+
+  if (searchForm.queryType === 'class' && !searchForm.classId) {
+    ElMessage.warning('请选择班级')
+    return
+  }
+
+  if (searchForm.queryType === 'student' && !searchForm.studentId) {
+    ElMessage.warning('请选择学生')
+    return
+  }
+
+  loading.value = true
   try {
     let res
-    if (qType === 'teacher') {
+    if (searchForm.queryType === 'teacher') {
       res = await request.get('/schedule/query/by-teacher', {
-        params: { teacherId: searchForm.value.teacherId, semesterId: searchForm.value.semesterId }
+        params: {
+          teacherId: searchForm.teacherId,
+          semesterId: searchForm.semesterId
+        }
       })
-    } else if (qType === 'class') {
+    } else if (searchForm.queryType === 'class') {
       res = await request.get('/schedule/query/by-class', {
-        params: { classId: searchForm.value.classId, semesterId: searchForm.value.semesterId }
+        params: {
+          classId: searchForm.classId,
+          semesterId: searchForm.semesterId
+        }
       })
-    } else if (qType === 'student') {
-      res = await request.get('/selection/my-schedule', {
-        params: { studentId: searchForm.value.studentId, semesterId: searchForm.value.semesterId }
+    } else {
+      res = await request.get('/schedule/query/by-student', {
+        params: {
+          studentId: searchForm.studentId,
+          semesterId: searchForm.semesterId
+        }
       })
     }
 
-    let data = res?.data || []
-
-    if (qType === 'teacher' || qType === 'class') {
-      const courseIds = [...new Set(data.map(d => d.courseId).filter(Boolean))]
-      const teacherIds = [...new Set(data.map(d => d.teacherId).filter(Boolean))]
-      const classroomIds = [...new Set(data.map(d => d.classroomId).filter(Boolean))]
-
-      const courseMap = {}
-      const teacherMap = {}
-      const classroomMap = {}
-
-      await Promise.all([
-        courseIds.length > 0 ? request.get('/course/list').then(r => (r.data || []).forEach(c => { courseMap[c.courseId] = c.name })).catch(() => {}) : Promise.resolve(),
-        teacherIds.length > 0 ? request.get('/teacher/list').then(r => (r.data || []).forEach(t => { teacherMap[t.teacherId] = t.name })).catch(() => {}) : Promise.resolve(),
-        classroomIds.length > 0 ? request.get('/classroom/list').then(r => (r.data || []).forEach(c => { classroomMap[c.classroomId] = c.name })).catch(() => {}) : Promise.resolve()
-      ])
-
-      data = data.map(d => ({
-        ...d,
-        courseName: courseMap[d.courseId] || d.courseId,
-        teacherName: teacherMap[d.teacherId] || d.teacherId,
-        classroomName: classroomMap[d.classroomId] || d.classroomId
-      }))
-    }
-
-    scheduleData.value = data
+    scheduleData.value = enrichSchedules(res.data || [])
+    searched.value = true
   } catch {
     scheduleData.value = []
+    searched.value = true
+  } finally {
+    loading.value = false
   }
 }
 
-const getCourseByDayAndPeriod = (day, period) => {
-  return scheduleData.value.filter(item => {
-    const itemDay = dayOfWeekMap[item.dayOfWeek] || item.dayOfWeek
-    return itemDay === day && item.startPeriod === period
-  })
+const handleQueryTypeChange = value => {
+  applyDefaultTarget(value)
 }
+
+const getCourseByDayAndPeriod = (dayOfWeek, startPeriod) =>
+  scheduleData.value.filter(item => item.dayOfWeek === dayOfWeek && item.startPeriod === startPeriod)
+
+onMounted(async () => {
+  loading.value = true
+  try {
+    await loadLookupData()
+    searchForm.queryType = getDefaultQueryType()
+    searchForm.semesterId = pickDefaultSemesterId()
+    applyDefaultTarget(searchForm.queryType)
+    if (searchForm.semesterId) {
+      await search()
+    }
+  } finally {
+    loading.value = false
+  }
+})
 </script>
 
 <style scoped>
-.page-container { width: 100%; }
+.page-container {
+  width: 100%;
+}
 
 .schedule-grid-wrapper {
   margin-top: 16px;
@@ -161,18 +315,15 @@ const getCourseByDayAndPeriod = (day, period) => {
 
 .schedule-grid {
   display: grid;
-  grid-template-columns: 80px repeat(7, 1fr);
+  grid-template-columns: 88px repeat(7, 1fr);
   gap: 1px;
   background: var(--border-color);
   border-radius: var(--radius-sm);
   overflow: hidden;
-  min-width: 800px;
+  min-width: 860px;
 }
 
-.grid-header {
-  display: contents;
-}
-
+.grid-header,
 .grid-row {
   display: contents;
 }
@@ -180,26 +331,26 @@ const getCourseByDayAndPeriod = (day, period) => {
 .grid-cell {
   background: var(--bg-card);
   padding: 10px 8px;
-  text-align: center;
-  min-height: 70px;
+  min-height: 72px;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-align: center;
 }
 
 .header-cell {
   background: #f0f4ff;
-  font-weight: 600;
-  font-size: 13px;
   color: var(--text-primary);
-  min-height: 44px;
+  font-size: 13px;
+  font-weight: 600;
+  min-height: 46px;
 }
 
 .period-cell {
-  font-weight: 600;
-  font-size: 12px;
-  color: var(--text-secondary);
   background: #f8f9fc;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .content-cell {
@@ -210,23 +361,23 @@ const getCourseByDayAndPeriod = (day, period) => {
 }
 
 .course-card {
-  background: linear-gradient(135deg, #eef1ff, #e8ecff);
+  width: 100%;
+  margin-bottom: 4px;
+  padding: 6px 8px;
   border-left: 3px solid var(--primary-color);
   border-radius: 4px;
-  padding: 6px 8px;
-  margin-bottom: 4px;
-  width: 100%;
+  background: linear-gradient(135deg, #eef1ff, #e8ecff);
 }
 
 .course-name {
-  font-weight: 600;
-  font-size: 12px;
-  color: var(--primary-color);
   margin-bottom: 2px;
+  color: var(--primary-color);
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .course-detail {
-  font-size: 11px;
   color: var(--text-secondary);
+  font-size: 11px;
 }
 </style>

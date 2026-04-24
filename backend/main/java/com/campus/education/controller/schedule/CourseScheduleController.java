@@ -5,12 +5,28 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.education.common.Result;
 import com.campus.education.entity.CourseSchedule;
+import com.campus.education.entity.Student;
+import com.campus.education.entity.StudentCourseSelection;
 import com.campus.education.service.CourseScheduleService;
+import com.campus.education.service.StudentCourseSelectionService;
+import com.campus.education.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/schedule")
@@ -18,6 +34,12 @@ public class CourseScheduleController {
 
     @Autowired
     private CourseScheduleService courseScheduleService;
+
+    @Autowired
+    private StudentService studentService;
+
+    @Autowired
+    private StudentCourseSelectionService studentCourseSelectionService;
 
     @GetMapping("/page")
     public Result<IPage<CourseSchedule>> page(
@@ -46,8 +68,7 @@ public class CourseScheduleController {
     }
 
     @GetMapping("/list")
-    public Result<List<CourseSchedule>> list(
-            @RequestParam(required = false) String semesterId) {
+    public Result<List<CourseSchedule>> list(@RequestParam(required = false) String semesterId) {
         LambdaQueryWrapper<CourseSchedule> wrapper = new LambdaQueryWrapper<>();
         if (semesterId != null && !semesterId.trim().isEmpty()) {
             wrapper.eq(CourseSchedule::getSemesterId, semesterId);
@@ -56,25 +77,19 @@ public class CourseScheduleController {
         return Result.success(courseScheduleService.list(wrapper));
     }
 
-    // [迭代补充] 排课冲突检测接口（不保存，仅返回冲突信息）
     @PostMapping("/check-conflict")
     public Result<List<Map<String, Object>>> checkConflict(@RequestBody CourseSchedule schedule) {
-        List<Map<String, Object>> conflicts = courseScheduleService.checkConflict(schedule);
-        return Result.success(conflicts);
+        return Result.success(courseScheduleService.checkConflict(schedule));
     }
 
-    // [迭代补充] 新增排课（含冲突检测，P0冲突拒绝保存）
     @PostMapping
     public Result<CourseSchedule> add(@RequestBody CourseSchedule schedule) {
-        CourseSchedule saved = courseScheduleService.saveWithConflictCheck(schedule);
-        return Result.success("排课成功", saved);
+        return Result.success("排课成功", courseScheduleService.saveWithConflictCheck(schedule));
     }
 
-    // [迭代补充] 修改排课（含冲突检测）
     @PutMapping
     public Result<CourseSchedule> update(@RequestBody CourseSchedule schedule) {
-        CourseSchedule saved = courseScheduleService.saveWithConflictCheck(schedule);
-        return Result.success("修改成功", saved);
+        return Result.success("修改成功", courseScheduleService.saveWithConflictCheck(schedule));
     }
 
     @DeleteMapping("/{id}")
@@ -83,7 +98,6 @@ public class CourseScheduleController {
         return Result.success("删除成功", null);
     }
 
-    // [迭代补充] 按教师查询课表
     @GetMapping("/query/by-teacher")
     public Result<List<CourseSchedule>> queryByTeacher(
             @RequestParam String teacherId,
@@ -95,7 +109,6 @@ public class CourseScheduleController {
         return Result.success(courseScheduleService.list(wrapper));
     }
 
-    // [迭代补充] 按班级查询课表
     @GetMapping("/query/by-class")
     public Result<List<CourseSchedule>> queryByClass(
             @RequestParam String classId,
@@ -107,7 +120,44 @@ public class CourseScheduleController {
         return Result.success(courseScheduleService.list(wrapper));
     }
 
-    // [迭代补充] 按教室查询课表
+    @GetMapping("/query/by-student")
+    public Result<List<CourseSchedule>> queryByStudent(
+            @RequestParam String studentId,
+            @RequestParam String semesterId) {
+        Student student = studentService.getById(studentId);
+        if (student == null) {
+            return Result.badRequest("学生不存在");
+        }
+
+        Map<String, CourseSchedule> mergedSchedules = new LinkedHashMap<>();
+
+        if (student.getClassId() != null && !student.getClassId().trim().isEmpty()) {
+            LambdaQueryWrapper<CourseSchedule> classWrapper = new LambdaQueryWrapper<>();
+            classWrapper.eq(CourseSchedule::getClassId, student.getClassId());
+            classWrapper.eq(CourseSchedule::getSemesterId, semesterId);
+            classWrapper.orderByAsc(CourseSchedule::getDayOfWeek, CourseSchedule::getStartPeriod);
+            courseScheduleService.list(classWrapper).forEach(item -> mergedSchedules.put(item.getScheduleId(), item));
+        }
+
+        List<String> selectedScheduleIds = studentCourseSelectionService.getMyCourses(studentId, semesterId).stream()
+                .map(StudentCourseSelection::getScheduleId)
+                .filter(id -> id != null && !id.trim().isEmpty())
+                .distinct()
+                .collect(Collectors.toList());
+
+        if (!selectedScheduleIds.isEmpty()) {
+            courseScheduleService.listByIds(selectedScheduleIds).stream()
+                    .filter(item -> semesterId.equals(item.getSemesterId()))
+                    .forEach(item -> mergedSchedules.put(item.getScheduleId(), item));
+        }
+
+        List<CourseSchedule> schedules = new ArrayList<>(mergedSchedules.values());
+        schedules.sort(Comparator.comparing(CourseSchedule::getDayOfWeek)
+                .thenComparing(CourseSchedule::getStartPeriod)
+                .thenComparing(CourseSchedule::getEndPeriod));
+        return Result.success(schedules);
+    }
+
     @GetMapping("/query/by-classroom")
     public Result<List<CourseSchedule>> queryByClassroom(
             @RequestParam String classroomId,

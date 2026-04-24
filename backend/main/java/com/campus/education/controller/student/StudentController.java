@@ -7,8 +7,17 @@ import com.campus.education.common.Result;
 import com.campus.education.entity.Student;
 import com.campus.education.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -17,6 +26,21 @@ public class StudentController {
 
     @Autowired
     private StudentService studentService;
+
+    @GetMapping("/list")
+    public Result<List<Student>> list(
+            @RequestParam(required = false) String classId,
+            @RequestParam(required = false) String status) {
+        LambdaQueryWrapper<Student> wrapper = new LambdaQueryWrapper<>();
+        if (classId != null && !classId.trim().isEmpty()) {
+            wrapper.eq(Student::getClassId, classId);
+        }
+        if (status != null && !status.trim().isEmpty()) {
+            wrapper.eq(Student::getStatus, status);
+        }
+        wrapper.orderByAsc(Student::getStudentId);
+        return Result.success(studentService.list(wrapper));
+    }
 
     @GetMapping("/page")
     public Result<IPage<Student>> page(
