@@ -4,9 +4,11 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.education.common.Result;
+import com.campus.education.common.StudentAccessGuard;
 import com.campus.education.entity.Attendance;
 import com.campus.education.service.AttendanceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -19,6 +21,9 @@ public class AttendanceController {
     @Autowired
     private AttendanceService attendanceService;
 
+    @Autowired
+    private StudentAccessGuard studentAccessGuard;
+
     @GetMapping("/list")
     public Result<Map<String, Object>> list(@RequestParam(defaultValue = "1") Integer page,
                                             @RequestParam(defaultValue = "10") Integer limit,
@@ -27,7 +32,9 @@ public class AttendanceController {
                                             @RequestParam(required = false) String studentId,
                                             @RequestParam(required = false) String classId,
                                             @RequestParam(required = false) String date,
-                                            @RequestParam(required = false) String status) {
+                                            @RequestParam(required = false) String status,
+                                            Authentication authentication) {
+        studentId = studentAccessGuard.resolveStudentFilter(authentication, studentId);
         LambdaQueryWrapper<Attendance> wrapper = new LambdaQueryWrapper<>();
         if (semesterId != null && !semesterId.trim().isEmpty()) {
             wrapper.eq(Attendance::getSemesterId, semesterId);

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.education.common.Result;
+import com.campus.education.common.StudentAccessGuard;
 import com.campus.education.entity.CourseSchedule;
 import com.campus.education.entity.Student;
 import com.campus.education.entity.StudentCourseSelection;
@@ -11,6 +12,7 @@ import com.campus.education.service.CourseScheduleService;
 import com.campus.education.service.StudentCourseSelectionService;
 import com.campus.education.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,6 +42,9 @@ public class CourseScheduleController {
 
     @Autowired
     private StudentCourseSelectionService studentCourseSelectionService;
+
+    @Autowired
+    private StudentAccessGuard studentAccessGuard;
 
     @GetMapping("/page")
     public Result<IPage<CourseSchedule>> page(
@@ -123,7 +128,9 @@ public class CourseScheduleController {
     @GetMapping("/query/by-student")
     public Result<List<CourseSchedule>> queryByStudent(
             @RequestParam String studentId,
-            @RequestParam String semesterId) {
+            @RequestParam String semesterId,
+            Authentication authentication) {
+        studentAccessGuard.verifyStudentAccess(authentication, studentId);
         Student student = studentService.getById(studentId);
         if (student == null) {
             return Result.badRequest("学生不存在");

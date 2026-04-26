@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.education.common.Result;
+import com.campus.education.common.StudentAccessGuard;
 import com.campus.education.entity.Course;
 import com.campus.education.entity.Grade;
 import com.campus.education.entity.Student;
@@ -11,6 +12,7 @@ import com.campus.education.mapper.CourseMapper;
 import com.campus.education.mapper.StudentMapper;
 import com.campus.education.service.GradeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,6 +34,9 @@ public class GradeController {
     @Autowired
     private CourseMapper courseMapper;
 
+    @Autowired
+    private StudentAccessGuard studentAccessGuard;
+
     @GetMapping("/page")
     public Result<IPage<Grade>> page(
             @RequestParam(defaultValue = "1") Integer current,
@@ -39,7 +44,9 @@ public class GradeController {
             @RequestParam(required = false) String semesterId,
             @RequestParam(required = false) String studentId,
             @RequestParam(required = false) String courseId,
-            @RequestParam(required = false) String status) {
+            @RequestParam(required = false) String status,
+            Authentication authentication) {
+        studentId = studentAccessGuard.resolveStudentFilter(authentication, studentId);
         Page<Grade> page = new Page<>(current, size);
         LambdaQueryWrapper<Grade> wrapper = new LambdaQueryWrapper<>();
         if (semesterId != null && !semesterId.trim().isEmpty()) {
@@ -61,8 +68,12 @@ public class GradeController {
     }
 
     @GetMapping("/{id}")
-    public Result<Grade> getById(@PathVariable String id) {
-        return Result.success(gradeService.getById(id));
+    public Result<Grade> getById(@PathVariable String id, Authentication authentication) {
+        Grade grade = gradeService.getById(id);
+        if (grade != null) {
+            studentAccessGuard.verifyStudentAccess(authentication, grade.getStudentId());
+        }
+        return Result.success(grade);
     }
 
     @PostMapping
@@ -104,7 +115,9 @@ public class GradeController {
     @GetMapping("/gpa/{studentId}")
     public Result<Map<String, Object>> gpa(
             @PathVariable String studentId,
-            @RequestParam(required = false) String semesterId) {
+            @RequestParam(required = false) String semesterId,
+            Authentication authentication) {
+        studentAccessGuard.verifyStudentAccess(authentication, studentId);
         return Result.success(gradeService.calculateGpa(studentId, semesterId));
     }
 

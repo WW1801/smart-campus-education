@@ -3,10 +3,13 @@ package com.campus.education.controller.selection;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.campus.education.common.BusinessException;
 import com.campus.education.common.Result;
+import com.campus.education.common.StudentAccessGuard;
 import com.campus.education.entity.StudentCourseSelection;
 import com.campus.education.service.StudentCourseSelectionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,12 +22,16 @@ public class StudentCourseSelectionController {
     @Autowired
     private StudentCourseSelectionService selectionService;
 
+    @Autowired
+    private StudentAccessGuard studentAccessGuard;
+
     // [迭代补充] 选课接口：含先修课程+时间冲突+容量校验
     @PostMapping("/select")
-    public Result<StudentCourseSelection> selectCourse(@RequestBody Map<String, String> params) {
-        String studentId = params.get("studentId");
+    public Result<StudentCourseSelection> selectCourse(@RequestBody Map<String, String> params,
+                                                       Authentication authentication) {
+        String studentId = studentAccessGuard.currentStudentId(authentication, params.get("studentId"));
         String scheduleId = params.get("scheduleId");
-        if (studentId == null || studentId.trim().isEmpty() || scheduleId == null || scheduleId.trim().isEmpty()) {
+        if (scheduleId == null || scheduleId.trim().isEmpty()) {
             return Result.badRequest("学号和排课ID不能为空");
         }
         StudentCourseSelection selection = selectionService.selectCourse(studentId, scheduleId);
@@ -33,7 +40,12 @@ public class StudentCourseSelectionController {
 
     // [迭代补充] 退选接口
     @PutMapping("/{id}/drop")
-    public Result<Void> dropCourse(@PathVariable String id) {
+    public Result<Void> dropCourse(@PathVariable String id, Authentication authentication) {
+        StudentCourseSelection selection = selectionService.getById(id);
+        if (selection == null) {
+            throw new BusinessException("selection not found");
+        }
+        studentAccessGuard.currentStudentId(authentication, selection.getStudentId());
         selectionService.dropCourse(id);
         return Result.success("退选成功", null);
     }
@@ -42,7 +54,9 @@ public class StudentCourseSelectionController {
     @GetMapping("/my-courses")
     public Result<List<StudentCourseSelection>> myCourses(
             @RequestParam String studentId,
-            @RequestParam(required = false) String semesterId) {
+            @RequestParam(required = false) String semesterId,
+            Authentication authentication) {
+        studentId = studentAccessGuard.currentStudentId(authentication, studentId);
         return Result.success(selectionService.getMyCourses(studentId, semesterId));
     }
 
@@ -50,7 +64,9 @@ public class StudentCourseSelectionController {
     @GetMapping("/my-schedule")
     public Result<List<Map<String, Object>>> mySchedule(
             @RequestParam String studentId,
-            @RequestParam(required = false) String semesterId) {
+            @RequestParam(required = false) String semesterId,
+            Authentication authentication) {
+        studentId = studentAccessGuard.currentStudentId(authentication, studentId);
         return Result.success(selectionService.getMySchedule(studentId, semesterId));
     }
 
@@ -58,7 +74,9 @@ public class StudentCourseSelectionController {
     @GetMapping("/available")
     public Result<List<Map<String, Object>>> availableCourses(
             @RequestParam String studentId,
-            @RequestParam(required = false) String semesterId) {
+            @RequestParam(required = false) String semesterId,
+            Authentication authentication) {
+        studentId = studentAccessGuard.currentStudentId(authentication, studentId);
         return Result.success(selectionService.getAvailableCourses(studentId, semesterId));
     }
 

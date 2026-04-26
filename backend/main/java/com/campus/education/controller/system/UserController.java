@@ -11,11 +11,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.SecureRandom;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/system/user")
 public class UserController {
+
+    private static final String TEMP_PASSWORD_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     @Autowired
     private UserService userService;
@@ -63,7 +69,7 @@ public class UserController {
     }
 
     @PostMapping
-    public Result<Void> add(@RequestBody User user) {
+    public Result<Map<String, String>> add(@RequestBody User user) {
         User existing = userService.findByUsername(user.getUsername());
         if (existing != null) {
             return Result.badRequest("用户名已存在");
@@ -71,8 +77,16 @@ public class UserController {
         if (user.getUserId() == null || user.getUserId().trim().isEmpty()) {
             user.setUserId(businessIdGenerator.nextNumericId("user", "user_id"));
         }
-        user.setPassword(passwordEncoder.encode(user.getPassword() != null && !user.getPassword().trim().isEmpty() ? user.getPassword() : "123456"));
+        String rawPassword = user.getPassword();
+        boolean generated = rawPassword == null || rawPassword.trim().isEmpty();
+        if (generated) {
+            rawPassword = generateTemporaryPassword();
+        }
+        user.setPassword(passwordEncoder.encode(rawPassword));
         userService.save(user);
+        if (generated) {
+            return Result.success("添加成功，已生成临时密码", passwordResult(rawPassword));
+        }
         return Result.success("添加成功", null);
     }
 
@@ -98,13 +112,28 @@ public class UserController {
     }
 
     @PutMapping("/{id}/reset-password")
-    public Result<Void> resetPassword(@PathVariable String id) {
+    public Result<Map<String, String>> resetPassword(@PathVariable String id) {
         User user = userService.getById(id);
         if (user == null) {
             return Result.badRequest("用户不存在");
         }
-        user.setPassword(passwordEncoder.encode("123456"));
+        String temporaryPassword = generateTemporaryPassword();
+        user.setPassword(passwordEncoder.encode(temporaryPassword));
         userService.updateById(user);
-        return Result.success("密码已重置为默认密码", null);
+        return Result.success("密码已重置为临时密码", passwordResult(temporaryPassword));
+    }
+
+    private String generateTemporaryPassword() {
+        StringBuilder password = new StringBuilder(16);
+        for (int i = 0; i < 16; i++) {
+            password.append(TEMP_PASSWORD_CHARS.charAt(SECURE_RANDOM.nextInt(TEMP_PASSWORD_CHARS.length())));
+        }
+        return password.toString();
+    }
+
+    private Map<String, String> passwordResult(String password) {
+        Map<String, String> data = new HashMap<>();
+        data.put("temporaryPassword", password);
+        return data;
     }
 }

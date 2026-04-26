@@ -26,10 +26,14 @@ public class JwtUtils {
 
     @PostConstruct
     public void init() {
-        byte[] keyBytes = new byte[32];
+        if (secret == null || secret.trim().isEmpty()) {
+            throw new IllegalStateException("jwt.secret must be configured");
+        }
         byte[] secretBytes = secret.getBytes(StandardCharsets.UTF_8);
-        System.arraycopy(secretBytes, 0, keyBytes, 0, Math.min(secretBytes.length, keyBytes.length));
-        this.key = new SecretKeySpec(keyBytes, "HmacSHA256");
+        if (secretBytes.length < 32) {
+            throw new IllegalStateException("jwt.secret must contain at least 32 bytes for HS256");
+        }
+        this.key = new SecretKeySpec(secretBytes, "HmacSHA256");
     }
 
     public String generateToken(String userId, String username, String roleId) {

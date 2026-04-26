@@ -4,9 +4,11 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.education.common.Result;
+import com.campus.education.common.StudentAccessGuard;
 import com.campus.education.entity.Student;
 import com.campus.education.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,6 +28,9 @@ public class StudentController {
 
     @Autowired
     private StudentService studentService;
+
+    @Autowired
+    private StudentAccessGuard studentAccessGuard;
 
     @GetMapping("/list")
     public Result<List<Student>> list(
@@ -77,7 +82,8 @@ public class StudentController {
     }
 
     @GetMapping("/{id}")
-    public Result<Student> getById(@PathVariable String id) {
+    public Result<Student> getById(@PathVariable String id, Authentication authentication) {
+        studentAccessGuard.verifyStudentAccess(authentication, id);
         return Result.success(studentService.getById(id));
     }
 
