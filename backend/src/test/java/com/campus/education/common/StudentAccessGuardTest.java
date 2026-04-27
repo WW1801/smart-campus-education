@@ -1,5 +1,9 @@
 package com.campus.education.common;
 
+/**
+ * 学生访问测试类，负责验证学生访问相关逻辑。
+ */
+
 import com.campus.education.entity.User;
 import com.campus.education.service.UserService;
 import org.junit.jupiter.api.BeforeEach;

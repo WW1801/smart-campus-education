@@ -1,5 +1,9 @@
 package com.campus.education.service.impl;
 
+/**
+ * 学生选课服务实现类，负责处理学生选课相关业务逻辑。
+ */
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -37,6 +41,10 @@ public class StudentCourseSelectionServiceImpl extends ServiceImpl<StudentCourse
     @Autowired
     private TeacherMapper teacherMapper;
 
+    @Autowired
+    private SemesterMapper semesterMapper;
+
+    // 处理选课
     @Override
     @Transactional
     public StudentCourseSelection selectCourse(String studentId, String scheduleId) {
@@ -111,10 +119,12 @@ public class StudentCourseSelectionServiceImpl extends ServiceImpl<StudentCourse
         return selection;
     }
 
+    // 刷新排课数据
     private CourseSchedule freshSchedule(String scheduleId) {
         return courseScheduleMapper.selectById(scheduleId);
     }
 
+    // 处理退选课程
     @Override
     @Transactional
     public void dropCourse(String selectionId) {
@@ -136,6 +146,7 @@ public class StudentCourseSelectionServiceImpl extends ServiceImpl<StudentCourse
                 .setSql("current_students = current_students - 1"));
     }
 
+    // 获取我的课程
     @Override
     public List<StudentCourseSelection> getMyCourses(String studentId, String semesterId) {
         LambdaQueryWrapper<StudentCourseSelection> wrapper = new LambdaQueryWrapper<>();
@@ -148,6 +159,7 @@ public class StudentCourseSelectionServiceImpl extends ServiceImpl<StudentCourse
         return this.list(wrapper);
     }
 
+    // 获取我的课表
     @Override
     public List<Map<String, Object>> getMySchedule(String studentId, String semesterId) {
         List<StudentCourseSelection> selections = getMyCourses(studentId, semesterId);
@@ -202,6 +214,85 @@ public class StudentCourseSelectionServiceImpl extends ServiceImpl<StudentCourse
         return scheduleList;
     }
 
+    // 获取学生课表
+    @Override
+    public List<Map<String, Object>> getStudentTimetable(String studentId, String semesterId) {
+        Student student = studentMapper.selectById(studentId);
+        if (student == null) {
+            throw new BusinessException("瀛︾敓涓嶅瓨鍦?");
+        }
+
+        String resolvedSemesterId = resolveSemesterId(semesterId);
+        if (resolvedSemesterId == null) {
+            return Collections.emptyList();
+        }
+
+        Map<String, CourseSchedule> mergedSchedules = new LinkedHashMap<>();
+        if (student.getClassId() != null && !student.getClassId().trim().isEmpty()) {
+            LambdaQueryWrapper<CourseSchedule> classWrapper = new LambdaQueryWrapper<>();
+            classWrapper.eq(CourseSchedule::getClassId, student.getClassId())
+                    .eq(CourseSchedule::getSemesterId, resolvedSemesterId)
+                    .orderByAsc(CourseSchedule::getDayOfWeek, CourseSchedule::getStartPeriod);
+            courseScheduleMapper.selectList(classWrapper).forEach(item -> mergedSchedules.put(item.getScheduleId(), item));
+        }
+
+        List<String> selectedScheduleIds = getMyCourses(studentId, resolvedSemesterId).stream()
+                .map(StudentCourseSelection::getScheduleId)
+                .filter(id -> id != null && !id.trim().isEmpty())
+                .distinct()
+                .collect(Collectors.toList());
+        if (!selectedScheduleIds.isEmpty()) {
+            courseScheduleMapper.selectBatchIds(selectedScheduleIds).stream()
+                    .filter(item -> resolvedSemesterId.equals(item.getSemesterId()))
+                    .forEach(item -> mergedSchedules.put(item.getScheduleId(), item));
+        }
+
+        if (mergedSchedules.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Set<String> courseIds = mergedSchedules.values().stream()
+                .map(CourseSchedule::getCourseId)
+                .collect(Collectors.toSet());
+        Set<String> teacherIds = mergedSchedules.values().stream()
+                .map(CourseSchedule::getTeacherId)
+                .collect(Collectors.toSet());
+
+        Map<String, Course> courseMap = courseIds.isEmpty()
+                ? Collections.emptyMap()
+                : courseMapper.selectBatchIds(courseIds).stream()
+                .collect(Collectors.toMap(Course::getCourseId, item -> item, (left, right) -> left));
+        Map<String, Teacher> teacherMap = teacherIds.isEmpty()
+                ? Collections.emptyMap()
+                : teacherMapper.selectBatchIds(teacherIds).stream()
+                .collect(Collectors.toMap(Teacher::getTeacherId, item -> item, (left, right) -> left));
+
+        return mergedSchedules.values().stream()
+                .sorted(Comparator.comparing(CourseSchedule::getDayOfWeek)
+                        .thenComparing(CourseSchedule::getStartPeriod)
+                        .thenComparing(CourseSchedule::getEndPeriod))
+                .map(schedule -> {
+                    Course course = courseMap.get(schedule.getCourseId());
+                    Teacher teacher = teacherMap.get(schedule.getTeacherId());
+
+                    Map<String, Object> item = new LinkedHashMap<>();
+                    item.put("scheduleId", schedule.getScheduleId());
+                    item.put("courseId", schedule.getCourseId());
+                    item.put("courseName", course != null ? course.getName() : schedule.getCourseId());
+                    item.put("credits", course != null ? course.getCredits() : 0);
+                    item.put("teacherName", teacher != null ? teacher.getName() : schedule.getTeacherId());
+                    item.put("semesterId", schedule.getSemesterId());
+                    item.put("dayOfWeek", schedule.getDayOfWeek());
+                    item.put("startPeriod", schedule.getStartPeriod());
+                    item.put("endPeriod", schedule.getEndPeriod());
+                    item.put("mode", schedule.getMode());
+                    item.put("status", "open_selection".equals(schedule.getMode()) ? "selected" : "class_based");
+                    return item;
+                })
+                .collect(Collectors.toList());
+    }
+
+    // 获取可选课程
     @Override
     public List<Map<String, Object>> getAvailableCourses(String studentId, String semesterId) {
         Student student = studentMapper.selectById(studentId);
@@ -274,6 +365,7 @@ public class StudentCourseSelectionServiceImpl extends ServiceImpl<StudentCourse
         return availableList;
     }
 
+    // 获取前置课程名称
     private List<String> getPrerequisiteNames(String courseId, String majorId) {
         LambdaQueryWrapper<TeachingPlan> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(TeachingPlan::getCourseId, courseId);
@@ -298,6 +390,7 @@ public class StudentCourseSelectionServiceImpl extends ServiceImpl<StudentCourse
         return names;
     }
 
+    // 检查前置课程是否满足
     private void checkPrerequisites(String studentId, String courseId, String majorId) {
         LambdaQueryWrapper<TeachingPlan> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(TeachingPlan::getCourseId, courseId);
@@ -329,6 +422,7 @@ public class StudentCourseSelectionServiceImpl extends ServiceImpl<StudentCourse
         }
     }
 
+    // 仅判断前置课程是否满足
     private boolean checkPrerequisiteMet(String studentId, String courseId, String majorId) {
         try {
             checkPrerequisites(studentId, courseId, majorId);
@@ -338,6 +432,7 @@ public class StudentCourseSelectionServiceImpl extends ServiceImpl<StudentCourse
         }
     }
 
+    // 检查时间冲突
     private void checkTimeConflict(String studentId, CourseSchedule newSchedule) {
         List<StudentCourseSelection> mySelections = this.list(new LambdaQueryWrapper<StudentCourseSelection>()
                 .eq(StudentCourseSelection::getStudentId, studentId)
@@ -370,6 +465,7 @@ public class StudentCourseSelectionServiceImpl extends ServiceImpl<StudentCourse
         }
     }
 
+    // 判断是否存在时间冲突
     private boolean checkTimeConflictExists(String studentId, CourseSchedule newSchedule) {
         try {
             checkTimeConflict(studentId, newSchedule);
@@ -377,5 +473,32 @@ public class StudentCourseSelectionServiceImpl extends ServiceImpl<StudentCourse
         } catch (BusinessException e) {
             return true;
         }
+    }
+
+    // 解析学期编号
+    private String resolveSemesterId(String semesterId) {
+        if (semesterId != null && !semesterId.trim().isEmpty()) {
+            return semesterId.trim();
+        }
+
+        Semester currentSemester = semesterMapper.selectOne(new LambdaQueryWrapper<Semester>()
+                .eq(Semester::getStatus, "current")
+                .last("LIMIT 1"));
+        if (currentSemester != null) {
+            return currentSemester.getSemesterId();
+        }
+
+        Semester upcomingSemester = semesterMapper.selectOne(new LambdaQueryWrapper<Semester>()
+                .eq(Semester::getStatus, "upcoming")
+                .orderByAsc(Semester::getStartDate)
+                .last("LIMIT 1"));
+        if (upcomingSemester != null) {
+            return upcomingSemester.getSemesterId();
+        }
+
+        Semester latestSemester = semesterMapper.selectOne(new LambdaQueryWrapper<Semester>()
+                .orderByDesc(Semester::getStartDate)
+                .last("LIMIT 1"));
+        return latestSemester != null ? latestSemester.getSemesterId() : null;
     }
 }

@@ -1,3 +1,4 @@
+<!-- 学生注册页面组件，负责处理学生模块的页面展示与交互。 -->
 <template>
   <div class="page-container">
     <div class="page-header">
@@ -156,6 +157,7 @@ const registerRules = {
   registerDate: [{ required: true, message: '请选择注册日期', trigger: 'change' }]
 }
 
+// 加载basic数据
 const loadBasicData = async () => {
   const [deptRes, majorRes, classRes] = await Promise.all([
     request.get('/department/list').catch(() => ({ data: [] })),
@@ -167,11 +169,13 @@ const loadBasicData = async () => {
   classList.value = classRes.data || []
 }
 
+// 页面挂载时初始化学生数据
 onMounted(() => {
   getRegisterList()
   loadBasicData()
 })
 
+// 获取注册列表
 const getRegisterList = async () => {
   loading.value = true
   try {
@@ -204,16 +208,21 @@ const getRegisterList = async () => {
   }
 }
 
+// 按条件查询学生
 const search = () => { currentPage.value = 1; getRegisterList() }
+// 重置查询条件
 const resetSearch = () => { searchForm.value = { studentId: '', name: '', status: '' }; currentPage.value = 1; getRegisterList() }
 
+// 添加注册
 const addRegister = () => {
   registerForm.value = { registerId: '', studentId: '', name: '', departmentId: '', majorId: '', classId: '', registerDate: '', remark: '' }
   dialogVisible.value = true
 }
 
+// 处理视图注册
 const viewRegister = (row) => { viewForm.value = { ...row }; viewDialogVisible.value = true }
 
+// 处理通过注册
 const approveRegister = async (registerId) => {
   await ElMessageBox.confirm('确认通过该注册申请？', '提示', { type: 'success' })
   try {
@@ -223,6 +232,7 @@ const approveRegister = async (registerId) => {
   } catch { ElMessage.error('操作失败') }
 }
 
+// 处理驳回注册
 const rejectRegister = async (registerId) => {
   await ElMessageBox.confirm('确认拒绝该注册申请？', '提示', { type: 'warning' })
   try {
@@ -232,6 +242,7 @@ const rejectRegister = async (registerId) => {
   } catch { ElMessage.error('操作失败') }
 }
 
+// 保存注册
 const saveRegister = async () => {
   if (!registerFormRef.value) return
   try {
@@ -255,7 +266,9 @@ const saveRegister = async () => {
   } catch { ElMessage.error('保存失败') }
 }
 
+// 处理每页条数变化
 const handleSizeChange = (size) => { pageSize.value = size; getRegisterList() }
+// 处理页码变化
 const handleCurrentChange = (current) => { currentPage.value = current; getRegisterList() }
 </script>
 

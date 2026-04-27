@@ -1,5 +1,9 @@
 package com.campus.education.entity;
 
+/**
+ * 审计日志实体类，负责映射审计日志相关业务数据。
+ */
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;

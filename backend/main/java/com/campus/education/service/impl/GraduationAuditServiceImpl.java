@@ -1,5 +1,9 @@
 package com.campus.education.service.impl;
 
+/**
+ * 毕业审核服务实现类，负责处理毕业审核相关业务逻辑。
+ */
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -54,6 +58,7 @@ public class GraduationAuditServiceImpl extends ServiceImpl<GraduationAuditMappe
     @Autowired
     private CourseMapper courseMapper;
 
+    // 处理审核学生
     @Override
     @Transactional
     public GraduationAuditVO auditStudent(String studentId, String auditOpinion) {
@@ -73,6 +78,7 @@ public class GraduationAuditServiceImpl extends ServiceImpl<GraduationAuditMappe
         return toView(student, audit);
     }
 
+    // 获取审核详情
     @Override
     public GraduationAuditVO getAuditDetail(String studentId) {
         Student student = getStudent(studentId);
@@ -80,6 +86,7 @@ public class GraduationAuditServiceImpl extends ServiceImpl<GraduationAuditMappe
         return toView(student, audit);
     }
 
+    // 批量审核
     @Override
     @Transactional
     public List<GraduationAuditVO> batchAudit(String majorId, String classId) {
@@ -91,6 +98,7 @@ public class GraduationAuditServiceImpl extends ServiceImpl<GraduationAuditMappe
         return result;
     }
 
+    // 授予学位
     @Override
     @Transactional
     public GraduationAuditVO grantDegree(String studentId, String auditOpinion) {
@@ -118,6 +126,7 @@ public class GraduationAuditServiceImpl extends ServiceImpl<GraduationAuditMappe
         return toView(student, audit);
     }
 
+    // 分页查询审核记录
     @Override
     public IPage<GraduationAuditVO> pageAudits(Integer current, Integer size, String studentId, String majorId, String classId, String status) {
         List<Student> students = listStudents(studentId, majorId, classId);
@@ -150,6 +159,7 @@ public class GraduationAuditServiceImpl extends ServiceImpl<GraduationAuditMappe
         return page;
     }
 
+    // 获取统计
     @Override
     public Map<String, Object> getStatistics(String majorId, String classId) {
         List<Student> students = listStudents(null, majorId, classId);
@@ -177,6 +187,73 @@ public class GraduationAuditServiceImpl extends ServiceImpl<GraduationAuditMappe
         return result;
     }
 
+    // 获取补修课程
+    @Override
+    public Map<String, Object> getRemedialCourses(String studentId) {
+        Student student = getStudent(studentId);
+        List<TeachingPlan> plans = teachingPlanMapper.selectList(
+                new LambdaQueryWrapper<TeachingPlan>().eq(TeachingPlan::getMajorId, student.getMajorId())
+        );
+        List<Grade> grades = gradeMapper.selectList(
+                new LambdaQueryWrapper<Grade>().eq(Grade::getStudentId, student.getStudentId())
+        );
+
+        Map<String, Course> courseMap = loadCourseMap(grades, plans);
+        Map<String, Grade> latestGradeMap = pickLatestGradeByCourse(grades);
+        Set<String> passedCourseIds = grades.stream()
+                .filter(item -> "approved".equals(item.getStatus()) && Boolean.TRUE.equals(item.getIsPass()))
+                .map(Grade::getCourseId)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        Map<String, TeachingPlan> planByCourseId = plans.stream()
+                .collect(Collectors.toMap(TeachingPlan::getCourseId, item -> item, (left, right) -> left));
+
+        double totalCredits = passedCourseIds.stream()
+                .map(courseMap::get)
+                .filter(Objects::nonNull)
+                .mapToDouble(Course::getCredits)
+                .sum();
+        double requiredCredits = planByCourseId.keySet().stream()
+                .map(courseMap::get)
+                .filter(Objects::nonNull)
+                .mapToDouble(Course::getCredits)
+                .sum();
+
+        List<Map<String, Object>> missingCourses = plans.stream()
+                .filter(plan -> !passedCourseIds.contains(plan.getCourseId()))
+                .sorted(Comparator.comparing(TeachingPlan::getSemesterType)
+                        .thenComparing(TeachingPlan::getCourseNature)
+                        .thenComparing(TeachingPlan::getCourseId))
+                .map(plan -> buildRemedialCourse(plan, latestGradeMap.get(plan.getCourseId()), courseMap.get(plan.getCourseId())))
+                .collect(Collectors.toList());
+
+        long compulsoryMissingCount = missingCourses.stream()
+                .filter(item -> "compulsory".equals(item.get("courseNature")))
+                .count();
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("studentId", student.getStudentId());
+        result.put("studentName", student.getName());
+        result.put("majorId", student.getMajorId());
+        result.put("classId", student.getClassId());
+        result.put("hasTeachingPlan", !plans.isEmpty());
+        result.put("totalCredits", round(totalCredits));
+        result.put("requiredCredits", round(requiredCredits));
+        result.put("remainingCredits", round(Math.max(requiredCredits - totalCredits, 0)));
+        result.put("compulsoryMissingCount", compulsoryMissingCount);
+        result.put("missingCourses", missingCourses);
+        result.put("message", plans.isEmpty()
+                ? "\u5f53\u524d\u4e13\u4e1a\u672a\u914d\u7f6e\u6559\u5b66\u8ba1\u5212\uff0c\u8bf7\u5148\u5b8c\u5584\u6559\u5b66\u8ba1\u5212\u540e\u518d\u67e5\u770b\u8865\u4fee\u8bfe\u7a0b"
+                : "\u6bd5\u4e1a\u5b66\u5206\u4ec5\u7edf\u8ba1\u5df2\u901a\u8fc7\u7684\u6210\u7ee9\u8bb0\u5f55\uff0c\u8bf7\u5148\u5b8c\u6210\u6392\u8bfe\u3001\u6210\u7ee9\u5f55\u5165\u548c\u5ba1\u6838\u540e\u518d\u67e5\u770b\u8865\u4fee\u8fdb\u5ea6");
+        return result;
+    }
+        /*
+        result.put("message", plans.isEmpty()
+
+        return result;
+    }
+
+    */
     private GraduationAudit buildOrUpdateAudit(Student student, String auditOpinion) {
         List<TeachingPlan> plans = teachingPlanMapper.selectList(
                 new LambdaQueryWrapper<TeachingPlan>().eq(TeachingPlan::getMajorId, student.getMajorId())
@@ -338,6 +415,17 @@ public class GraduationAuditServiceImpl extends ServiceImpl<GraduationAuditMappe
         return result;
     }
 
+    private Map<String, Grade> pickLatestGradeByCourse(List<Grade> grades) {
+        Map<String, Grade> result = new LinkedHashMap<>();
+        for (Grade grade : grades) {
+            Grade existing = result.get(grade.getCourseId());
+            if (existing == null || isLaterGrade(grade, existing)) {
+                result.put(grade.getCourseId(), grade);
+            }
+        }
+        return result;
+    }
+
     private double calculateGpa(Map<String, Grade> bestGradeMap, Map<String, Course> courseMap) {
         double totalWeightedPoints = 0.0;
         double totalCredits = 0.0;
@@ -354,6 +442,73 @@ public class GraduationAuditServiceImpl extends ServiceImpl<GraduationAuditMappe
         return totalCredits == 0 ? 0 : totalWeightedPoints / totalCredits;
     }
 
+    private Map<String, Object> buildRemedialCourse(TeachingPlan plan, Grade grade, Course course) {
+        Map<String, Object> item = new LinkedHashMap<>();
+        item.put("courseId", plan.getCourseId());
+        item.put("courseName", course != null ? course.getName() : plan.getCourseId());
+        item.put("credits", course != null ? course.getCredits() : 0);
+        item.put("semesterType", plan.getSemesterType());
+        item.put("courseNature", plan.getCourseNature());
+        item.put("progressStatus", resolveRemedialStatus(grade));
+        item.put("gradeStatus", grade != null ? grade.getStatus() : null);
+        item.put("totalScore", grade != null ? grade.getTotalScore() : null);
+        return item;
+    }
+
+    private String resolveRemedialStatus(Grade grade) {
+        if (grade == null) {
+            return "not_taken";
+        }
+        if ("pending".equals(grade.getStatus())) {
+            return "pending_review";
+        }
+        if ("rejected".equals(grade.getStatus())) {
+            return "rejected";
+        }
+        if (Boolean.TRUE.equals(grade.getIsPass())) {
+            return "passed";
+        }
+        return "failed";
+    }
+
+    private boolean isLaterGrade(Grade candidate, Grade baseline) {
+        LocalDateTime candidateTime = candidate.getUpdatedAt() != null ? candidate.getUpdatedAt() : candidate.getCreatedAt();
+        LocalDateTime baselineTime = baseline.getUpdatedAt() != null ? baseline.getUpdatedAt() : baseline.getCreatedAt();
+        if (baselineTime == null) {
+            return true;
+        }
+        if (candidateTime == null) {
+            return false;
+        }
+        return candidateTime.isAfter(baselineTime);
+    }
+
+    private String resolveOpinion(List<TeachingPlan> plans, double totalCredits, double requiredCredits, boolean compulsoryPass,
+                                  double gpa, String manualOpinion) {
+        if (manualOpinion != null && !manualOpinion.trim().isEmpty()) {
+            return manualOpinion.trim();
+        }
+        if (plans.isEmpty()) {
+            return "\u672a\u914d\u7f6e\u6559\u5b66\u8ba1\u5212\uff0c\u6682\u65f6\u65e0\u6cd5\u5b8c\u6210\u6bd5\u4e1a\u5ba1\u6838";
+        }
+
+        List<String> reasons = new ArrayList<>();
+        if (totalCredits < requiredCredits) {
+            reasons.add("\u5b66\u5206\u672a\u8fbe\u6807");
+        }
+        if (!compulsoryPass) {
+            reasons.add("\u5fc5\u4fee\u8bfe\u7a0b\u672a\u5168\u90e8\u901a\u8fc7");
+        }
+        if (gpa < MIN_GPA_FOR_GRADUATION) {
+            reasons.add("\u7ee9\u70b9\u672a\u8fbe\u6807");
+        }
+        if (reasons.isEmpty()) {
+            return "\u6ee1\u8db3\u6bd5\u4e1a\u6761\u4ef6\uff0c\u53ef\u6388\u4e88\u5b66\u4f4d";
+        }
+        return String.join("\uff1b", reasons);
+    }
+
+    /*
     private String resolveOpinion(List<TeachingPlan> plans, double totalCredits, double requiredCredits, boolean compulsoryPass,
                                   double gpa, String manualOpinion) {
         if (manualOpinion != null && !manualOpinion.trim().isEmpty()) {
@@ -379,6 +534,7 @@ public class GraduationAuditServiceImpl extends ServiceImpl<GraduationAuditMappe
         return String.join("，", reasons);
     }
 
+    */
     private String generateCertificateNo(String studentId) {
         return "DEG" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + studentId;
     }

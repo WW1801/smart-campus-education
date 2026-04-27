@@ -1,5 +1,9 @@
 package com.campus.education.common;
 
+/**
+ * 全局异常处理类，负责统一转换接口异常响应。
+ */
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindException;
@@ -17,12 +21,14 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    // 处理业务异常
     @ExceptionHandler(BusinessException.class)
     public Result<Void> handleBusinessException(BusinessException e) {
         log.warn("业务异常: code={}, message={}", e.getCode(), e.getMessage());
         return Result.error(e.getCode(), e.getMessage());
     }
 
+    // 处理校验异常
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Void> handleValidationException(MethodArgumentNotValidException e) {
@@ -33,6 +39,7 @@ public class GlobalExceptionHandler {
         return Result.badRequest(message);
     }
 
+    // 处理绑定异常
     @ExceptionHandler(BindException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Void> handleBindException(BindException e) {
@@ -42,6 +49,7 @@ public class GlobalExceptionHandler {
         return Result.badRequest(message);
     }
 
+    // 处理约束违例异常
     @ExceptionHandler(ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Void> handleConstraintViolationException(ConstraintViolationException e) {
@@ -51,6 +59,7 @@ public class GlobalExceptionHandler {
         return Result.badRequest(message);
     }
 
+    // 处理异常
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result<Void> handleException(Exception e) {

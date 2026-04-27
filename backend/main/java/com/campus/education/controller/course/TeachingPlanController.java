@@ -1,5 +1,9 @@
 package com.campus.education.controller.course;
 
+/**
+ * 教学计划控制器，负责处理教学计划相关接口请求。
+ */
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -22,6 +26,7 @@ public class TeachingPlanController {
     @Autowired
     private BusinessIdGenerator businessIdGenerator;
 
+    // 分页查询教学计划
     @GetMapping("/page")
     public Result<IPage<TeachingPlan>> page(
             @RequestParam(defaultValue = "1") Integer current,
@@ -44,6 +49,7 @@ public class TeachingPlanController {
         return Result.success(teachingPlanService.page(page, wrapper));
     }
 
+    // 查询教学计划列表
     @GetMapping("/list")
     public Result<List<TeachingPlan>> list(
             @RequestParam(required = false) String majorId) {
@@ -55,11 +61,13 @@ public class TeachingPlanController {
         return Result.success(teachingPlanService.list(wrapper));
     }
 
+    // 获取教学计划详情
     @GetMapping("/{id}")
     public Result<TeachingPlan> getById(@PathVariable String id) {
         return Result.success(teachingPlanService.getById(id));
     }
 
+    // 添加教学计划
     @PostMapping
     public Result<Void> add(@RequestBody TeachingPlan plan) {
         LambdaQueryWrapper<TeachingPlan> wrapper = new LambdaQueryWrapper<>();
@@ -75,12 +83,14 @@ public class TeachingPlanController {
         return Result.success("添加成功", null);
     }
 
+    // 更新教学计划
     @PutMapping
     public Result<Void> update(@RequestBody TeachingPlan plan) {
         teachingPlanService.updateById(plan);
         return Result.success("更新成功", null);
     }
 
+    // 删除教学计划
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         teachingPlanService.removeById(id);

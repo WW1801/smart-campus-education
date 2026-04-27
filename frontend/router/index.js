@@ -1,6 +1,12 @@
+/**
+ * 路由配置模块，负责注册页面路由与权限守卫。
+ */
 import { createRouter, createWebHistory } from 'vue-router'
 import store from '../store'
 
+const validRoleIds = new Set(['1', '2', '3', '4', '5'])
+
+// 获取默认首页路径
 const getDefaultHomePath = (roleId) => {
   const map = {
     '1': '/home/system/user',
@@ -9,7 +15,7 @@ const getDefaultHomePath = (roleId) => {
     '4': '/home/grade/query',
     '5': '/home/selection'
   }
-  return map[roleId] || '/'
+  return map[roleId] || null
 }
 
 const routes = [
@@ -32,7 +38,8 @@ const routes = [
         children: [
           { path: 'user', name: 'User', component: () => import('../views/system/User.vue'), meta: { requiresAuth: true, roles: ['1'] } },
           { path: 'role', name: 'Role', component: () => import('../views/system/Role.vue'), meta: { requiresAuth: true, roles: ['1'] } },
-          { path: 'permission', name: 'Permission', component: () => import('../views/system/Permission.vue'), meta: { requiresAuth: true, roles: ['1'] } }
+          { path: 'permission', name: 'Permission', component: () => import('../views/system/Permission.vue'), meta: { requiresAuth: true, roles: ['1'] } },
+          { path: 'model', name: 'Model', component: () => import('../views/system/Model.vue'), meta: { requiresAuth: true, roles: ['1'] } }
         ]
       },
       {
@@ -116,28 +123,50 @@ const router = createRouter({
   routes
 })
 
+// 执行路由跳转前校验
 router.beforeEach((to, from, next) => {
   const isLoggedIn = !!store.state.token
   const userRole = store.state.user?.roleId || ''
+  const hasValidRole = validRoleIds.has(userRole)
+
+  // 重置认证状态并返回登录页
+  const resetAuthAndGoHome = () => {
+    if (isLoggedIn || store.state.user) {
+      store.dispatch('logout')
+    }
+    next('/')
+  }
 
   if (to.matched.some(record => record.meta.requiresAuth)) {
-    if (!isLoggedIn) {
-      next({ path: '/' })
+    if (!isLoggedIn || !hasValidRole) {
+      resetAuthAndGoHome()
     } else {
       if (to.path === '/home') {
-        next(getDefaultHomePath(userRole))
+        const homePath = getDefaultHomePath(userRole)
+        if (homePath) {
+          next(homePath)
+        } else {
+          resetAuthAndGoHome()
+        }
         return
       }
       const requiredRoles = to.meta.roles
       if (requiredRoles && requiredRoles.length > 0 && !requiredRoles.includes(userRole)) {
-        next(getDefaultHomePath(userRole))
+        const homePath = getDefaultHomePath(userRole)
+        if (homePath) {
+          next(homePath)
+        } else {
+          resetAuthAndGoHome()
+        }
       } else {
         next()
       }
     }
   } else {
-    if (to.path === '/' && isLoggedIn) {
+    if (to.path === '/' && isLoggedIn && hasValidRole) {
       next('/home')
+    } else if (to.path === '/' && isLoggedIn && !hasValidRole) {
+      resetAuthAndGoHome()
     } else {
       next()
     }

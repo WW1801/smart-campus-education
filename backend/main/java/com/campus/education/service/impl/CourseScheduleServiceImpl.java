@@ -1,5 +1,9 @@
 package com.campus.education.service.impl;
 
+/**
+ * 排课服务实现类，负责处理排课相关业务逻辑。
+ */
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.campus.education.common.BusinessException;
@@ -30,6 +34,7 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
     @Autowired
     private TeacherMapper teacherMapper;
 
+    // 检查冲突
     @Override
     public List<Map<String, Object>> checkConflict(CourseSchedule schedule) {
         List<Map<String, Object>> conflicts = new ArrayList<>();
@@ -77,6 +82,7 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         return conflicts;
     }
 
+    // 保存并执行冲突检查
     @Override
     public CourseSchedule saveWithConflictCheck(CourseSchedule schedule) {
         List<Map<String, Object>> conflicts = checkConflict(schedule);
@@ -107,6 +113,7 @@ public class CourseScheduleServiceImpl extends ServiceImpl<CourseScheduleMapper,
         return schedule;
     }
 
+    // 构建冲突详情
     private Map<String, Object> buildConflictDetail(String type, String priority, CourseSchedule existing, String message) {
         Course course = courseMapper.selectById(existing.getCourseId());
         Teacher teacher = teacherMapper.selectById(existing.getTeacherId());

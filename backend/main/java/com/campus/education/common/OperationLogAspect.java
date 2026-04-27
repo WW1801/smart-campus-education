@@ -1,5 +1,9 @@
 package com.campus.education.common;
 
+/**
+ * 操作日志切面类，负责记录接口调用过程中的关键日志。
+ */
+
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -16,9 +20,11 @@ import javax.servlet.http.HttpServletRequest;
 @Component
 public class OperationLogAspect {
 
+    // 定义控制器切点
     @Pointcut("execution(* com.campus.education.controller..*.*(..))")
     public void controllerPointcut() {}
 
+    // 执行环绕通知
     @Around("controllerPointcut()")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
         long startTime = System.currentTimeMillis();

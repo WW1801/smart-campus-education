@@ -1,3 +1,4 @@
+<!-- 应用根组件，负责承载全局页面结构。 -->
 <template>
   <div class="app-container">
     <router-view v-slot="{ Component }">

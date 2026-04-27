@@ -1,5 +1,9 @@
 package com.campus.education.service.impl;
 
+/**
+ * 成绩服务实现类，负责处理成绩相关业务逻辑。
+ */
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.campus.education.common.BusinessException;
@@ -14,8 +18,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.DoubleSummaryStatistics;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @Service
 public class GradeServiceImpl extends ServiceImpl<GradeMapper, Grade> implements GradeService {
@@ -28,6 +37,7 @@ public class GradeServiceImpl extends ServiceImpl<GradeMapper, Grade> implements
 
     private static final Map<String, double[]> SCORE_WEIGHTS = createWeights();
 
+    // 创建权重
     private static Map<String, double[]> createWeights() {
         Map<String, double[]> map = new HashMap<>();
         map.put("compulsory", new double[]{0.3, 0.7});
@@ -36,6 +46,7 @@ public class GradeServiceImpl extends ServiceImpl<GradeMapper, Grade> implements
         return map;
     }
 
+    // 处理提交成绩
     @Override
     @Transactional
     public void submitGrade(Grade grade) {
@@ -43,9 +54,10 @@ public class GradeServiceImpl extends ServiceImpl<GradeMapper, Grade> implements
         calculateTotalScore(grade);
         grade.setStatus("pending");
         grade.setIsPass(null);
-        this.save(grade);
+        upsertGrade(grade);
     }
 
+    // 批量提交成绩
     @Override
     @Transactional
     public void batchSubmitGrades(List<Grade> grades) {
@@ -54,10 +66,11 @@ public class GradeServiceImpl extends ServiceImpl<GradeMapper, Grade> implements
             calculateTotalScore(grade);
             grade.setStatus("pending");
             grade.setIsPass(null);
+            upsertGrade(grade);
         }
-        this.saveBatch(grades);
     }
 
+    // 处理通过成绩
     @Override
     @Transactional
     public void approveGrade(String gradeId) {
@@ -73,6 +86,7 @@ public class GradeServiceImpl extends ServiceImpl<GradeMapper, Grade> implements
         this.updateById(grade);
     }
 
+    // 处理驳回成绩
     @Override
     @Transactional
     public void rejectGrade(String gradeId, String reason) {
@@ -88,6 +102,7 @@ public class GradeServiceImpl extends ServiceImpl<GradeMapper, Grade> implements
         this.updateById(grade);
     }
 
+    // 计算绩点
     @Override
     public Map<String, Object> calculateGpa(String studentId, String semesterId) {
         LambdaQueryWrapper<Grade> wrapper = new LambdaQueryWrapper<>();
@@ -106,9 +121,11 @@ public class GradeServiceImpl extends ServiceImpl<GradeMapper, Grade> implements
 
         for (Grade grade : grades) {
             Course course = courseMapper.selectById(grade.getCourseId());
-            if (course == null) continue;
+            if (course == null) {
+                continue;
+            }
 
-            double credit = course.getCredits().doubleValue();
+            double credit = course.getCredits() == null ? 0 : course.getCredits();
             double gradePoint = grade.getTotalScore() >= 60 ? (grade.getTotalScore() - 50) / 10 : 0;
 
             totalWeightedPoints += gradePoint * credit;
@@ -132,12 +149,17 @@ public class GradeServiceImpl extends ServiceImpl<GradeMapper, Grade> implements
         return result;
     }
 
+    // 获取统计
     @Override
     public Map<String, Object> getStatistics(String semesterId, String courseId, String classId) {
         LambdaQueryWrapper<Grade> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Grade::getStatus, "approved");
-        if (semesterId != null) wrapper.eq(Grade::getSemesterId, semesterId);
-        if (courseId != null) wrapper.eq(Grade::getCourseId, courseId);
+        if (semesterId != null) {
+            wrapper.eq(Grade::getSemesterId, semesterId);
+        }
+        if (courseId != null) {
+            wrapper.eq(Grade::getCourseId, courseId);
+        }
         List<Grade> grades = this.list(wrapper);
 
         if (grades.isEmpty()) {
@@ -147,7 +169,9 @@ public class GradeServiceImpl extends ServiceImpl<GradeMapper, Grade> implements
         }
 
         DoubleSummaryStatistics stats = grades.stream()
-                .mapToDouble(Grade::getTotalScore)
+                .map(Grade::getTotalScore)
+                .filter(Objects::nonNull)
+                .mapToDouble(Double::doubleValue)
                 .summaryStatistics();
 
         long passCount = grades.stream().filter(g -> Boolean.TRUE.equals(g.getIsPass())).count();
@@ -176,14 +200,12 @@ public class GradeServiceImpl extends ServiceImpl<GradeMapper, Grade> implements
         result.put("distribution", distribution);
 
         Map<String, Double> courseAvgMap = new LinkedHashMap<>();
-        for (Grade g : grades) {
-            String cId = g.getCourseId();
-            courseAvgMap.merge(cId, g.getTotalScore(), (a, b) -> a + b);
-        }
         Map<String, Integer> courseCountMap = new LinkedHashMap<>();
-        for (Grade g : grades) {
-            courseCountMap.merge(g.getCourseId(), 1, Integer::sum);
+        for (Grade grade : grades) {
+            courseAvgMap.merge(grade.getCourseId(), grade.getTotalScore(), Double::sum);
+            courseCountMap.merge(grade.getCourseId(), 1, Integer::sum);
         }
+
         List<Map<String, Object>> courseAvgList = new ArrayList<>();
         for (Map.Entry<String, Double> entry : courseAvgMap.entrySet()) {
             Course course = courseMapper.selectById(entry.getKey());
@@ -197,18 +219,20 @@ public class GradeServiceImpl extends ServiceImpl<GradeMapper, Grade> implements
         return result;
     }
 
+    // 校验分数
     private void validateScore(Grade grade) {
         if (grade.getUsualScore() == null && grade.getExamScore() == null) {
             throw new BusinessException("平时成绩和考试成绩至少填写一项");
         }
         if (grade.getUsualScore() != null && (grade.getUsualScore() < 0 || grade.getUsualScore() > 100)) {
-            throw new BusinessException("平时成绩必须在0~100之间");
+            throw new BusinessException("平时成绩必须在 0~100 之间");
         }
         if (grade.getExamScore() != null && (grade.getExamScore() < 0 || grade.getExamScore() > 100)) {
-            throw new BusinessException("考试成绩必须在0~100之间");
+            throw new BusinessException("考试成绩必须在 0~100 之间");
         }
     }
 
+    // 计算总分
     private void calculateTotalScore(Grade grade) {
         if (grade.getExamScore() == null) {
             grade.setTotalScore(0.0);
@@ -219,17 +243,53 @@ public class GradeServiceImpl extends ServiceImpl<GradeMapper, Grade> implements
         }
 
         String courseNature = getCourseNature(grade.getCourseId());
-        double[] weights = SCORE_WEIGHTS.containsKey(courseNature) ? SCORE_WEIGHTS.get(courseNature) : new double[]{0.3, 0.7};
-
+        double[] weights = SCORE_WEIGHTS.getOrDefault(courseNature, new double[]{0.3, 0.7});
         double total = grade.getUsualScore() * weights[0] + grade.getExamScore() * weights[1];
         grade.setTotalScore(Math.round(total * 100) / 100.0);
     }
 
+    // 获取课程性质
     private String getCourseNature(String courseId) {
         LambdaQueryWrapper<TeachingPlan> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(TeachingPlan::getCourseId, courseId);
         wrapper.last("LIMIT 1");
         TeachingPlan plan = teachingPlanMapper.selectOne(wrapper);
         return plan != null ? plan.getCourseNature() : "compulsory";
+    }
+
+    // 新增或更新成绩
+    private void upsertGrade(Grade grade) {
+        if (grade.getGradeId() != null && grade.getGradeId().trim().isEmpty()) {
+            grade.setGradeId(null);
+        }
+
+        Grade existingGrade = findExistingGrade(grade);
+        if (existingGrade != null) {
+            if ("approved".equals(existingGrade.getStatus())) {
+                throw new BusinessException("该学生该课程已存在已通过审核的成绩记录");
+            }
+            grade.setGradeId(existingGrade.getGradeId());
+            this.updateById(grade);
+            return;
+        }
+
+        this.save(grade);
+    }
+
+    // 查找现有成绩
+    private Grade findExistingGrade(Grade grade) {
+        if (grade == null || grade.getStudentId() == null || grade.getCourseId() == null
+                || grade.getSemesterId() == null || grade.getTeacherId() == null) {
+            return null;
+        }
+
+        LambdaQueryWrapper<Grade> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Grade::getStudentId, grade.getStudentId())
+                .eq(Grade::getCourseId, grade.getCourseId())
+                .eq(Grade::getSemesterId, grade.getSemesterId())
+                .eq(Grade::getTeacherId, grade.getTeacherId())
+                .orderByDesc(Grade::getUpdatedAt, Grade::getCreatedAt)
+                .last("LIMIT 1");
+        return this.getOne(wrapper, false);
     }
 }

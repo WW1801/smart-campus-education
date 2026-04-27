@@ -1,3 +1,4 @@
+<!-- 考勤主页面组件，负责处理考勤模块的页面展示与交互。 -->
 <template>
   <div class="module-container">
     <router-view />

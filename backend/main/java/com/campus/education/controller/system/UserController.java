@@ -1,5 +1,9 @@
 package com.campus.education.controller.system;
 
+/**
+ * 用户控制器，负责处理用户相关接口请求。
+ */
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -32,6 +36,7 @@ public class UserController {
     @Autowired
     private BusinessIdGenerator businessIdGenerator;
 
+    // 分页查询用户
     @GetMapping("/page")
     public Result<IPage<User>> page(
             @RequestParam(defaultValue = "1") Integer current,
@@ -52,6 +57,7 @@ public class UserController {
         return Result.success(result);
     }
 
+    // 查询用户列表
     @GetMapping("/list")
     public Result<List<User>> list() {
         List<User> users = userService.list();
@@ -59,6 +65,7 @@ public class UserController {
         return Result.success(users);
     }
 
+    // 获取用户详情
     @GetMapping("/{id}")
     public Result<User> getById(@PathVariable String id) {
         User user = userService.getById(id);
@@ -68,6 +75,7 @@ public class UserController {
         return Result.success(user);
     }
 
+    // 添加用户
     @PostMapping
     public Result<Map<String, String>> add(@RequestBody User user) {
         User existing = userService.findByUsername(user.getUsername());
@@ -90,6 +98,7 @@ public class UserController {
         return Result.success("添加成功", null);
     }
 
+    // 更新用户
     @PutMapping
     public Result<Void> update(@RequestBody User user) {
         User existing = userService.getById(user.getUserId());
@@ -105,12 +114,14 @@ public class UserController {
         return Result.success("更新成功", null);
     }
 
+    // 删除用户
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         userService.removeById(id);
         return Result.success("删除成功", null);
     }
 
+    // 重置密码
     @PutMapping("/{id}/reset-password")
     public Result<Map<String, String>> resetPassword(@PathVariable String id) {
         User user = userService.getById(id);
@@ -123,6 +134,7 @@ public class UserController {
         return Result.success("密码已重置为临时密码", passwordResult(temporaryPassword));
     }
 
+    // 处理生成临时密码
     private String generateTemporaryPassword() {
         StringBuilder password = new StringBuilder(16);
         for (int i = 0; i < 16; i++) {
@@ -131,6 +143,7 @@ public class UserController {
         return password.toString();
     }
 
+    // 处理密码结果
     private Map<String, String> passwordResult(String password) {
         Map<String, String> data = new HashMap<>();
         data.put("temporaryPassword", password);

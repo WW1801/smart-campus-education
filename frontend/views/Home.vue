@@ -1,3 +1,4 @@
+<!-- 首页布局组件，负责承载系统主框架与导航布局。 -->
 <template>
   <div class="layout-container">
     <el-container>
@@ -109,8 +110,10 @@ const roleTagType = computed(() => {
 
 const activeMenu = computed(() => route.path)
 
+// 判断是否具备角色
 const hasRole = (roles) => roles.includes(roleId.value)
 
+// 处理退出登录
 const handleLogout = async () => {
   await ElMessageBox.confirm('确认退出登录？', '提示', { type: 'warning' })
   store.dispatch('logout')

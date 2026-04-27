@@ -1,3 +1,4 @@
+<!-- 选课主页面组件，负责处理选课模块的页面展示与交互。 -->
 <template>
   <div class="page-container">
     <div class="page-header">
@@ -7,7 +8,7 @@
         </div>
         <div>
           <div class="page-header-title">选课管理</div>
-          <div class="page-header-desc">在线选课、退选与冲突检测</div>
+          <div class="page-header-desc">在线选课、退选与个人课表</div>
         </div>
       </div>
     </div>
@@ -24,22 +25,25 @@
           <el-table :data="filteredAvailableList" stripe v-loading="loading">
             <el-table-column prop="courseName" label="课程名称" width="160" />
             <el-table-column prop="teacherName" label="授课教师" width="100" />
-            <el-table-column label="上课时间" width="140">
+            <el-table-column label="上课时间" width="150">
               <template #default="{ row }">周{{ row.dayOfWeek }} 第{{ row.startPeriod }}-{{ row.endPeriod }}节</template>
             </el-table-column>
             <el-table-column prop="credits" label="学分" width="60" />
             <el-table-column label="选课容量" width="100">
               <template #default="{ row }">{{ row.currentStudents }}/{{ row.maxStudents }}</template>
             </el-table-column>
-            <el-table-column label="先修课程" width="120">
+            <el-table-column label="先修课程" width="140">
               <template #default="{ row }">
                 <span v-if="row.prerequisites && row.prerequisites.length">{{ row.prerequisites.join(', ') }}</span>
                 <span v-else style="color: #c0c4cc">无</span>
               </template>
             </el-table-column>
-            <el-table-column label="状态" width="80">
+            <el-table-column label="状态" width="90">
               <template #default="{ row }">
-                <el-tag :type="row.hasTimeConflict ? 'danger' : row.prerequisitesMet === false ? 'warning' : row.alreadySelected ? 'info' : 'success'" size="small">
+                <el-tag
+                  :type="row.hasTimeConflict ? 'danger' : row.prerequisitesMet === false ? 'warning' : row.alreadySelected ? 'info' : 'success'"
+                  size="small"
+                >
                   {{ row.hasTimeConflict ? '冲突' : row.prerequisitesMet === false ? '未满足' : row.alreadySelected ? '已选' : '可选' }}
                 </el-tag>
               </template>
@@ -67,7 +71,7 @@
           <el-table :data="selectedList" stripe>
             <el-table-column prop="courseName" label="课程名称" width="160" />
             <el-table-column prop="teacherName" label="授课教师" width="100" />
-            <el-table-column label="上课时间" width="140">
+            <el-table-column label="上课时间" width="150">
               <template #default="{ row }">周{{ row.dayOfWeek }} 第{{ row.startPeriod }}-{{ row.endPeriod }}节</template>
             </el-table-column>
             <el-table-column prop="credits" label="学分" width="60" />
@@ -89,7 +93,7 @@
 
       <el-tab-pane label="我的课表" name="schedule">
         <el-card>
-          <div class="schedule-grid-wrapper" v-if="selectedList.filter(s => s.status === 'selected').length > 0">
+          <div class="schedule-grid-wrapper" v-if="scheduleList.length > 0">
             <div class="schedule-grid">
               <div class="grid-header">
                 <div class="grid-cell header-cell">节次\星期</div>
@@ -97,8 +101,8 @@
               </div>
               <div class="grid-row" v-for="period in periods" :key="period">
                 <div class="grid-cell period-cell">{{ period }}-{{ period + 1 }}节</div>
-                <div class="grid-cell content-cell" v-for="day in weekDays" :key="day + period">
-                  <div class="course-card" v-for="course in getCourseByDayAndPeriod(day, period)" :key="course.selectionId">
+                <div class="grid-cell content-cell" v-for="day in weekDays" :key="`${day}-${period}`">
+                  <div class="course-card" v-for="course in getCourseByDayAndPeriod(day, period)" :key="course.scheduleId">
                     <div class="course-name">{{ course.courseName }}</div>
                     <div class="course-detail">{{ course.teacherName }}</div>
                   </div>
@@ -106,7 +110,7 @@
               </div>
             </div>
           </div>
-          <el-empty v-else description="暂无已选课程" />
+          <el-empty v-else description="暂无课表" />
         </el-card>
       </el-tab-pane>
     </el-tabs>
@@ -114,7 +118,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { List, Search } from '@element-plus/icons-vue'
 import { useStore } from 'vuex'
@@ -124,74 +128,134 @@ const store = useStore()
 
 const activeTab = ref('available')
 const loading = ref(false)
+const currentSemesterId = ref('')
 const searchForm = ref({ keyword: '' })
 const availableList = ref([])
 const selectedList = ref([])
+const scheduleList = ref([])
 const weekDays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
 const periods = [1, 3, 5, 7, 9]
 
 const filteredAvailableList = computed(() => {
   if (!searchForm.value.keyword) return availableList.value
-  const kw = searchForm.value.keyword.toLowerCase()
-  return availableList.value.filter(c => (c.courseName || '').toLowerCase().includes(kw))
+  const keyword = searchForm.value.keyword.toLowerCase()
+  return availableList.value.filter(item => (item.courseName || '').toLowerCase().includes(keyword))
 })
 
 const selectedTotalCredits = computed(() => {
   return selectedList.value
-    .filter(s => s.status === 'selected')
-    .reduce((sum, s) => sum + (s.credits || 0), 0)
+    .filter(item => item.status === 'selected')
+    .reduce((sum, item) => sum + (item.credits || 0), 0)
 })
 
-onMounted(() => { loadAvailable(); loadSelected() })
+// 页面挂载时初始化选课数据
+onMounted(async () => {
+  await loadSemesterContext()
+  await Promise.all([loadAvailable(), loadSelected(), loadSchedule()])
+})
 
+// 加载学期上下文
+const loadSemesterContext = async () => {
+  try {
+    const res = await request.get('/semester/list')
+    const semesterList = res.data || []
+    const currentSemester = semesterList.find(item => item.status === 'current') || semesterList[0]
+    currentSemesterId.value = currentSemester?.semesterId || ''
+  } catch {
+    currentSemesterId.value = ''
+  }
+}
+
+// 加载可选
 const loadAvailable = async () => {
   loading.value = true
   try {
-    const res = await request.get('/selection/available', { params: { studentId: store.state.user?.relatedId } })
+    const res = await request.get('/selection/available', {
+      params: {
+        studentId: store.state.user?.relatedId,
+        semesterId: currentSemesterId.value || undefined
+      }
+    })
     availableList.value = res.data || []
   } catch {
     availableList.value = []
-  } finally { loading.value = false }
+  } finally {
+    loading.value = false
+  }
 }
 
+// 加载已选课程
 const loadSelected = async () => {
   try {
-    const res = await request.get('/selection/my-schedule', { params: { studentId: store.state.user?.relatedId } })
-    selectedList.value = (res.data || []).map(s => ({ ...s, status: s.status || 'selected' }))
+    const res = await request.get('/selection/my-schedule', {
+      params: {
+        studentId: store.state.user?.relatedId,
+        semesterId: currentSemesterId.value || undefined
+      }
+    })
+    selectedList.value = (res.data || []).map(item => ({ ...item, status: item.status || 'selected' }))
   } catch {
     selectedList.value = []
   }
 }
 
+// 加载课表
+const loadSchedule = async () => {
+  try {
+    const res = await request.get('/selection/timetable', {
+      params: {
+        studentId: store.state.user?.relatedId,
+        semesterId: currentSemesterId.value || undefined
+      }
+    })
+    scheduleList.value = res.data || []
+  } catch {
+    scheduleList.value = []
+  }
+}
+
+// 选择课程
 const selectCourse = async (row) => {
   try {
-    await ElMessageBox.confirm(`确认选课「${row.courseName}」？`, '选课确认', { type: 'info' })
-  } catch { return }
+    await ElMessageBox.confirm(`确认选课《${row.courseName}》？`, '选课确认', { type: 'info' })
+  } catch {
+    return
+  }
+
   try {
     await request.post('/selection/select', { studentId: store.state.user?.relatedId, scheduleId: row.scheduleId })
     ElMessage.success('选课成功')
-    loadAvailable()
-    loadSelected()
-  } catch (e) {
-    ElMessage.error(e.message || '选课失败')
+    await Promise.all([loadAvailable(), loadSelected(), loadSchedule()])
+  } catch (error) {
+    ElMessage.error(error.message || '选课失败')
   }
 }
 
+// 处理退选课程
 const dropCourse = async (row) => {
-  await ElMessageBox.confirm('确认退选该课程？', '提示', { type: 'warning' })
+  try {
+    await ElMessageBox.confirm('确认退选该课程？', '提示', { type: 'warning' })
+  } catch {
+    return
+  }
+
   try {
     await request.put(`/selection/${row.selectionId}/drop`)
     ElMessage.success('退选成功')
-    loadSelected()
-    loadAvailable()
-  } catch (e) {
-    ElMessage.error(e.message || '退选失败')
+    await Promise.all([loadSelected(), loadAvailable(), loadSchedule()])
+  } catch (error) {
+    ElMessage.error(error.message || '退选失败')
   }
 }
 
+// 获取课程按日期and节次
 const getCourseByDayAndPeriod = (day, period) => {
-  const dayMap = { '周一': 1, '周二': 2, '周三': 3, '周四': 4, '周五': 5, '周六': 6, '周日': 7 }
-  return selectedList.value.filter(s => s.status === 'selected' && s.dayOfWeek === dayMap[day] && s.startPeriod === period)
+  const dayMap = { 周一: 1, 周二: 2, 周三: 3, 周四: 4, 周五: 5, 周六: 6, 周日: 7 }
+  return scheduleList.value.filter(item =>
+    item.dayOfWeek === dayMap[day] &&
+    item.startPeriod <= period + 1 &&
+    item.endPeriod >= period
+  )
 }
 </script>
 

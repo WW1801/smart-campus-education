@@ -1,5 +1,9 @@
 package com.campus.education.controller.grade;
 
+/**
+ * 成绩控制器，负责处理成绩相关接口请求。
+ */
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -8,13 +12,28 @@ import com.campus.education.common.StudentAccessGuard;
 import com.campus.education.entity.Course;
 import com.campus.education.entity.Grade;
 import com.campus.education.entity.Student;
+import com.campus.education.entity.User;
 import com.campus.education.mapper.CourseMapper;
 import com.campus.education.mapper.StudentMapper;
+import com.campus.education.service.CourseRosterService;
 import com.campus.education.service.GradeService;
+import com.campus.education.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,6 +56,13 @@ public class GradeController {
     @Autowired
     private StudentAccessGuard studentAccessGuard;
 
+    @Autowired
+    private CourseRosterService courseRosterService;
+
+    @Autowired
+    private UserService userService;
+
+    // 分页查询成绩
     @GetMapping("/page")
     public Result<IPage<Grade>> page(
             @RequestParam(defaultValue = "1") Integer current,
@@ -67,6 +93,67 @@ public class GradeController {
         return Result.success(result);
     }
 
+    // 处理名单
+    @GetMapping("/roster")
+    public Result<List<Grade>> roster(@RequestParam String courseId,
+                                      @RequestParam String semesterId,
+                                      @RequestParam(required = false) String teacherId,
+                                      Authentication authentication) {
+        if (courseId == null || courseId.trim().isEmpty() || semesterId == null || semesterId.trim().isEmpty()) {
+            return Result.badRequest("璇疯緭鍏ヨ绋婭D鍜屽鏈烮D");
+        }
+
+        String resolvedTeacherId = resolveTeacherId(authentication, teacherId);
+        List<Student> rosterStudents = courseRosterService.listActiveStudents(courseId, semesterId, resolvedTeacherId);
+
+        LambdaQueryWrapper<Grade> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Grade::getCourseId, courseId)
+                .eq(Grade::getSemesterId, semesterId)
+                .orderByDesc(Grade::getUpdatedAt, Grade::getCreatedAt);
+        if (resolvedTeacherId != null && !resolvedTeacherId.trim().isEmpty()) {
+            wrapper.eq(Grade::getTeacherId, resolvedTeacherId);
+        }
+        List<Grade> gradeRecords = gradeService.list(wrapper);
+        enrichGrades(gradeRecords);
+
+        Map<String, Grade> gradeMap = gradeRecords.stream()
+                .filter(item -> item.getStudentId() != null && !item.getStudentId().trim().isEmpty())
+                .collect(Collectors.toMap(Grade::getStudentId, Function.identity(), this::pickLatestGrade, LinkedHashMap::new));
+
+        Course course = courseMapper.selectById(courseId);
+        List<Grade> result = new ArrayList<>();
+        Set<String> includedStudentIds = new LinkedHashSet<>();
+
+        for (Student student : rosterStudents) {
+            Grade grade = gradeMap.get(student.getStudentId());
+            if (grade == null) {
+                grade = new Grade();
+                grade.setStudentId(student.getStudentId());
+                grade.setCourseId(courseId);
+                grade.setSemesterId(semesterId);
+                grade.setTeacherId(resolvedTeacherId);
+                grade.setStatus("pending");
+            }
+            grade.setStudentName(student.getName());
+            grade.setCourseName(course != null ? course.getName() : courseId);
+            result.add(grade);
+            includedStudentIds.add(student.getStudentId());
+        }
+
+        for (Grade grade : gradeMap.values()) {
+            if (includedStudentIds.add(grade.getStudentId())) {
+                if (grade.getCourseName() == null && course != null) {
+                    grade.setCourseName(course.getName());
+                }
+                result.add(grade);
+            }
+        }
+
+        result.sort(Comparator.comparing(Grade::getStudentId, Comparator.nullsLast(String::compareTo)));
+        return Result.success(result);
+    }
+
+    // 获取成绩详情
     @GetMapping("/{id}")
     public Result<Grade> getById(@PathVariable String id, Authentication authentication) {
         Grade grade = gradeService.getById(id);
@@ -76,42 +163,47 @@ public class GradeController {
         return Result.success(grade);
     }
 
+    // 处理提交
     @PostMapping
     public Result<Void> submit(@RequestBody Grade grade) {
         gradeService.submitGrade(grade);
-        return Result.success("成绩录入成功", null);
+        return Result.success("鎴愮哗褰曞叆鎴愬姛", null);
     }
 
+    // 批量提交
     @PostMapping("/batch")
     public Result<Void> batchSubmit(@RequestBody List<Grade> grades) {
         gradeService.batchSubmitGrades(grades);
-        return Result.success("批量录入成功", null);
+        return Result.success("鎵归噺褰曞叆鎴愬姛", null);
     }
 
+    // 处理通过
     @PutMapping("/{id}/approve")
     public Result<Void> approve(@PathVariable String id) {
         gradeService.approveGrade(id);
-        return Result.success("审核通过", null);
+        return Result.success("瀹℃牳閫氳繃", null);
     }
 
     @PutMapping("/{id}/reject")
     public Result<Void> reject(@PathVariable String id, @RequestBody(required = false) Map<String, String> params) {
         String reason = params != null ? params.get("reason") : null;
         gradeService.rejectGrade(id, reason);
-        return Result.success("已驳回", null);
+        return Result.success("宸查┏鍥?", null);
     }
 
+    // 更新成绩
     @PutMapping
     public Result<Void> update(@RequestBody Grade grade) {
         if (!"rejected".equals(grade.getStatus())) {
-            return Result.badRequest("只能修改已驳回的成绩");
+            return Result.badRequest("鍙兘淇敼宸查┏鍥炵殑鎴愮哗");
         }
         grade.setStatus("pending");
         grade.setIsPass(null);
         gradeService.updateById(grade);
-        return Result.success("修改成功，已重新提交审核", null);
+        return Result.success("淇敼鎴愬姛锛屽凡閲嶆柊鎻愪氦瀹℃牳", null);
     }
 
+    // 处理绩点
     @GetMapping("/gpa/{studentId}")
     public Result<Map<String, Object>> gpa(
             @PathVariable String studentId,
@@ -121,6 +213,7 @@ public class GradeController {
         return Result.success(gradeService.calculateGpa(studentId, semesterId));
     }
 
+    // 处理统计
     @GetMapping("/statistics")
     public Result<Map<String, Object>> statistics(
             @RequestParam(required = false) String semesterId,
@@ -129,6 +222,7 @@ public class GradeController {
         return Result.success(gradeService.getStatistics(semesterId, courseId, classId));
     }
 
+    // 补全成绩信息
     private void enrichGrades(List<Grade> grades) {
         if (grades == null || grades.isEmpty()) {
             return;
@@ -162,5 +256,33 @@ public class GradeController {
                 grade.setCourseName(course.getName());
             }
         }
+    }
+
+    // 选取最新成绩记录
+    private Grade pickLatestGrade(Grade left, Grade right) {
+        LocalDateTime leftTime = left.getUpdatedAt() != null ? left.getUpdatedAt() : left.getCreatedAt();
+        LocalDateTime rightTime = right.getUpdatedAt() != null ? right.getUpdatedAt() : right.getCreatedAt();
+        if (leftTime == null) {
+            return right;
+        }
+        if (rightTime == null) {
+            return left;
+        }
+        return rightTime.isAfter(leftTime) ? right : left;
+    }
+
+    // 解析教师编号
+    private String resolveTeacherId(Authentication authentication, String requestedTeacherId) {
+        if (authentication == null || authentication.getName() == null) {
+            return requestedTeacherId;
+        }
+        User user = userService.getById(authentication.getName());
+        if (user == null) {
+            return requestedTeacherId;
+        }
+        if ("4".equals(user.getRoleId())) {
+            return user.getRelatedId();
+        }
+        return requestedTeacherId;
     }
 }

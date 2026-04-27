@@ -1,3 +1,4 @@
+<!-- 教师信息页面组件，负责处理教师模块的页面展示与交互。 -->
 <template>
   <div class="page-container">
     <div class="page-header">
@@ -174,6 +175,7 @@ const teacherRules = {
   status: [{ required: true, message: '请选择状态', trigger: 'change' }]
 }
 
+// 加载院系列表
 const loadDepts = async () => {
   try {
     const res = await request.get('/department/list')
@@ -181,8 +183,10 @@ const loadDepts = async () => {
   } catch {}
 }
 
+// 页面挂载时初始化教师数据
 onMounted(() => { getTeacherList(); loadDepts() })
 
+// 获取教师列表
 const getTeacherList = async () => {
   loading.value = true
   try {
@@ -198,26 +202,32 @@ const getTeacherList = async () => {
   }
 }
 
+// 按条件查询教师
 const search = () => { currentPage.value = 1; getTeacherList() }
+// 重置查询条件
 const resetSearch = () => {
   searchForm.value = { teacherId: '', name: '', departmentId: '' }
   currentPage.value = 1
   getTeacherList()
 }
 
+// 添加教师
 const addTeacher = () => {
   editMode.value = false
   teacherForm.value = { teacherId: '', name: '', gender: '', birthdate: '', phone: '', email: '', departmentId: '', title: '', specialty: '', status: '' }
   dialogVisible.value = true
 }
 
+// 编辑教师
 const editTeacher = (row) => { editMode.value = true; teacherForm.value = { ...row }; dialogVisible.value = true }
 
+// 删除教师
 const deleteTeacher = async (teacherId) => {
   try { await ElMessageBox.confirm('确认删除该教师？', '提示', { type: 'warning' }); await request.delete(`/teacher/${teacherId}`); ElMessage.success('删除成功'); getTeacherList() }
   catch (e) { if (e !== 'cancel') ElMessage.error('删除教师失败') }
 }
 
+// 保存教师
 const saveTeacher = async () => {
   if (!teacherFormRef.value) return
   try { await teacherFormRef.value.validate() } catch { return }
@@ -230,7 +240,9 @@ const saveTeacher = async () => {
   } catch (error) { ElMessage.error('保存教师失败') }
 }
 
+// 处理每页条数变化
 const handleSizeChange = (size) => { pageSize.value = size; getTeacherList() }
+// 处理页码变化
 const handleCurrentChange = (current) => { currentPage.value = current; getTeacherList() }
 </script>
 

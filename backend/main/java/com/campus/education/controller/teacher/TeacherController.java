@@ -1,5 +1,9 @@
 package com.campus.education.controller.teacher;
 
+/**
+ * 教师控制器，负责处理教师相关接口请求。
+ */
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -56,18 +60,21 @@ public class TeacherController {
         return Result.success("查询成功", data);
     }
 
+    // 添加教师
     @PostMapping
     public Result<Void> add(@RequestBody Teacher teacher) {
         teacherService.save(teacher);
         return Result.success("添加成功", null);
     }
 
+    // 更新教师
     @PutMapping
     public Result<Void> update(@RequestBody Teacher teacher) {
         teacherService.updateById(teacher);
         return Result.success("更新成功", null);
     }
 
+    // 删除教师
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         teacherService.removeById(id);

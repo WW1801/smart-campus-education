@@ -1,3 +1,4 @@
+<!-- 课程计划页面组件，负责处理课程模块的页面展示与交互。 -->
 <template>
   <div class="page-container">
     <div class="page-header">
@@ -131,22 +132,26 @@ const planRules = {
   courseNature: [{ required: true, message: '请选择课程性质', trigger: 'change' }]
 }
 
+// 页面挂载时初始化课程数据
 onMounted(() => {
   getPlanList()
   loadMajors()
   loadCourses()
 })
 
+// 加载专业列表
 const loadMajors = async () => {
   try { const res = await request.get('/major/list'); majorList.value = res.data || [] }
   catch {}
 }
 
+// 加载课程
 const loadCourses = async () => {
   try { const res = await request.get('/course/list'); courseOptions.value = res.data || [] }
   catch {}
 }
 
+// 获取计划列表
 const getPlanList = async () => {
   loading.value = true
   try {
@@ -167,21 +172,26 @@ const getPlanList = async () => {
   }
 }
 
+// 按条件查询课程
 const search = () => { currentPage.value = 1; getPlanList() }
+// 重置查询条件
 const resetSearch = () => { searchForm.value = { majorId: '', grade: '' }; currentPage.value = 1; getPlanList() }
 
+// 添加计划
 const addPlan = () => {
   editMode.value = false
   planForm.value = { planId: '', majorId: '', courseId: '', semesterType: 1, courseNature: 'compulsory', isPrerequisite: 0, prerequisiteIds: '' }
   dialogVisible.value = true
 }
 
+// 编辑计划
 const editPlan = (row) => {
   editMode.value = true
   planForm.value = { ...row }
   dialogVisible.value = true
 }
 
+// 删除计划
 const deletePlan = async (planId) => {
   await ElMessageBox.confirm('确认删除该教学计划？', '提示', { type: 'warning' })
   try {
@@ -191,6 +201,7 @@ const deletePlan = async (planId) => {
   } catch { ElMessage.error('删除失败') }
 }
 
+// 保存计划
 const savePlan = async () => {
   if (!planFormRef.value) return
   try {
@@ -208,7 +219,9 @@ const savePlan = async () => {
   } catch { ElMessage.error('保存失败') }
 }
 
+// 处理每页条数变化
 const handleSizeChange = (size) => { pageSize.value = size; getPlanList() }
+// 处理页码变化
 const handleCurrentChange = (current) => { currentPage.value = current; getPlanList() }
 </script>
 

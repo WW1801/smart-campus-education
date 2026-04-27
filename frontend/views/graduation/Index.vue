@@ -1,9 +1,10 @@
+<!-- 毕业审核主页面组件，负责处理毕业审核模块的页面展示与交互。 -->
 <template>
   <div class="page-container">
     <div class="page-header">
       <div>
         <div class="page-header-title">毕业管理</div>
-        <div class="page-header-desc">毕业资格审核、学位授予与统计分析</div>
+        <div class="page-header-desc">毕业资格审核、学位授予与补修课程查看</div>
       </div>
       <div class="action-group">
         <el-button type="primary" @click="loadData">刷新</el-button>
@@ -79,9 +80,10 @@
           </template>
         </el-table-column>
         <el-table-column prop="auditOpinion" label="审核意见" min-width="180" show-overflow-tooltip />
-        <el-table-column label="操作" width="180" fixed="right">
+        <el-table-column label="操作" width="240" fixed="right">
           <template #default="{ row }">
             <el-button link type="primary" @click="auditOne(row)">审核</el-button>
+            <el-button link type="warning" @click="viewRemedialCourses(row)">补修课程</el-button>
             <el-button
               link
               type="success"
@@ -103,6 +105,53 @@
         />
       </div>
     </el-card>
+
+    <el-dialog v-model="remedialDialogVisible" title="补修课程" width="860px">
+      <div v-loading="remedialLoading">
+        <div class="remedial-summary">
+          <div class="remedial-title">
+            {{ remedialInfo.studentName || '-' }}（{{ remedialInfo.studentId || '-' }}）
+          </div>
+          <div class="remedial-metrics">
+            <span>学分进度：{{ remedialInfo.totalCredits || 0 }}/{{ remedialInfo.requiredCredits || 0 }}</span>
+            <span>还差学分：{{ remedialInfo.remainingCredits || 0 }}</span>
+            <span>未完成必修：{{ remedialInfo.compulsoryMissingCount || 0 }}</span>
+          </div>
+        </div>
+
+        <el-alert
+          :title="remedialInfo.message || '毕业学分以已通过成绩为准'"
+          type="info"
+          :closable="false"
+          show-icon
+          style="margin-bottom: 16px;"
+        />
+
+        <el-empty v-if="remedialInfo.hasTeachingPlan === false" description="当前专业未配置教学计划" />
+        <el-empty v-else-if="!remedialInfo.missingCourses || remedialInfo.missingCourses.length === 0" description="当前没有待补修课程" />
+        <el-table v-else :data="remedialInfo.missingCourses" stripe>
+          <el-table-column prop="courseId" label="课程ID" width="110" />
+          <el-table-column prop="courseName" label="课程名称" min-width="180" />
+          <el-table-column prop="credits" label="学分" width="80" />
+          <el-table-column prop="semesterType" label="建议学期" width="100" />
+          <el-table-column label="课程性质" width="110">
+            <template #default="{ row }">
+              <el-tag :type="courseNatureTagType(row.courseNature)" size="small">{{ courseNatureText(row.courseNature) }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="当前进度" width="110">
+            <template #default="{ row }">
+              <el-tag :type="progressStatusTagType(row.progressStatus)" size="small">{{ progressStatusText(row.progressStatus) }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="totalScore" label="最近成绩" width="100">
+            <template #default="{ row }">
+              <span>{{ row.totalScore ?? '-' }}</span>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -116,6 +165,9 @@ const tableData = ref([])
 const majorOptions = ref([])
 const classOptions = ref([])
 const stats = ref({})
+const remedialDialogVisible = ref(false)
+const remedialLoading = ref(false)
+const remedialInfo = ref({ missingCourses: [] })
 const searchForm = reactive({
   studentId: '',
   majorId: '',
@@ -133,11 +185,13 @@ const filteredClassOptions = computed(() => {
   return classOptions.value.filter(item => item.majorId === searchForm.majorId)
 })
 
+// 页面挂载时初始化毕业数据
 onMounted(() => {
   loadOptions()
   loadData()
 })
 
+// 加载选项
 const loadOptions = async () => {
   const [majorRes, classRes] = await Promise.all([
     request.get('/major/list'),
@@ -147,6 +201,7 @@ const loadOptions = async () => {
   classOptions.value = classRes.data || []
 }
 
+// 加载数据
 const loadData = async () => {
   loading.value = true
   try {
@@ -176,11 +231,13 @@ const loadData = async () => {
   }
 }
 
+// 处理查询
 const handleSearch = () => {
   pagination.current = 1
   loadData()
 }
 
+// 处理重置
 const handleReset = () => {
   searchForm.studentId = ''
   searchForm.majorId = ''
@@ -190,11 +247,13 @@ const handleReset = () => {
   loadData()
 }
 
+// 处理分页变化
 const handlePageChange = (page) => {
   pagination.current = page
   loadData()
 }
 
+// 审核单条记录
 const auditOne = async (row) => {
   try {
     await ElMessageBox.confirm(`确认审核学生 ${row.studentName} (${row.studentId})？`, '毕业审核', { type: 'warning' })
@@ -206,6 +265,7 @@ const auditOne = async (row) => {
   loadData()
 }
 
+// 批量审核
 const batchAudit = async () => {
   try {
     await ElMessageBox.confirm('将对当前筛选范围内学生执行批量毕业审核，是否继续？', '批量审核', { type: 'warning' })
@@ -220,6 +280,7 @@ const batchAudit = async () => {
   loadData()
 }
 
+// 授予学位
 const grantDegree = async (row) => {
   try {
     await ElMessageBox.confirm(`确认向 ${row.studentName} 授予学位？`, '学位授予', { type: 'warning' })
@@ -231,6 +292,31 @@ const grantDegree = async (row) => {
   loadData()
 }
 
+// 处理视图补修课程
+const viewRemedialCourses = async (row) => {
+  remedialDialogVisible.value = true
+  remedialLoading.value = true
+  remedialInfo.value = {
+    studentId: row.studentId,
+    studentName: row.studentName,
+    missingCourses: []
+  }
+  try {
+    const res = await request.get(`/graduation/remedial/${row.studentId}`)
+    remedialInfo.value = res.data || { missingCourses: [] }
+  } catch (error) {
+    remedialInfo.value = {
+      studentId: row.studentId,
+      studentName: row.studentName,
+      missingCourses: [],
+      message: error.message || '补修课程加载失败'
+    }
+  } finally {
+    remedialLoading.value = false
+  }
+}
+
+// 获取状态文本
 const statusText = (status) => {
   const map = {
     unaudited: '未审核',
@@ -240,11 +326,56 @@ const statusText = (status) => {
   return map[status] || status
 }
 
+// 获取状态标签类型
 const statusTagType = (status) => {
   const map = {
     unaudited: 'info',
     approved: 'success',
     rejected: 'danger'
+  }
+  return map[status] || 'info'
+}
+
+// 获取课程性质文本
+const courseNatureText = (nature) => {
+  const map = {
+    compulsory: '必修',
+    elective_major: '专业选修',
+    elective_public: '公共选修'
+  }
+  return map[nature] || nature
+}
+
+// 获取课程性质标签类型
+const courseNatureTagType = (nature) => {
+  const map = {
+    compulsory: 'danger',
+    elective_major: 'warning',
+    elective_public: 'success'
+  }
+  return map[nature] || 'info'
+}
+
+// 获取进度状态文本
+const progressStatusText = (status) => {
+  const map = {
+    not_taken: '未修',
+    pending_review: '待审核',
+    rejected: '已驳回',
+    failed: '未通过',
+    passed: '已通过'
+  }
+  return map[status] || status
+}
+
+// 获取进度状态标签类型
+const progressStatusTagType = (status) => {
+  const map = {
+    not_taken: 'info',
+    pending_review: 'warning',
+    rejected: 'danger',
+    failed: 'danger',
+    passed: 'success'
   }
   return map[status] || 'info'
 }
@@ -324,6 +455,25 @@ const statusTagType = (status) => {
   display: flex;
   justify-content: flex-end;
   margin-top: 16px;
+}
+
+.remedial-summary {
+  margin-bottom: 16px;
+}
+
+.remedial-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.remedial-metrics {
+  display: flex;
+  gap: 20px;
+  margin-top: 10px;
+  color: #4b5563;
+  font-size: 13px;
+  flex-wrap: wrap;
 }
 
 @media (max-width: 960px) {

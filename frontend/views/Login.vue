@@ -1,3 +1,4 @@
+<!-- 登录页面组件，负责用户登录入口与身份认证交互。 -->
 <template>
   <div class="login-container">
     <div class="login-bg">
@@ -101,6 +102,7 @@ const loginRules = {
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
 }
 
+// 获取默认首页路径
 const getDefaultHomePath = (roleId) => {
   const map = {
     '1': '/home/system/user',
@@ -112,6 +114,7 @@ const getDefaultHomePath = (roleId) => {
   return map[roleId] || '/home'
 }
 
+// 处理登录
 const login = async () => {
   if (!loginFormRef.value) return
   try {

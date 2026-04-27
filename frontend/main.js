@@ -1,3 +1,6 @@
+/**
+ * 前端启动入口，负责创建并挂载 Vue 应用。
+ */
 import { createApp } from 'vue'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'

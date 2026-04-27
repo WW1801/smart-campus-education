@@ -1,5 +1,9 @@
 package com.campus.education.controller.graduation;
 
+/**
+ * 毕业审核控制器，负责处理毕业审核相关接口请求。
+ */
+
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.campus.education.common.Result;
 import com.campus.education.dto.GraduationAuditVO;
@@ -17,6 +21,7 @@ public class GraduationAuditController {
     @Autowired
     private GraduationAuditService graduationAuditService;
 
+    // 处理审核学生
     @PostMapping("/audit/{studentId}")
     public Result<GraduationAuditVO> auditStudent(@PathVariable String studentId,
                                                   @RequestBody(required = false) Map<String, String> params) {
@@ -24,6 +29,7 @@ public class GraduationAuditController {
         return Result.success("毕业审核完成", graduationAuditService.auditStudent(studentId, opinion));
     }
 
+    // 获取审核详情
     @GetMapping("/audit/{studentId}")
     public Result<GraduationAuditVO> getAuditDetail(@PathVariable String studentId) {
         return Result.success(graduationAuditService.getAuditDetail(studentId));
@@ -36,6 +42,7 @@ public class GraduationAuditController {
         return Result.success("批量审核完成", graduationAuditService.batchAudit(majorId, classId));
     }
 
+    // 授予学位
     @PutMapping("/degree/{studentId}")
     public Result<GraduationAuditVO> grantDegree(@PathVariable String studentId,
                                                  @RequestBody(required = false) Map<String, String> params) {
@@ -57,5 +64,11 @@ public class GraduationAuditController {
     public Result<Map<String, Object>> statistics(@RequestParam(required = false) String majorId,
                                                   @RequestParam(required = false) String classId) {
         return Result.success(graduationAuditService.getStatistics(majorId, classId));
+    }
+
+    // 获取补修课程
+    @GetMapping("/remedial/{studentId}")
+    public Result<Map<String, Object>> remedialCourses(@PathVariable String studentId) {
+        return Result.success(graduationAuditService.getRemedialCourses(studentId));
     }
 }

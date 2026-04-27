@@ -1,5 +1,9 @@
 package com.campus.education.controller.schedule;
 
+/**
+ * 排课控制器，负责处理排课相关接口请求。
+ */
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -46,6 +50,7 @@ public class CourseScheduleController {
     @Autowired
     private StudentAccessGuard studentAccessGuard;
 
+    // 分页查询课程课表
     @GetMapping("/page")
     public Result<IPage<CourseSchedule>> page(
             @RequestParam(defaultValue = "1") Integer current,
@@ -82,27 +87,32 @@ public class CourseScheduleController {
         return Result.success(courseScheduleService.list(wrapper));
     }
 
+    // 检查冲突
     @PostMapping("/check-conflict")
     public Result<List<Map<String, Object>>> checkConflict(@RequestBody CourseSchedule schedule) {
         return Result.success(courseScheduleService.checkConflict(schedule));
     }
 
+    // 添加课程课表
     @PostMapping
     public Result<CourseSchedule> add(@RequestBody CourseSchedule schedule) {
         return Result.success("排课成功", courseScheduleService.saveWithConflictCheck(schedule));
     }
 
+    // 更新课程课表
     @PutMapping
     public Result<CourseSchedule> update(@RequestBody CourseSchedule schedule) {
         return Result.success("修改成功", courseScheduleService.saveWithConflictCheck(schedule));
     }
 
+    // 删除课程课表
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         courseScheduleService.removeById(id);
         return Result.success("删除成功", null);
     }
 
+    // 处理查询按教师
     @GetMapping("/query/by-teacher")
     public Result<List<CourseSchedule>> queryByTeacher(
             @RequestParam String teacherId,
@@ -114,6 +124,7 @@ public class CourseScheduleController {
         return Result.success(courseScheduleService.list(wrapper));
     }
 
+    // 处理查询按班级
     @GetMapping("/query/by-class")
     public Result<List<CourseSchedule>> queryByClass(
             @RequestParam String classId,
@@ -125,6 +136,7 @@ public class CourseScheduleController {
         return Result.success(courseScheduleService.list(wrapper));
     }
 
+    // 处理查询按学生
     @GetMapping("/query/by-student")
     public Result<List<CourseSchedule>> queryByStudent(
             @RequestParam String studentId,
@@ -165,6 +177,7 @@ public class CourseScheduleController {
         return Result.success(schedules);
     }
 
+    // 处理查询按教室
     @GetMapping("/query/by-classroom")
     public Result<List<CourseSchedule>> queryByClassroom(
             @RequestParam String classroomId,

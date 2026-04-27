@@ -1,5 +1,9 @@
 package com.campus.education.controller.student;
 
+/**
+ * 学生控制器，负责处理学生相关接口请求。
+ */
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -32,6 +36,7 @@ public class StudentController {
     @Autowired
     private StudentAccessGuard studentAccessGuard;
 
+    // 查询学生列表
     @GetMapping("/list")
     public Result<List<Student>> list(
             @RequestParam(required = false) String classId,
@@ -47,6 +52,7 @@ public class StudentController {
         return Result.success(studentService.list(wrapper));
     }
 
+    // 分页查询学生
     @GetMapping("/page")
     public Result<IPage<Student>> page(
             @RequestParam(defaultValue = "1") Integer current,
@@ -81,12 +87,14 @@ public class StudentController {
         return Result.success(studentService.page(page, wrapper));
     }
 
+    // 获取学生详情
     @GetMapping("/{id}")
     public Result<Student> getById(@PathVariable String id, Authentication authentication) {
         studentAccessGuard.verifyStudentAccess(authentication, id);
         return Result.success(studentService.getById(id));
     }
 
+    // 添加学生
     @PostMapping
     public Result<Void> add(@RequestBody Student student) {
         student.setStatus("active");
@@ -94,18 +102,21 @@ public class StudentController {
         return Result.success("添加成功", null);
     }
 
+    // 更新学生
     @PutMapping
     public Result<Void> update(@RequestBody Student student) {
         studentService.updateById(student);
         return Result.success("更新成功", null);
     }
 
+    // 删除学生
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         studentService.removeById(id);
         return Result.success("删除成功", null);
     }
 
+    // 变更状态
     @PutMapping("/{id}/status")
     public Result<Void> changeStatus(@PathVariable String id, @RequestBody Map<String, String> params) {
         String targetStatus = params.get("status");

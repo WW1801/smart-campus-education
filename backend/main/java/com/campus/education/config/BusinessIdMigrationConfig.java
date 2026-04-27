@@ -1,5 +1,9 @@
 package com.campus.education.config;
 
+/**
+ * 业务编号迁移配置类，负责启动时修正历史业务编号。
+ */
+
 import com.campus.education.common.BusinessIdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +22,7 @@ public class BusinessIdMigrationConfig implements CommandLineRunner {
     private final JdbcTemplate jdbcTemplate;
     private final BusinessIdGenerator businessIdGenerator;
 
+    // 处理业务编号迁移配置
     public BusinessIdMigrationConfig(JdbcTemplate jdbcTemplate, BusinessIdGenerator businessIdGenerator) {
         this.jdbcTemplate = jdbcTemplate;
         this.businessIdGenerator = businessIdGenerator;
@@ -32,6 +37,7 @@ public class BusinessIdMigrationConfig implements CommandLineRunner {
         migrateTeachingPlans();
     }
 
+    // 迁移角色
     private void migrateRoles() {
         List<String> invalidIds = jdbcTemplate.queryForList(
                 "SELECT role_id FROM role WHERE role_id NOT REGEXP '^[0-9]{1,6}$' ORDER BY created_at, role_id",
@@ -55,6 +61,7 @@ public class BusinessIdMigrationConfig implements CommandLineRunner {
         }
     }
 
+    // 迁移权限
     private void migratePermissions() {
         List<String> invalidIds = jdbcTemplate.queryForList(
                 "SELECT permission_id FROM permission WHERE permission_id NOT REGEXP '^[0-9]{1,6}$' ORDER BY created_at, permission_id",
@@ -77,6 +84,7 @@ public class BusinessIdMigrationConfig implements CommandLineRunner {
         }
     }
 
+    // 迁移用户
     private void migrateUsers() {
         List<String> invalidIds = jdbcTemplate.queryForList(
                 "SELECT user_id FROM user WHERE user_id NOT REGEXP '^[0-9]{1,6}$' ORDER BY created_at, user_id",
@@ -90,6 +98,7 @@ public class BusinessIdMigrationConfig implements CommandLineRunner {
         }
     }
 
+    // 迁移教学计划
     private void migrateTeachingPlans() {
         List<String> invalidIds = jdbcTemplate.queryForList(
                 "SELECT plan_id FROM teaching_plan WHERE plan_id NOT REGEXP '^TP[0-9]{3,}$' ORDER BY created_at, plan_id",

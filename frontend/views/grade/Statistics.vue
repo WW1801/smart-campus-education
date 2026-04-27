@@ -1,3 +1,4 @@
+<!-- 成绩统计页面组件，负责处理成绩模块的页面展示与交互。 -->
 <template>
   <div class="page-container">
     <div class="page-header">
@@ -93,6 +94,7 @@ const distributionData = ref([
 
 const courseAvgData = ref([])
 
+// 加载统计
 const loadStatistics = async () => {
   try {
     const res = await request.get('/grade/statistics')
@@ -125,6 +127,7 @@ const loadStatistics = async () => {
   })
 }
 
+// 初始化分布图表
 const initDistributionChart = () => {
   if (!distributionChartRef.value) return
   distributionChart = echarts.init(distributionChartRef.value)
@@ -147,6 +150,7 @@ const initDistributionChart = () => {
   })
 }
 
+// 初始化课程平均图表
 const initCourseAvgChart = () => {
   if (!courseAvgChartRef.value) return
   courseAvgChart = echarts.init(courseAvgChartRef.value)
@@ -161,6 +165,7 @@ const initCourseAvgChart = () => {
       barWidth: '40%',
       itemStyle: {
         borderRadius: [6, 6, 0, 0],
+        // 处理颜色
         color: (params) => {
           const colors = [['#2ec4b6', '#3dd5c6'], ['#4361ee', '#6b83f2'], ['#f59e0b', '#fbbf24'], ['#8b5cf6', '#a78bfa'], ['#ec4899', '#f472b6']]
           return new echarts.graphic.LinearGradient(0, 0, 0, 1, [
@@ -173,11 +178,13 @@ const initCourseAvgChart = () => {
   })
 }
 
+// 处理resize
 const handleResize = () => {
   distributionChart?.resize()
   courseAvgChart?.resize()
 }
 
+// 页面挂载时初始化成绩数据
 onMounted(() => {
   loadStatistics()
   window.addEventListener('resize', handleResize)

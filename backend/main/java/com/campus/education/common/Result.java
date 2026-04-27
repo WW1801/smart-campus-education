@@ -1,5 +1,9 @@
 package com.campus.education.common;
 
+/**
+ * 统一返回结果类，封装接口响应的标准结构。
+ */
+
 import lombok.Data;
 
 @Data
@@ -8,8 +12,10 @@ public class Result<T> {
     private String message;
     private T data;
 
+    // 处理结果
     private Result() {}
 
+    // 返回成功结果
     public static <T> Result<T> success() {
         Result<T> result = new Result<>();
         result.setCode(200);
@@ -17,6 +23,7 @@ public class Result<T> {
         return result;
     }
 
+    // 返回成功结果
     public static <T> Result<T> success(T data) {
         Result<T> result = new Result<>();
         result.setCode(200);
@@ -25,6 +32,7 @@ public class Result<T> {
         return result;
     }
 
+    // 返回成功结果
     public static <T> Result<T> success(String message, T data) {
         Result<T> result = new Result<>();
         result.setCode(200);
@@ -33,6 +41,7 @@ public class Result<T> {
         return result;
     }
 
+    // 返回错误结果
     public static <T> Result<T> error(int code, String message) {
         Result<T> result = new Result<>();
         result.setCode(code);
@@ -40,18 +49,22 @@ public class Result<T> {
         return result;
     }
 
+    // 返回错误结果
     public static <T> Result<T> error(String message) {
         return error(500, message);
     }
 
+    // 返回未授权结果
     public static <T> Result<T> unauthorized(String message) {
         return error(401, message);
     }
 
+    // 返回禁止访问结果
     public static <T> Result<T> forbidden(String message) {
         return error(403, message);
     }
 
+    // 返回错误请求结果
     public static <T> Result<T> badRequest(String message) {
         return error(400, message);
     }

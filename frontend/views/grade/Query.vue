@@ -1,3 +1,4 @@
+<!-- 成绩查询页面组件，负责处理成绩模块的页面展示与交互。 -->
 <template>
   <div class="page-container">
     <div class="page-header">
@@ -79,14 +80,17 @@ const tableData = ref([])
 const searchForm = reactive({ studentId: '', courseId: '', status: '' })
 const page = reactive({ current: 1, size: 10, total: 0 })
 
+// 页面挂载时初始化成绩数据
 onMounted(() => { loadData() })
 
+// 重置查询条件
 const resetSearch = () => {
   Object.assign(searchForm, { studentId: '', courseId: '', status: '' })
   page.current = 1
   loadData()
 }
 
+// 加载数据
 const loadData = async () => {
   loading.value = true
   try {
@@ -96,6 +100,7 @@ const loadData = async () => {
   } finally { loading.value = false }
 }
 
+// 处理通过成绩
 const approveGrade = async (row) => {
   try {
     await request.put(`/grade/${row.gradeId}/approve`)
@@ -106,6 +111,7 @@ const approveGrade = async (row) => {
   }
 }
 
+// 处理驳回成绩
 const rejectGrade = async (row) => {
   try {
     await request.put(`/grade/${row.gradeId}/reject`, { reason: '成绩不合规' })

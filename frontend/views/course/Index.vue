@@ -1,3 +1,4 @@
+<!-- 课程主页面组件，负责处理课程模块的页面展示与交互。 -->
 <template>
   <div class="module-container">
     <router-view />

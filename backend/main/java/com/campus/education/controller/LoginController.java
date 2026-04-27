@@ -1,5 +1,9 @@
 package com.campus.education.controller;
 
+/**
+ * 登录控制器，负责处理认证与登录相关接口。
+ */
+
 import com.campus.education.common.Result;
 import com.campus.education.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +18,7 @@ public class LoginController {
     @Autowired
     private UserService userService;
 
+    // 处理登录
     @PostMapping
     public Result<Map<String, Object>> login(@RequestBody Map<String, String> params) {
         String username = params.get("username");

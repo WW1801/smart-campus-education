@@ -1,5 +1,9 @@
 package com.campus.education.dto;
 
+/**
+ * 毕业审核视图对象，负责封装毕业审核相关展示数据。
+ */
+
 import lombok.Data;
 
 import java.time.LocalDateTime;

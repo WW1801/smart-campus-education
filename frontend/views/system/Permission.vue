@@ -1,3 +1,4 @@
+<!-- 系统管理权限管理页面组件，负责处理系统管理模块的页面展示与交互。 -->
 <template>
   <div class="page-container">
     <div class="page-header">
@@ -68,21 +69,27 @@ const permissionRules = {
   code: [{ required: true, message: '请输入权限代码', trigger: 'blur' }]
 }
 
+// 页面挂载时初始化权限数据
 onMounted(() => { getPermissionList() })
 
+// 获取权限列表
 const getPermissionList = async () => {
   try { const res = await request.get('/system/permission/list'); permissionList.value = res.data }
   catch (error) { ElMessage.error('获取权限列表失败') }
 }
 
+// 添加权限
 const addPermission = () => { editMode.value = false; permissionForm.value = { permissionId: '', name: '', code: '', description: '' }; dialogVisible.value = true }
+// 编辑权限
 const editPermission = (row) => { editMode.value = true; permissionForm.value = { ...row }; dialogVisible.value = true }
 
+// 删除权限
 const deletePermission = async (permissionId) => {
   try { await request.delete(`/system/permission/${permissionId}`); ElMessage.success('删除成功'); getPermissionList() }
   catch (error) { ElMessage.error('删除失败') }
 }
 
+// 保存权限
 const savePermission = async () => {
   try {
     await permissionFormRef.value?.validate()

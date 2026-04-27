@@ -1,3 +1,6 @@
+/**
+ * 请求工具模块，负责封装 Axios 请求与拦截逻辑。
+ */
 import axios from 'axios'
 import store from '../store'
 import router from '../router'
@@ -8,6 +11,7 @@ const request = axios.create({
     timeout: 10000
 })
 
+// 为请求统一附加认证信息
 request.interceptors.request.use(config => {
     const token = store.state.token
     if (token) {
@@ -16,6 +20,7 @@ request.interceptors.request.use(config => {
     return config
 })
 
+// 统一处理响应结果与异常
 request.interceptors.response.use(
     response => {
         const res = response.data

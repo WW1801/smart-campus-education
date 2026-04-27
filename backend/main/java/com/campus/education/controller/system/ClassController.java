@@ -1,5 +1,9 @@
 package com.campus.education.controller.system;
 
+/**
+ * 班级控制器，负责处理班级相关接口请求。
+ */
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.campus.education.common.Result;
 import com.campus.education.entity.Class;
@@ -25,18 +29,21 @@ public class ClassController {
         return Result.success(classService.list(wrapper));
     }
 
+    // 添加班级
     @PostMapping
     public Result<Void> add(@RequestBody Class clazz) {
         classService.save(clazz);
         return Result.success("添加成功", null);
     }
 
+    // 更新班级
     @PutMapping
     public Result<Void> update(@RequestBody Class clazz) {
         classService.updateById(clazz);
         return Result.success("更新成功", null);
     }
 
+    // 删除班级
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         classService.removeById(id);

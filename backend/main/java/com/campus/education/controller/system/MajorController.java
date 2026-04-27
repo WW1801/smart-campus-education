@@ -1,5 +1,9 @@
 package com.campus.education.controller.system;
 
+/**
+ * 专业控制器，负责处理专业相关接口请求。
+ */
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.campus.education.common.Result;
 import com.campus.education.entity.Major;
@@ -25,18 +29,21 @@ public class MajorController {
         return Result.success(majorService.list(wrapper));
     }
 
+    // 添加专业
     @PostMapping
     public Result<Void> add(@RequestBody Major major) {
         majorService.save(major);
         return Result.success("添加成功", null);
     }
 
+    // 更新专业
     @PutMapping
     public Result<Void> update(@RequestBody Major major) {
         majorService.updateById(major);
         return Result.success("更新成功", null);
     }
 
+    // 删除专业
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         majorService.removeById(id);

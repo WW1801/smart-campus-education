@@ -1,5 +1,9 @@
 package com.campus.education.service.impl;
 
+/**
+ * 用户服务实现类，负责处理用户相关业务逻辑。
+ */
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.campus.education.common.BusinessException;
@@ -42,6 +46,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Autowired
     private RolePermissionMapper rolePermissionMapper;
 
+    // 处理登录
     @Override
     public Map<String, Object> login(String username, String password) {
         User user = findByUsername(username);
@@ -75,11 +80,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return result;
     }
 
+    // 查找按用户名
     @Override
     public User findByUsername(String username) {
         return this.getOne(new LambdaQueryWrapper<User>().eq(User::getUsername, username));
     }
 
+    // 获取权限编码按角色编号
     @Override
     public List<String> getPermissionCodesByRoleId(String roleId) {
         List<RolePermission> rolePermissions = rolePermissionMapper.selectList(

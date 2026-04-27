@@ -1,5 +1,9 @@
 package com.campus.education.controller.system;
 
+/**
+ * 角色控制器，负责处理角色相关接口请求。
+ */
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -28,11 +32,13 @@ public class RoleController {
     @Autowired
     private BusinessIdGenerator businessIdGenerator;
 
+    // 查询角色列表
     @GetMapping("/list")
     public Result<List<Role>> list() {
         return Result.success(roleService.list());
     }
 
+    // 分页查询角色
     @GetMapping("/page")
     public Result<IPage<Role>> page(
             @RequestParam(defaultValue = "1") Integer current,
@@ -40,11 +46,13 @@ public class RoleController {
         return Result.success(roleService.page(new Page<>(current, size)));
     }
 
+    // 获取角色详情
     @GetMapping("/{id}")
     public Result<Role> getById(@PathVariable String id) {
         return Result.success(roleService.getById(id));
     }
 
+    // 添加角色
     @PostMapping
     public Result<Void> add(@RequestBody Role role) {
         if (role.getRoleId() == null || role.getRoleId().trim().isEmpty()) {
@@ -54,12 +62,14 @@ public class RoleController {
         return Result.success("添加成功", null);
     }
 
+    // 更新角色
     @PutMapping
     public Result<Void> update(@RequestBody Role role) {
         roleService.updateById(role);
         return Result.success("更新成功", null);
     }
 
+    // 删除角色
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         rolePermissionMapper.delete(new LambdaQueryWrapper<RolePermission>().eq(RolePermission::getRoleId, id));
@@ -67,6 +77,7 @@ public class RoleController {
         return Result.success("删除成功", null);
     }
 
+    // 获取权限
     @GetMapping("/{id}/permissions")
     public Result<List<String>> getPermissions(@PathVariable String id) {
         List<RolePermission> list = rolePermissionMapper.selectList(
@@ -75,6 +86,7 @@ public class RoleController {
         return Result.success(permissionIds);
     }
 
+    // 分配权限
     @PutMapping("/{id}/permissions")
     public Result<Void> assignPermissions(@PathVariable String id, @RequestBody List<String> permissionIds) {
         rolePermissionMapper.delete(new LambdaQueryWrapper<RolePermission>().eq(RolePermission::getRoleId, id));

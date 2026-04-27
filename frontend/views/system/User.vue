@@ -1,3 +1,4 @@
+<!-- 系统管理用户管理页面组件，负责处理系统管理模块的页面展示与交互。 -->
 <template>
   <div class="page-container">
     <div class="page-header">
@@ -113,11 +114,13 @@ const rules = {
 
 const dialogTitle = ref('新增用户')
 
+// 获取角色name
 const getRoleName = (roleId) => {
   const role = roleList.value.find(r => r.roleId === roleId)
   return role ? role.name : roleId
 }
 
+// 重置查询条件
 const resetSearch = () => {
   searchForm.username = ''
   searchForm.roleId = ''
@@ -125,11 +128,13 @@ const resetSearch = () => {
   loadData()
 }
 
+// 加载角色
 const loadRoles = async () => {
   const res = await request.get('/system/role/list')
   roleList.value = res.data
 }
 
+// 加载数据
 const loadData = async () => {
   loading.value = true
   try {
@@ -143,12 +148,14 @@ const loadData = async () => {
   }
 }
 
+// 处理opendialog
 const openDialog = (row) => {
   dialogTitle.value = row ? '编辑用户' : '新增用户'
   Object.assign(form, row || { userId: '', username: '', password: '', name: '', roleId: '', relatedId: '' })
   dialogVisible.value = true
 }
 
+// 处理提交
 const handleSubmit = async () => {
   await formRef.value.validate()
   if (form.userId) {
@@ -161,6 +168,7 @@ const handleSubmit = async () => {
   loadData()
 }
 
+// 处理删除
 const handleDelete = async (row) => {
   await ElMessageBox.confirm('确认删除该用户？', '提示', { type: 'warning' })
   await request.delete(`/system/user/${row.userId}`)
@@ -168,12 +176,14 @@ const handleDelete = async (row) => {
   loadData()
 }
 
+// 重置密码
 const resetPassword = async (row) => {
   await ElMessageBox.confirm('确认重置密码为默认密码？', '提示', { type: 'warning' })
   await request.put(`/system/user/${row.userId}/reset-password`)
   ElMessage.success('密码已重置')
 }
 
+// 页面挂载时初始化用户数据
 onMounted(() => {
   loadRoles()
   loadData()

@@ -1,3 +1,4 @@
+<!-- 排课查询页面组件，负责处理排课模块的页面展示与交互。 -->
 <template>
   <div class="page-container">
     <div class="page-header">
@@ -144,6 +145,7 @@ const courseMap = computed(() => Object.fromEntries(courseList.value.map(item =>
 const teacherMap = computed(() => Object.fromEntries(teacherList.value.map(item => [item.teacherId, item.name])))
 const classroomMap = computed(() => Object.fromEntries(classroomList.value.map(item => [item.classroomId, item.name])))
 
+// 获取默认查询类型
 const getDefaultQueryType = () => {
   if (currentRoleId.value === '5') {
     return 'student'
@@ -154,11 +156,13 @@ const getDefaultQueryType = () => {
   return 'teacher'
 }
 
+// 选取默认学期编号
 const pickDefaultSemesterId = () => {
   const activeSemester = semesterList.value.find(item => item.status === 'active')
   return activeSemester?.semesterId || semesterList.value[0]?.semesterId || ''
 }
 
+// 查找默认选项编号
 const findDefaultOptionId = (type, preferredId = '') => {
   if (type === 'teacher') {
     if (preferredId && teacherList.value.some(item => item.teacherId === preferredId)) {
@@ -205,6 +209,7 @@ const enrichSchedules = rows =>
     classroomName: classroomMap.value[item.classroomId] || item.classroomName || item.classroomId || '-'
   }))
 
+// 加载基础数据
 const loadLookupData = async () => {
   const [semesterRes, teacherRes, classRes, studentRes, courseRes, classroomRes] = await Promise.all([
     request.get('/semester/list').catch(() => ({ data: [] })),
@@ -223,6 +228,7 @@ const loadLookupData = async () => {
   classroomList.value = classroomRes.data || []
 }
 
+// 按条件查询课表
 const search = async () => {
   if (!searchForm.semesterId) {
     ElMessage.warning('请选择学期')
@@ -284,9 +290,11 @@ const handleQueryTypeChange = value => {
   applyDefaultTarget(value)
 }
 
+// 获取课程按日期and节次
 const getCourseByDayAndPeriod = (dayOfWeek, startPeriod) =>
   scheduleData.value.filter(item => item.dayOfWeek === dayOfWeek && item.startPeriod === startPeriod)
 
+// 页面挂载时初始化课表数据
 onMounted(async () => {
   loading.value = true
   try {

@@ -1,5 +1,9 @@
 package com.campus.education.config;
 
+/**
+ * 安全配置类，负责定义系统认证与授权规则。
+ */
+
 import com.campus.education.common.JwtUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,11 +41,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private JwtUtils jwtUtils;
 
+    // 创建密码编码器
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    // 配置安全访问规则
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
@@ -106,10 +112,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         private final JwtUtils jwtUtils;
         private final ObjectMapper objectMapper = new ObjectMapper();
 
+        // 初始化 JWT 认证过滤器
         JwtAuthenticationFilter(JwtUtils jwtUtils) {
             this.jwtUtils = jwtUtils;
         }
 
+        // 执行内部过滤处理
         @Override
         protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
                 throws ServletException, IOException {

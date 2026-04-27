@@ -1,3 +1,4 @@
+<!-- 系统管理角色管理页面组件，负责处理系统管理模块的页面展示与交互。 -->
 <template>
   <div class="page-container">
     <div class="page-header">
@@ -86,6 +87,7 @@ const checkedKeys = ref([])
 const currentRole = ref(null)
 const treeProps = { label: 'name', children: 'children' }
 
+// 构建权限tree
 const buildPermissionTree = (permissions) => {
   const map = {}
   const roots = []
@@ -97,6 +99,7 @@ const buildPermissionTree = (permissions) => {
   return roots
 }
 
+// 加载权限tree
 const loadPermissionTree = async () => {
   try {
     const res = await request.get('/system/permission/list')
@@ -106,8 +109,10 @@ const loadPermissionTree = async () => {
   } catch (error) { console.error('获取权限列表失败:', error) }
 }
 
+// 页面挂载时初始化角色数据
 onMounted(() => { getRoleList(); loadPermissionTree() })
 
+// 获取角色列表
 const getRoleList = async () => {
   try {
     const res = await request.get('/system/role/list')
@@ -115,14 +120,18 @@ const getRoleList = async () => {
   } catch (error) { ElMessage.error('获取角色列表失败') }
 }
 
+// 添加角色
 const addRole = () => { editMode.value = false; roleForm.value = { roleId: '', name: '', description: '' }; dialogVisible.value = true }
+// 编辑角色
 const editRole = (row) => { editMode.value = true; roleForm.value = { ...row }; dialogVisible.value = true }
 
+// 删除角色
 const deleteRole = async (roleId) => {
   try { await request.delete(`/system/role/${roleId}`); ElMessage.success('删除成功'); getRoleList() }
   catch (error) { ElMessage.error('删除失败') }
 }
 
+// 保存角色
 const saveRole = async () => {
   try {
     await roleFormRef.value?.validate()
@@ -132,6 +141,7 @@ const saveRole = async () => {
   } catch (error) { ElMessage.error('保存失败') }
 }
 
+// 设置权限
 const setPermission = async (role) => {
   currentRole.value = role
   try { const res = await request.get(`/system/role/${role.roleId}/permissions`); checkedKeys.value = res.data || [] }
@@ -141,6 +151,7 @@ const setPermission = async (role) => {
   permissionTreeRef.value?.setCheckedKeys(checkedKeys.value)
 }
 
+// 保存权限
 const savePermission = async () => {
   try {
     const permissionIds = permissionTreeRef.value

@@ -1,5 +1,9 @@
 package com.campus.education.common;
 
+/**
+ * JWT测试类，负责验证JWT相关逻辑。
+ */
+
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -16,6 +20,19 @@ class JwtUtilsTest {
         ReflectionTestUtils.setField(jwtUtils, "expiration", 7200000L);
 
         assertThrows(IllegalStateException.class, jwtUtils::init);
+    }
+
+    @Test
+    void shouldUseFallbackJwtSecretWhenMissing() {
+        JwtUtils jwtUtils = new JwtUtils();
+        ReflectionTestUtils.setField(jwtUtils, "secret", "");
+        ReflectionTestUtils.setField(jwtUtils, "expiration", 7200000L);
+
+        jwtUtils.init();
+
+        String token = jwtUtils.generateToken("U001", "student1", "5");
+
+        assertTrue(jwtUtils.validateToken(token));
     }
 
     @Test

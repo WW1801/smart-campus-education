@@ -1,3 +1,4 @@
+<!-- 排课排课页面组件，负责处理排课模块的页面展示与交互。 -->
 <template>
   <div class="page-container">
     <div class="page-header">
@@ -222,6 +223,7 @@ const page = reactive({
   total: 0
 })
 
+// 创建空表单
 const createEmptyForm = () => ({
   scheduleId: '',
   mode: 'class_based',
@@ -257,6 +259,7 @@ const periodOptions = Array.from({ length: 12 }, (_, index) => ({
 const endPeriodOptions = computed(() => periodOptions.filter(item => item.value >= form.startPeriod))
 const hasP0Conflict = computed(() => conflictList.value.some(item => item.priority === 'P0'))
 
+// 校验班级编号
 const validateClassId = (_, value, callback) => {
   if (form.mode === 'class_based' && !value) {
     callback(new Error('请选择班级'))
@@ -265,6 +268,7 @@ const validateClassId = (_, value, callback) => {
   callback()
 }
 
+// 校验结束节次
 const validateEndPeriod = (_, value, callback) => {
   if (!value) {
     callback(new Error('请选择结束节次'))
@@ -295,6 +299,7 @@ const teacherMap = computed(() => Object.fromEntries(teacherList.value.map(item 
 const classMap = computed(() => Object.fromEntries(classList.value.map(item => [item.classId, item.name])))
 const classroomMap = computed(() => Object.fromEntries(classroomList.value.map(item => [item.classroomId, formatClassroomLabel(item)])))
 
+// 监听关键数据变化
 watch(
   () => form.startPeriod,
   value => {
@@ -304,6 +309,7 @@ watch(
   }
 )
 
+// 监听关键数据变化
 watch(
   () => form.mode,
   mode => {
@@ -313,8 +319,10 @@ watch(
   }
 )
 
+// 格式化星期显示
 const formatWeekday = value => `周${value || ''}`
 
+// 格式化教室显示名称
 const formatClassroomLabel = classroom => {
   if (!classroom) {
     return ''
@@ -323,6 +331,7 @@ const formatClassroomLabel = classroom => {
   return extra ? `${classroom.name} (${extra})` : classroom.name
 }
 
+// 构建排课请求数据
 const buildPayload = source => ({
   scheduleId: source.scheduleId || '',
   mode: source.mode || 'class_based',
@@ -338,6 +347,7 @@ const buildPayload = source => ({
   endPeriod: Number(source.endPeriod || source.startPeriod || 1)
 })
 
+// 补全排课列表展示字段
 const enrichScheduleRows = rows =>
   (rows || []).map(item => ({
     ...item,
@@ -348,17 +358,20 @@ const enrichScheduleRows = rows =>
     classroomName: classroomMap.value[item.classroomId] || item.classroomId
   }))
 
+// 重置查询条件
 const resetSearch = () => {
   searchForm.semesterId = ''
   page.current = 1
   loadData()
 }
 
+// 加载学期列表
 const loadSemesters = async () => {
   const res = await request.get('/semester/list')
   semesterList.value = res.data || []
 }
 
+// 加载选择数据
 const loadSelectData = async () => {
   const [courseRes, teacherRes, classroomRes, classRes] = await Promise.all([
     request.get('/course/list').catch(() => ({ data: [] })),
@@ -373,6 +386,7 @@ const loadSelectData = async () => {
   classList.value = classRes.data || []
 }
 
+// 加载数据
 const loadData = async () => {
   loading.value = true
   try {
@@ -393,6 +407,7 @@ const loadData = async () => {
   }
 }
 
+// 重置表单数据
 const resetForm = row => {
   const payload = buildPayload(row || createEmptyForm())
   Object.assign(form, payload)
@@ -401,6 +416,7 @@ const resetForm = row => {
   }
 }
 
+// 打开编辑对话框
 const openDialog = row => {
   dialogTitle.value = row ? '编辑排课' : '新增排课'
   conflictList.value = []
@@ -409,6 +425,8 @@ const openDialog = row => {
   nextTick(() => formRef.value?.clearValidate())
 }
 
+// 执行检查冲突
+// 执行冲突检测
 const doCheckConflict = async () => {
   try {
     await formRef.value?.validate()
@@ -425,6 +443,8 @@ const doCheckConflict = async () => {
   ElMessage.warning(`检测到 ${conflictList.value.length} 个冲突`)
 }
 
+// 处理提交
+// 提交排课数据
 const handleSubmit = async () => {
   try {
     await formRef.value?.validate()
@@ -444,12 +464,14 @@ const handleSubmit = async () => {
   await loadData()
 }
 
+// 检查单条排课冲突
 const checkConflict = async row => {
   const res = await request.post('/schedule/check-conflict', buildPayload(row))
   conflictResult.value = res.data || []
   conflictDialogVisible.value = true
 }
 
+// 删除排课记录
 const handleDelete = async row => {
   await ElMessageBox.confirm('确认删除这条排课记录吗？', '提示', { type: 'warning' })
   await request.delete(`/schedule/${row.scheduleId}`)
@@ -457,6 +479,7 @@ const handleDelete = async row => {
   await loadData()
 }
 
+// 页面挂载时初始化课表数据
 onMounted(async () => {
   await Promise.all([loadSemesters(), loadSelectData()])
   await loadData()

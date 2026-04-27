@@ -1,5 +1,9 @@
 package com.campus.education.service.impl;
 
+/**
+ * GraduationAuditServiceImpl测试类，负责验证GraduationAuditServiceImpl相关逻辑。
+ */
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.campus.education.dto.GraduationAuditVO;
 import com.campus.education.entity.Course;

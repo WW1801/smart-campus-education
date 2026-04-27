@@ -1,3 +1,4 @@
+<!-- 通用冲突提示组件，负责展示排课冲突信息。 -->
 <template>
   <div class="conflict-tip">
     <div v-for="(conflict, index) in conflicts" :key="index" class="conflict-item" :class="'priority-' + conflict.priority">
@@ -35,8 +36,11 @@ const props = defineProps({
   conflicts: { type: Array, default: () => [] }
 })
 
+// 获取优先级标签
 const priorityLabel = (p) => ({ P0: '不可调和', P1: '容量不足', P2: '可换教室', P3: '可调时段' }[p] || p)
+// 获取优先级类型
 const priorityType = (p) => ({ P0: 'error', P1: 'warning', P2: 'warning', P3: 'info' }[p] || 'warning')
+// 获取类型标签
 const typeLabel = (t) => ({ teacher: '教师冲突', classroom: '教室冲突', class: '班级冲突', capacity: '容量冲突' }[t] || t)
 </script>
 

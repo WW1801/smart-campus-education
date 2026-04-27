@@ -1,5 +1,9 @@
 package com.campus.education.controller.system;
 
+/**
+ * 教室控制器，负责处理教室相关接口请求。
+ */
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.campus.education.common.Result;
 import com.campus.education.entity.Classroom;

@@ -1,3 +1,4 @@
+<!-- 考勤统计页面组件，负责处理考勤模块的页面展示与交互。 -->
 <template>
   <div class="page-container">
     <div class="page-header">
@@ -86,6 +87,7 @@ let trendChart = null
 const stats = ref({ presentRate: 0, lateRate: 0, absentRate: 0, leaveRate: 0 })
 const trendData = ref([])
 
+// 加载统计
 const loadStatistics = async () => {
   try {
     const res = await request.get('/attendance/statistics')
@@ -109,6 +111,7 @@ const loadStatistics = async () => {
   })
 }
 
+// 初始化饼图图表
 const initPieChart = () => {
   if (!pieChartRef.value) return
   pieChart = echarts.init(pieChartRef.value)
@@ -132,6 +135,7 @@ const initPieChart = () => {
   })
 }
 
+// 初始化趋势图表
 const initTrendChart = () => {
   if (!trendChartRef.value) return
   trendChart = echarts.init(trendChartRef.value)
@@ -162,8 +166,10 @@ const initTrendChart = () => {
   })
 }
 
+// 处理resize
 const handleResize = () => { pieChart?.resize(); trendChart?.resize() }
 
+// 页面挂载时初始化考勤数据
 onMounted(() => {
   loadStatistics()
   window.addEventListener('resize', handleResize)

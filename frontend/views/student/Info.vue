@@ -1,3 +1,4 @@
+<!-- 学生信息页面组件，负责处理学生模块的页面展示与交互。 -->
 <template>
   <div class="page-container">
     <div class="page-header">
@@ -203,7 +204,9 @@ const rules = {
 
 const dialogTitle = ref('新增学生')
 
+// 处理状态标签
 const statusLabel = (s) => ({ active: '在读', suspended: '休学', graduated: '毕业', dropped: '退学' }[s] || s)
+// 获取状态标签类型
 const statusTagType = (s) => ({ active: 'success', suspended: 'warning', graduated: '', dropped: 'danger' }[s] || 'info')
 
 const allowedTargets = computed(() => {
@@ -225,17 +228,20 @@ const filteredClasses = computed(() => {
   return classList.value.filter(c => c.majorId === form.majorId)
 })
 
+// 处理院系变更
 const onDeptChange = () => {
   form.majorId = ''
   form.classId = ''
 }
 
+// 重置查询条件
 const resetSearch = () => {
   Object.assign(searchForm, { studentId: '', name: '', departmentId: '', status: '' })
   page.current = 1
   loadData()
 }
 
+// 加载basic数据
 const loadBasicData = async () => {
   const [deptRes, majorRes, classRes] = await Promise.all([
     request.get('/department/list').catch(() => ({ data: [] })),
@@ -247,6 +253,7 @@ const loadBasicData = async () => {
   classList.value = classRes.data || []
 }
 
+// 加载数据
 const loadData = async () => {
   loading.value = true
   try {
@@ -260,6 +267,7 @@ const loadData = async () => {
   }
 }
 
+// 处理opendialog
 const openDialog = (row) => {
   dialogTitle.value = row ? '编辑学生' : '新增学生'
   Object.assign(form, row ? { ...row, _existing: true } : {
@@ -269,6 +277,7 @@ const openDialog = (row) => {
   dialogVisible.value = true
 }
 
+// 处理提交
 const handleSubmit = async () => {
   try {
     await formRef.value.validate()
@@ -287,6 +296,7 @@ const handleSubmit = async () => {
   } catch { ElMessage.error('操作失败') }
 }
 
+// 处理删除
 const handleDelete = async (row) => {
   await ElMessageBox.confirm('确认删除该学生？', '提示', { type: 'warning' })
   await request.delete(`/student/${row.studentId}`)
@@ -294,6 +304,7 @@ const handleDelete = async (row) => {
   loadData()
 }
 
+// 变更状态
 const changeStatus = (row) => {
   currentStudent.value = row
   targetStatus.value = ''
@@ -301,6 +312,7 @@ const changeStatus = (row) => {
   statusDialogVisible.value = true
 }
 
+// 处理提交状态变更
 const submitStatusChange = async () => {
   if (!targetStatus.value) {
     ElMessage.warning('请选择目标状态')
@@ -315,6 +327,7 @@ const submitStatusChange = async () => {
   loadData()
 }
 
+// 页面挂载时初始化学生数据
 onMounted(() => {
   loadBasicData()
   loadData()

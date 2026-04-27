@@ -1,5 +1,9 @@
 package com.campus.education.service.impl;
 
+/**
+ * 学生服务实现类，负责处理学生相关业务逻辑。
+ */
+
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.campus.education.common.BusinessException;
 import com.campus.education.entity.Student;
@@ -17,6 +21,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
 
     private static final Map<String, Set<String>> ALLOWED_TRANSITIONS = createTransitions();
 
+    // 初始化状态流转规则
     private static Map<String, Set<String>> createTransitions() {
         Map<String, Set<String>> map = new java.util.HashMap<>();
         map.put("active", new HashSet<>(Arrays.asList("suspended", "graduated", "dropped")));
@@ -24,6 +29,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         return map;
     }
 
+    // 变更状态
     @Override
     public void changeStatus(String studentId, String targetStatus, String reason) {
         Student student = this.getById(studentId);

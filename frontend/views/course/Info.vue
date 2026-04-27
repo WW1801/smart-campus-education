@@ -1,3 +1,4 @@
+<!-- 课程信息页面组件，负责处理课程模块的页面展示与交互。 -->
 <template>
   <div class="page-container">
     <div class="page-header">
@@ -145,13 +146,16 @@ const courseRules = {
   departmentId: [{ required: true, message: '请选择院系', trigger: 'change' }]
 }
 
+// 页面挂载时初始化课程数据
 onMounted(() => { getCourseList(); loadDepts() })
 
+// 加载院系列表
 const loadDepts = async () => {
   try { const res = await request.get('/department/list'); deptList.value = res.data || [] }
   catch {}
 }
 
+// 获取课程列表
 const getCourseList = async () => {
   loading.value = true
   try {
@@ -163,17 +167,23 @@ const getCourseList = async () => {
   } finally { loading.value = false }
 }
 
+// 按条件查询课程
 const search = () => { currentPage.value = 1; getCourseList() }
+// 重置查询条件
 const resetSearch = () => { searchForm.value = { code: '', name: '', departmentId: '', type: '' }; currentPage.value = 1; getCourseList() }
 
+// 添加课程
 const addCourse = () => { editMode.value = false; courseForm.value = { courseId: '', code: '', name: '', credits: null, hours: null, type: '', departmentId: '', description: '' }; dialogVisible.value = true }
+// 编辑课程
 const editCourse = (row) => { editMode.value = true; courseForm.value = { ...row }; dialogVisible.value = true }
 
+// 删除课程
 const deleteCourse = async (courseId) => {
   try { await ElMessageBox.confirm('确认删除该课程？', '提示', { type: 'warning' }); await request.delete(`/course/${courseId}`); ElMessage.success('删除成功'); getCourseList() }
   catch (error) { if (error !== 'cancel') ElMessage.error('删除课程失败') }
 }
 
+// 保存课程
 const saveCourse = async () => {
   if (!courseFormRef.value) return
   try { await courseFormRef.value.validate() } catch { return }
@@ -186,7 +196,9 @@ const saveCourse = async () => {
   } catch (error) { ElMessage.error('保存课程失败') }
 }
 
+// 处理每页条数变化
 const handleSizeChange = (size) => { pageSize.value = size; getCourseList() }
+// 处理页码变化
 const handleCurrentChange = (current) => { currentPage.value = current; getCourseList() }
 </script>
 

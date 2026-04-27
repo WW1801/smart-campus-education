@@ -1,5 +1,9 @@
 package com.campus.education.entity;
 
+/**
+ * 成绩实体类，负责映射成绩相关业务数据。
+ */
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;

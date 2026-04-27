@@ -1,5 +1,9 @@
 package com.campus.education.controller.selection;
 
+/**
+ * 学生选课控制器，负责处理学生选课相关接口请求。
+ */
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -68,6 +72,16 @@ public class StudentCourseSelectionController {
             Authentication authentication) {
         studentId = studentAccessGuard.currentStudentId(authentication, studentId);
         return Result.success(selectionService.getMySchedule(studentId, semesterId));
+    }
+
+    // 处理课表
+    @GetMapping("/timetable")
+    public Result<List<Map<String, Object>>> timetable(
+            @RequestParam String studentId,
+            @RequestParam(required = false) String semesterId,
+            Authentication authentication) {
+        studentId = studentAccessGuard.currentStudentId(authentication, studentId);
+        return Result.success(selectionService.getStudentTimetable(studentId, semesterId));
     }
 
     // [迭代补充] 查询可选课程列表（含先修/冲突/容量标记）

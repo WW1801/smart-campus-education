@@ -1,5 +1,9 @@
 package com.campus.education.controller.course;
 
+/**
+ * 课程控制器，负责处理课程相关接口请求。
+ */
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -60,18 +64,21 @@ public class CourseController {
         return Result.success("查询成功", data);
     }
 
+    // 添加课程
     @PostMapping
     public Result<Void> add(@RequestBody Course course) {
         courseService.save(course);
         return Result.success("添加成功", null);
     }
 
+    // 更新课程
     @PutMapping
     public Result<Void> update(@RequestBody Course course) {
         courseService.updateById(course);
         return Result.success("更新成功", null);
     }
 
+    // 删除课程
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
         courseService.removeById(id);

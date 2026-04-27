@@ -1,7 +1,9 @@
 package com.campus.education.config;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+/**
+ * 毕业审核表结构初始化类，负责确保毕业审核表存在。
+ */
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -9,10 +11,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class GraduationSchemaInitConfig implements CommandLineRunner {
 
-    private static final Logger log = LoggerFactory.getLogger(GraduationSchemaInitConfig.class);
-
     private final JdbcTemplate jdbcTemplate;
 
+    // 处理毕业结构初始化配置
     public GraduationSchemaInitConfig(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
@@ -42,6 +43,5 @@ public class GraduationSchemaInitConfig implements CommandLineRunner {
                         + "CONSTRAINT fk_graduation_student FOREIGN KEY (student_id) REFERENCES student(student_id)"
                         + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='毕业审核表'"
         );
-        log.info("Ensured graduation_audit table exists");
     }
 }
