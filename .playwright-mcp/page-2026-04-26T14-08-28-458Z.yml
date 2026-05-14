@@ -1,0 +1,22 @@
+- generic [ref=e1031]:
+  - generic [ref=e1033]:
+    - img [ref=e1035]
+    - heading "校园教务系统" [level=1] [ref=e1037]
+    - paragraph [ref=e1038]: 智慧校园 · 高效管理 · 便捷服务
+    - generic [ref=e1039]:
+      - generic [ref=e1042]: 全方位教务管理
+      - generic [ref=e1045]: 智能排课与冲突检测
+      - generic [ref=e1048]: 在线选课与成绩管理
+  - generic [ref=e1050]:
+    - generic [ref=e1051]:
+      - heading "欢迎登录" [level=2] [ref=e1052]
+      - paragraph [ref=e1053]: 请输入您的账号信息
+    - generic [ref=e1054]:
+      - generic [ref=e1058]:
+        - img [ref=e1061]
+        - textbox "请输入用户名" [ref=e1063]
+      - generic [ref=e1067]:
+        - img [ref=e1070]
+        - textbox "请输入密码" [ref=e1073]
+      - button "登 录" [ref=e1076] [cursor=pointer]:
+        - generic [ref=e1077]: 登 录

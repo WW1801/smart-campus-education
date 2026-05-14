@@ -1,0 +1,86 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e8]:
+        - img [ref=e10]
+        - generic [ref=e14]: 教务管理系统
+      - generic [ref=e15]:
+        - generic [ref=e16]: 用户
+        - generic:
+          - generic: 未知角色
+        - button "退出登录" [ref=e17] [cursor=pointer]:
+          - generic [ref=e18]: 退出登录
+    - generic [ref=e19]:
+      - complementary [ref=e20]:
+        - menubar
+      - main [ref=e21]:
+        - generic [ref=e23]:
+          - generic [ref=e24]:
+            - generic [ref=e25]:
+              - img [ref=e28]
+              - generic [ref=e30]:
+                - generic [ref=e31]: 用户管理
+                - generic [ref=e32]: 管理系统用户账号与角色分配
+            - button "新增用户" [ref=e33] [cursor=pointer]:
+              - generic [ref=e34]:
+                - img [ref=e36]
+                - text: 新增用户
+          - generic [ref=e39]:
+            - generic [ref=e40]:
+              - generic [ref=e42]:
+                - img [ref=e45]
+                - textbox "搜索用户名" [ref=e47]
+              - generic [ref=e49] [cursor=pointer]:
+                - generic:
+                  - combobox [ref=e51]
+                  - generic [ref=e52]: 筛选角色
+                - img [ref=e55]
+              - button "查询" [ref=e57] [cursor=pointer]:
+                - generic [ref=e58]: 查询
+              - button "重置" [ref=e59] [cursor=pointer]:
+                - generic [ref=e60]: 重置
+            - generic [ref=e61]:
+              - generic [ref=e62]:
+                - table [ref=e64]:
+                  - rowgroup [ref=e73]:
+                    - row "用户ID 用户名 姓名 角色 关联ID 最后登录 操作" [ref=e74]:
+                      - columnheader "用户ID" [ref=e75]:
+                        - generic [ref=e76]: 用户ID
+                      - columnheader "用户名" [ref=e77]:
+                        - generic [ref=e78]: 用户名
+                      - columnheader "姓名" [ref=e79]:
+                        - generic [ref=e80]: 姓名
+                      - columnheader "角色" [ref=e81]:
+                        - generic [ref=e82]: 角色
+                      - columnheader "关联ID" [ref=e83]:
+                        - generic [ref=e84]: 关联ID
+                      - columnheader "最后登录" [ref=e85]:
+                        - generic [ref=e86]: 最后登录
+                      - columnheader "操作" [ref=e87]:
+                        - generic [ref=e88]: 操作
+                - generic [ref=e92]:
+                  - table:
+                    - rowgroup
+                  - generic [ref=e94]: No Data
+              - img [ref=e97]
+            - generic [ref=e99]:
+              - generic [ref=e100]: Total 0
+              - generic [ref=e103] [cursor=pointer]:
+                - generic:
+                  - combobox [ref=e105]
+                  - generic [ref=e106]: 10/page
+                - img [ref=e109]
+              - button "Go to previous page" [disabled] [ref=e111]:
+                - generic:
+                  - img
+              - list [ref=e112]:
+                - listitem "page 1" [ref=e113]: "1"
+              - button "Go to next page" [disabled] [ref=e114]:
+                - generic:
+                  - img
+  - alert [ref=e115]:
+    - img [ref=e117]
+    - paragraph [ref=e119]: 登录已过期，请重新登录
+  - alert [ref=e120]:
+    - img [ref=e122]
+    - paragraph [ref=e124]: 登录已过期，请重新登录

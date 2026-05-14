@@ -1,0 +1,108 @@
+- generic [ref=e1]:
+  - generic [ref=e179]:
+    - generic [ref=e180]:
+      - generic [ref=e182]:
+        - img [ref=e184]
+        - generic [ref=e188]: 教务管理系统
+      - generic [ref=e189]:
+        - generic [ref=e190]: admin
+        - generic [ref=e192]: 系统管理员
+        - button "退出登录" [ref=e193] [cursor=pointer]:
+          - generic [ref=e194]: 退出登录
+    - generic [ref=e195]:
+      - complementary [ref=e196]:
+        - menubar [ref=e197]:
+          - menuitem "系统管理" [expanded] [ref=e198]:
+            - generic [ref=e199] [cursor=pointer]:
+              - img [ref=e201]
+              - generic [ref=e203]: 系统管理
+              - img [ref=e205]
+            - menu [ref=e207]:
+              - menuitem "用户管理" [ref=e208] [cursor=pointer]
+              - menuitem "角色管理" [ref=e209] [cursor=pointer]
+              - menuitem "权限管理" [ref=e210] [cursor=pointer]
+          - menuitem "学生管理" [ref=e211]:
+            - generic [ref=e212] [cursor=pointer]:
+              - img [ref=e214]
+              - generic [ref=e216]: 学生管理
+              - img [ref=e218]
+          - menuitem "教师管理" [ref=e220]:
+            - generic [ref=e221] [cursor=pointer]:
+              - img [ref=e223]
+              - generic [ref=e225]: 教师管理
+              - img [ref=e227]
+          - menuitem "课程管理" [ref=e229]:
+            - generic [ref=e230] [cursor=pointer]:
+              - img [ref=e232]
+              - generic [ref=e235]: 课程管理
+              - img [ref=e237]
+          - menuitem "排课管理" [expanded] [ref=e239]:
+            - generic [ref=e240] [cursor=pointer]:
+              - img [ref=e242]
+              - generic [ref=e244]: 排课管理
+              - img [ref=e246]
+            - menu [ref=e575]:
+              - menuitem "排课安排" [ref=e576] [cursor=pointer]
+              - menuitem "课表查询" [ref=e577] [cursor=pointer]
+          - menuitem "成绩管理" [expanded] [ref=e248]:
+            - generic [ref=e249] [cursor=pointer]:
+              - img [ref=e251]
+              - generic [ref=e253]: 成绩管理
+              - img [ref=e255]
+            - menu [ref=e946]:
+              - menuitem "成绩录入" [ref=e947] [cursor=pointer]
+              - menuitem "成绩查询" [ref=e948] [cursor=pointer]
+              - menuitem "成绩统计" [ref=e949] [cursor=pointer]
+          - menuitem "考勤管理" [ref=e257]:
+            - generic [ref=e258] [cursor=pointer]:
+              - img [ref=e260]
+              - generic [ref=e264]: 考勤管理
+              - img [ref=e266]
+          - menuitem "毕业管理" [ref=e268] [cursor=pointer]:
+            - img [ref=e270]
+            - generic [ref=e272]: 毕业管理
+      - main [ref=e273]:
+        - generic [ref=e951]:
+          - generic [ref=e953]:
+            - img [ref=e956]
+            - generic [ref=e958]:
+              - generic [ref=e959]: 成绩统计
+              - generic [ref=e960]: 成绩分布与趋势分析
+          - generic [ref=e961]:
+            - generic [ref=e962]:
+              - img [ref=e965]
+              - generic [ref=e967]:
+                - generic [ref=e968]: "6"
+                - generic [ref=e969]: 参考人数
+            - generic [ref=e970]:
+              - img [ref=e973]
+              - generic [ref=e975]:
+                - generic [ref=e976]: "79.75"
+                - generic [ref=e977]: 平均分
+            - generic [ref=e978]:
+              - img [ref=e981]
+              - generic [ref=e983]:
+                - generic [ref=e984]: 83.33%
+                - generic [ref=e985]: 及格率
+            - generic [ref=e986]:
+              - img [ref=e989]
+              - generic [ref=e991]:
+                - generic [ref=e992]: 16.67%
+                - generic [ref=e993]: 优秀率
+          - generic [ref=e994]:
+            - generic [ref=e997]: 成绩分布
+            - generic [ref=e1004]: 各课程平均分
+  - dialog "提示" [ref=e1010]:
+    - generic [ref=e1011]:
+      - generic [ref=e1012]:
+        - generic [ref=e1013]: 提示
+        - button "Close this dialog" [ref=e1014] [cursor=pointer]:
+          - img [ref=e1016]
+      - generic [ref=e1019]:
+        - img [ref=e1021]
+        - paragraph [ref=e1024]: 确认退出登录？
+      - generic [ref=e1025]:
+        - button "Cancel" [ref=e1026] [cursor=pointer]:
+          - generic [ref=e1027]: Cancel
+        - button "OK" [active] [ref=e1028] [cursor=pointer]:
+          - generic [ref=e1029]: OK

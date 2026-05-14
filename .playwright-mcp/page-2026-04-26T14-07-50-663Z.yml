@@ -1,0 +1,374 @@
+- generic [ref=e179]:
+  - generic [ref=e180]:
+    - generic [ref=e182]:
+      - img [ref=e184]
+      - generic [ref=e188]: 教务管理系统
+    - generic [ref=e189]:
+      - generic [ref=e190]: admin
+      - generic [ref=e192]: 系统管理员
+      - button "退出登录" [ref=e193] [cursor=pointer]:
+        - generic [ref=e194]: 退出登录
+  - generic [ref=e195]:
+    - complementary [ref=e196]:
+      - menubar [ref=e197]:
+        - menuitem "系统管理" [expanded] [ref=e198]:
+          - generic [ref=e199] [cursor=pointer]:
+            - img [ref=e201]
+            - generic [ref=e203]: 系统管理
+            - img [ref=e205]
+          - menu [ref=e207]:
+            - menuitem "用户管理" [ref=e208] [cursor=pointer]
+            - menuitem "角色管理" [ref=e209] [cursor=pointer]
+            - menuitem "权限管理" [ref=e210] [cursor=pointer]
+        - menuitem "学生管理" [ref=e211]:
+          - generic [ref=e212] [cursor=pointer]:
+            - img [ref=e214]
+            - generic [ref=e216]: 学生管理
+            - img [ref=e218]
+        - menuitem "教师管理" [ref=e220]:
+          - generic [ref=e221] [cursor=pointer]:
+            - img [ref=e223]
+            - generic [ref=e225]: 教师管理
+            - img [ref=e227]
+        - menuitem "课程管理" [ref=e229]:
+          - generic [ref=e230] [cursor=pointer]:
+            - img [ref=e232]
+            - generic [ref=e235]: 课程管理
+            - img [ref=e237]
+        - menuitem "排课管理" [expanded] [ref=e239]:
+          - generic [ref=e240] [cursor=pointer]:
+            - img [ref=e242]
+            - generic [ref=e244]: 排课管理
+            - img [ref=e246]
+          - menu [ref=e575]:
+            - menuitem "排课安排" [ref=e576] [cursor=pointer]
+            - menuitem "课表查询" [ref=e577] [cursor=pointer]
+        - menuitem "成绩管理" [expanded] [ref=e248]:
+          - generic [ref=e249] [cursor=pointer]:
+            - img [ref=e251]
+            - generic [ref=e253]: 成绩管理
+            - img [ref=e255]
+          - menu [ref=e946]:
+            - menuitem "成绩录入" [ref=e947] [cursor=pointer]
+            - menuitem "成绩查询" [ref=e948] [cursor=pointer]
+            - menuitem "成绩统计" [ref=e949] [cursor=pointer]
+        - menuitem "考勤管理" [ref=e257]:
+          - generic [ref=e258] [cursor=pointer]:
+            - img [ref=e260]
+            - generic [ref=e264]: 考勤管理
+            - img [ref=e266]
+        - menuitem "毕业管理" [ref=e268] [cursor=pointer]:
+          - img [ref=e270]
+          - generic [ref=e272]: 毕业管理
+    - main [ref=e273]:
+      - generic [ref=e579]:
+        - generic [ref=e580]:
+          - generic [ref=e581]:
+            - img [ref=e584]
+            - generic [ref=e586]:
+              - generic [ref=e587]: 排课安排
+              - generic [ref=e588]: 管理排课信息并检测冲突
+          - button "新增排课" [ref=e589] [cursor=pointer]:
+            - generic [ref=e590]:
+              - img [ref=e592]
+              - text: 新增排课
+        - generic [ref=e595]:
+          - generic [ref=e596]:
+            - generic [ref=e598] [cursor=pointer]:
+              - generic:
+                - combobox [ref=e600]
+                - generic [ref=e601]: 选择学期
+              - img [ref=e604]
+            - button "查询" [ref=e606] [cursor=pointer]:
+              - generic [ref=e607]: 查询
+            - button "重置" [ref=e608] [cursor=pointer]:
+              - generic [ref=e609]: 重置
+          - generic [ref=e611]:
+            - table [ref=e613]:
+              - rowgroup [ref=e624]:
+                - row "学期 课程 教师 班级 教室 排课模式 时间 容量 操作" [ref=e625]:
+                  - columnheader "学期" [ref=e626]:
+                    - generic [ref=e627]: 学期
+                  - columnheader "课程" [ref=e628]:
+                    - generic [ref=e629]: 课程
+                  - columnheader "教师" [ref=e630]:
+                    - generic [ref=e631]: 教师
+                  - columnheader "班级" [ref=e632]:
+                    - generic [ref=e633]: 班级
+                  - columnheader "教室" [ref=e634]:
+                    - generic [ref=e635]: 教室
+                  - columnheader "排课模式" [ref=e636]:
+                    - generic [ref=e637]: 排课模式
+                  - columnheader "时间" [ref=e638]:
+                    - generic [ref=e639]: 时间
+                  - columnheader "容量" [ref=e640]:
+                    - generic [ref=e641]: 容量
+                  - columnheader "操作" [ref=e642]:
+                    - generic [ref=e643]: 操作
+            - table [ref=e648]:
+              - rowgroup [ref=e659]:
+                - row "2023-2024学年第一学期 市场管理 张老师 营销1班 A101 (A楼 / classroom) 按班级排课 周1 第1-2节 - 编辑 检测冲突 删除" [ref=e660]:
+                  - cell "2023-2024学年第一学期" [ref=e661]:
+                    - generic [ref=e662]: 2023-2024学年第一学期
+                  - cell "市场管理" [ref=e663]:
+                    - generic [ref=e664]: 市场管理
+                  - cell "张老师" [ref=e665]:
+                    - generic [ref=e666]: 张老师
+                  - cell "营销1班" [ref=e667]:
+                    - generic [ref=e668]: 营销1班
+                  - cell "A101 (A楼 / classroom)" [ref=e669]:
+                    - generic [ref=e670]: A101 (A楼 / classroom)
+                  - cell "按班级排课" [ref=e671]:
+                    - generic [ref=e674]: 按班级排课
+                  - cell "周1 第1-2节" [ref=e675]:
+                    - generic [ref=e676]: 周1 第1-2节
+                  - cell "-" [ref=e677]:
+                    - generic [ref=e678]: "-"
+                  - cell "编辑 检测冲突 删除" [ref=e679]:
+                    - generic [ref=e680]:
+                      - button "编辑" [ref=e681] [cursor=pointer]:
+                        - generic [ref=e682]: 编辑
+                      - button "检测冲突" [ref=e683] [cursor=pointer]:
+                        - generic [ref=e684]: 检测冲突
+                      - button "删除" [ref=e685] [cursor=pointer]:
+                        - generic [ref=e686]: 删除
+                - row "2023-2024学年第一学期 高等数学 王老师 计科2班 B101 (B楼 / lecture_hall) 按班级排课 周1 第2-10节 - 编辑 检测冲突 删除" [ref=e687]:
+                  - cell "2023-2024学年第一学期" [ref=e688]:
+                    - generic [ref=e689]: 2023-2024学年第一学期
+                  - cell "高等数学" [ref=e690]:
+                    - generic [ref=e691]: 高等数学
+                  - cell "王老师" [ref=e692]:
+                    - generic [ref=e693]: 王老师
+                  - cell "计科2班" [ref=e694]:
+                    - generic [ref=e695]: 计科2班
+                  - cell "B101 (B楼 / lecture_hall)" [ref=e696]:
+                    - generic [ref=e697]: B101 (B楼 / lecture_hall)
+                  - cell "按班级排课" [ref=e698]:
+                    - generic [ref=e701]: 按班级排课
+                  - cell "周1 第2-10节" [ref=e702]:
+                    - generic [ref=e703]: 周1 第2-10节
+                  - cell "-" [ref=e704]:
+                    - generic [ref=e705]: "-"
+                  - cell "编辑 检测冲突 删除" [ref=e706]:
+                    - generic [ref=e707]:
+                      - button "编辑" [ref=e708] [cursor=pointer]:
+                        - generic [ref=e709]: 编辑
+                      - button "检测冲突" [ref=e710] [cursor=pointer]:
+                        - generic [ref=e711]: 检测冲突
+                      - button "删除" [ref=e712] [cursor=pointer]:
+                        - generic [ref=e713]: 删除
+                - row "2023-2024学年第二学期 数据结构 张老师 计科1班 A101 (A楼 / classroom) 按班级排课 周1 第2-2节 - 编辑 检测冲突 删除" [ref=e714]:
+                  - cell "2023-2024学年第二学期" [ref=e715]:
+                    - generic [ref=e716]: 2023-2024学年第二学期
+                  - cell "数据结构" [ref=e717]:
+                    - generic [ref=e718]: 数据结构
+                  - cell "张老师" [ref=e719]:
+                    - generic [ref=e720]: 张老师
+                  - cell "计科1班" [ref=e721]:
+                    - generic [ref=e722]: 计科1班
+                  - cell "A101 (A楼 / classroom)" [ref=e723]:
+                    - generic [ref=e724]: A101 (A楼 / classroom)
+                  - cell "按班级排课" [ref=e725]:
+                    - generic [ref=e728]: 按班级排课
+                  - cell "周1 第2-2节" [ref=e729]:
+                    - generic [ref=e730]: 周1 第2-2节
+                  - cell "-" [ref=e731]:
+                    - generic [ref=e732]: "-"
+                  - cell "编辑 检测冲突 删除" [ref=e733]:
+                    - generic [ref=e734]:
+                      - button "编辑" [ref=e735] [cursor=pointer]:
+                        - generic [ref=e736]: 编辑
+                      - button "检测冲突" [ref=e737] [cursor=pointer]:
+                        - generic [ref=e738]: 检测冲突
+                      - button "删除" [ref=e739] [cursor=pointer]:
+                        - generic [ref=e740]: 删除
+                - row "2023-2024学年第一学期 数据结构 刘老师 计科2班 A102 (A楼 / classroom) 按班级排课 周2 第1-4节 - 编辑 检测冲突 删除" [ref=e741]:
+                  - cell "2023-2024学年第一学期" [ref=e742]:
+                    - generic [ref=e743]: 2023-2024学年第一学期
+                  - cell "数据结构" [ref=e744]:
+                    - generic [ref=e745]: 数据结构
+                  - cell "刘老师" [ref=e746]:
+                    - generic [ref=e747]: 刘老师
+                  - cell "计科2班" [ref=e748]:
+                    - generic [ref=e749]: 计科2班
+                  - cell "A102 (A楼 / classroom)" [ref=e750]:
+                    - generic [ref=e751]: A102 (A楼 / classroom)
+                  - cell "按班级排课" [ref=e752]:
+                    - generic [ref=e755]: 按班级排课
+                  - cell "周2 第1-4节" [ref=e756]:
+                    - generic [ref=e757]: 周2 第1-4节
+                  - cell "-" [ref=e758]:
+                    - generic [ref=e759]: "-"
+                  - cell "编辑 检测冲突 删除" [ref=e760]:
+                    - generic [ref=e761]:
+                      - button "编辑" [ref=e762] [cursor=pointer]:
+                        - generic [ref=e763]: 编辑
+                      - button "检测冲突" [ref=e764] [cursor=pointer]:
+                        - generic [ref=e765]: 检测冲突
+                      - button "删除" [ref=e766] [cursor=pointer]:
+                        - generic [ref=e767]: 删除
+                - row "2023-2024学年第二学期 算法设计与分析 李老师 计科1班 A101 (A楼 / classroom) 按班级排课 周2 第3-4节 - 编辑 检测冲突 删除" [ref=e768]:
+                  - cell "2023-2024学年第二学期" [ref=e769]:
+                    - generic [ref=e770]: 2023-2024学年第二学期
+                  - cell "算法设计与分析" [ref=e771]:
+                    - generic [ref=e772]: 算法设计与分析
+                  - cell "李老师" [ref=e773]:
+                    - generic [ref=e774]: 李老师
+                  - cell "计科1班" [ref=e775]:
+                    - generic [ref=e776]: 计科1班
+                  - cell "A101 (A楼 / classroom)" [ref=e777]:
+                    - generic [ref=e778]: A101 (A楼 / classroom)
+                  - cell "按班级排课" [ref=e779]:
+                    - generic [ref=e782]: 按班级排课
+                  - cell "周2 第3-4节" [ref=e783]:
+                    - generic [ref=e784]: 周2 第3-4节
+                  - cell "-" [ref=e785]:
+                    - generic [ref=e786]: "-"
+                  - cell "编辑 检测冲突 删除" [ref=e787]:
+                    - generic [ref=e788]:
+                      - button "编辑" [ref=e789] [cursor=pointer]:
+                        - generic [ref=e790]: 编辑
+                      - button "检测冲突" [ref=e791] [cursor=pointer]:
+                        - generic [ref=e792]: 检测冲突
+                      - button "删除" [ref=e793] [cursor=pointer]:
+                        - generic [ref=e794]: 删除
+                - row "2023-2024学年第二学期 人工智能导论 张老师 - B101 (B楼 / lecture_hall) 开放选课 周2 第7-8节 1/120 编辑 检测冲突 删除" [ref=e795]:
+                  - cell "2023-2024学年第二学期" [ref=e796]:
+                    - generic [ref=e797]: 2023-2024学年第二学期
+                  - cell "人工智能导论" [ref=e798]:
+                    - generic [ref=e799]: 人工智能导论
+                  - cell "张老师" [ref=e800]:
+                    - generic [ref=e801]: 张老师
+                  - cell "-" [ref=e802]:
+                    - generic [ref=e803]: "-"
+                  - cell "B101 (B楼 / lecture_hall)" [ref=e804]:
+                    - generic [ref=e805]: B101 (B楼 / lecture_hall)
+                  - cell "开放选课" [ref=e806]:
+                    - generic [ref=e809]: 开放选课
+                  - cell "周2 第7-8节" [ref=e810]:
+                    - generic [ref=e811]: 周2 第7-8节
+                  - cell "1/120" [ref=e812]:
+                    - generic [ref=e813]: 1/120
+                  - cell "编辑 检测冲突 删除" [ref=e814]:
+                    - generic [ref=e815]:
+                      - button "编辑" [ref=e816] [cursor=pointer]:
+                        - generic [ref=e817]: 编辑
+                      - button "检测冲突" [ref=e818] [cursor=pointer]:
+                        - generic [ref=e819]: 检测冲突
+                      - button "删除" [ref=e820] [cursor=pointer]:
+                        - generic [ref=e821]: 删除
+                - row "2023-2024学年第二学期 操作系统 张老师 计科1班 A102 (A楼 / classroom) 按班级排课 周3 第1-2节 - 编辑 检测冲突 删除" [ref=e822]:
+                  - cell "2023-2024学年第二学期" [ref=e823]:
+                    - generic [ref=e824]: 2023-2024学年第二学期
+                  - cell "操作系统" [ref=e825]:
+                    - generic [ref=e826]: 操作系统
+                  - cell "张老师" [ref=e827]:
+                    - generic [ref=e828]: 张老师
+                  - cell "计科1班" [ref=e829]:
+                    - generic [ref=e830]: 计科1班
+                  - cell "A102 (A楼 / classroom)" [ref=e831]:
+                    - generic [ref=e832]: A102 (A楼 / classroom)
+                  - cell "按班级排课" [ref=e833]:
+                    - generic [ref=e836]: 按班级排课
+                  - cell "周3 第1-2节" [ref=e837]:
+                    - generic [ref=e838]: 周3 第1-2节
+                  - cell "-" [ref=e839]:
+                    - generic [ref=e840]: "-"
+                  - cell "编辑 检测冲突 删除" [ref=e841]:
+                    - generic [ref=e842]:
+                      - button "编辑" [ref=e843] [cursor=pointer]:
+                        - generic [ref=e844]: 编辑
+                      - button "检测冲突" [ref=e845] [cursor=pointer]:
+                        - generic [ref=e846]: 检测冲突
+                      - button "删除" [ref=e847] [cursor=pointer]:
+                        - generic [ref=e848]: 删除
+                - row "2023-2024学年第二学期 计算机网络 李老师 计科1班 A102 (A楼 / classroom) 按班级排课 周4 第3-4节 - 编辑 检测冲突 删除" [ref=e849]:
+                  - cell "2023-2024学年第二学期" [ref=e850]:
+                    - generic [ref=e851]: 2023-2024学年第二学期
+                  - cell "计算机网络" [ref=e852]:
+                    - generic [ref=e853]: 计算机网络
+                  - cell "李老师" [ref=e854]:
+                    - generic [ref=e855]: 李老师
+                  - cell "计科1班" [ref=e856]:
+                    - generic [ref=e857]: 计科1班
+                  - cell "A102 (A楼 / classroom)" [ref=e858]:
+                    - generic [ref=e859]: A102 (A楼 / classroom)
+                  - cell "按班级排课" [ref=e860]:
+                    - generic [ref=e863]: 按班级排课
+                  - cell "周4 第3-4节" [ref=e864]:
+                    - generic [ref=e865]: 周4 第3-4节
+                  - cell "-" [ref=e866]:
+                    - generic [ref=e867]: "-"
+                  - cell "编辑 检测冲突 删除" [ref=e868]:
+                    - generic [ref=e869]:
+                      - button "编辑" [ref=e870] [cursor=pointer]:
+                        - generic [ref=e871]: 编辑
+                      - button "检测冲突" [ref=e872] [cursor=pointer]:
+                        - generic [ref=e873]: 检测冲突
+                      - button "删除" [ref=e874] [cursor=pointer]:
+                        - generic [ref=e875]: 删除
+                - row "2023-2024学年第二学期 数据库原理 张老师 计科1班 A101 (A楼 / classroom) 按班级排课 周5 第1-2节 - 编辑 检测冲突 删除" [ref=e876]:
+                  - cell "2023-2024学年第二学期" [ref=e877]:
+                    - generic [ref=e878]: 2023-2024学年第二学期
+                  - cell "数据库原理" [ref=e879]:
+                    - generic [ref=e880]: 数据库原理
+                  - cell "张老师" [ref=e881]:
+                    - generic [ref=e882]: 张老师
+                  - cell "计科1班" [ref=e883]:
+                    - generic [ref=e884]: 计科1班
+                  - cell "A101 (A楼 / classroom)" [ref=e885]:
+                    - generic [ref=e886]: A101 (A楼 / classroom)
+                  - cell "按班级排课" [ref=e887]:
+                    - generic [ref=e890]: 按班级排课
+                  - cell "周5 第1-2节" [ref=e891]:
+                    - generic [ref=e892]: 周5 第1-2节
+                  - cell "-" [ref=e893]:
+                    - generic [ref=e894]: "-"
+                  - cell "编辑 检测冲突 删除" [ref=e895]:
+                    - generic [ref=e896]:
+                      - button "编辑" [ref=e897] [cursor=pointer]:
+                        - generic [ref=e898]: 编辑
+                      - button "检测冲突" [ref=e899] [cursor=pointer]:
+                        - generic [ref=e900]: 检测冲突
+                      - button "删除" [ref=e901] [cursor=pointer]:
+                        - generic [ref=e902]: 删除
+                - row "2023-2024学年第二学期 创业基础 王老师 - B101 (B楼 / lecture_hall) 开放选课 周5 第7-8节 0/150 编辑 检测冲突 删除" [ref=e903]:
+                  - cell "2023-2024学年第二学期" [ref=e904]:
+                    - generic [ref=e905]: 2023-2024学年第二学期
+                  - cell "创业基础" [ref=e906]:
+                    - generic [ref=e907]: 创业基础
+                  - cell "王老师" [ref=e908]:
+                    - generic [ref=e909]: 王老师
+                  - cell "-" [ref=e910]:
+                    - generic [ref=e911]: "-"
+                  - cell "B101 (B楼 / lecture_hall)" [ref=e912]:
+                    - generic [ref=e913]: B101 (B楼 / lecture_hall)
+                  - cell "开放选课" [ref=e914]:
+                    - generic [ref=e917]: 开放选课
+                  - cell "周5 第7-8节" [ref=e918]:
+                    - generic [ref=e919]: 周5 第7-8节
+                  - cell "0/150" [ref=e920]:
+                    - generic [ref=e921]: 0/150
+                  - cell "编辑 检测冲突 删除" [ref=e922]:
+                    - generic [ref=e923]:
+                      - button "编辑" [ref=e924] [cursor=pointer]:
+                        - generic [ref=e925]: 编辑
+                      - button "检测冲突" [ref=e926] [cursor=pointer]:
+                        - generic [ref=e927]: 检测冲突
+                      - button "删除" [ref=e928] [cursor=pointer]:
+                        - generic [ref=e929]: 删除
+          - generic [ref=e930]:
+            - generic [ref=e931]: Total 10
+            - generic [ref=e934] [cursor=pointer]:
+              - generic:
+                - combobox [ref=e936]
+                - generic [ref=e937]: 10/page
+              - img [ref=e940]
+            - button "Go to previous page" [disabled] [ref=e942]:
+              - generic:
+                - img
+            - list [ref=e943]:
+              - listitem "page 1" [ref=e944]: "1"
+            - button "Go to next page" [disabled] [ref=e945]:
+              - generic:
+                - img

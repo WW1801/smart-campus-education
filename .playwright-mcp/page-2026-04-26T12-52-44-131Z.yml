@@ -1,0 +1,46 @@
+- generic [ref=e2]:
+  - generic [ref=e4]:
+    - heading "教务管理系统 ER 图" [level=1] [ref=e5]
+    - paragraph [ref=e6]: 包含数据库实体关系图和系统功能结构图，可直接作为说明书插图或演示截图使用。
+  - generic [ref=e7]:
+    - generic [ref=e8]:
+      - heading "一、数据库 ER 图" [level=2] [ref=e9]
+      - generic [ref=e10]: 用户、角色、学生、课程、排课、成绩、考勤、毕业审核
+    - generic [ref=e12]:
+      - img
+      - generic [ref=e13]:
+        - generic [ref=e14]: User
+        - generic [ref=e15]: 账号、用户名、角色
+      - generic [ref=e16]:
+        - generic [ref=e17]: Role
+        - generic [ref=e18]: 角色定义
+      - generic [ref=e19]:
+        - generic [ref=e20]: Permission
+        - generic [ref=e21]: 权限点配置
+      - generic [ref=e22]:
+        - generic [ref=e23]: Student
+        - generic [ref=e24]: 学生基础信息
+      - generic [ref=e25]:
+        - generic [ref=e26]: Course
+        - generic [ref=e27]: 课程主数据
+      - generic [ref=e28]:
+        - generic [ref=e29]: TeachingPlan
+        - generic [ref=e30]: 教学计划
+      - generic [ref=e31]:
+        - generic [ref=e32]: Schedule
+        - generic [ref=e33]: 排课安排
+      - generic [ref=e34]:
+        - generic [ref=e35]: Grade
+        - generic [ref=e36]: 成绩记录
+      - generic [ref=e37]:
+        - generic [ref=e38]: Attendance
+        - generic [ref=e39]: 考勤记录
+      - generic [ref=e40]:
+        - generic [ref=e41]: GraduationAudit
+        - generic [ref=e42]: 毕业审核
+    - generic [ref=e43]:
+      - generic [ref=e44]: 成绩类表
+      - generic [ref=e46]: 基础主数据表
+      - generic [ref=e48]: 教学过程表
+      - generic [ref=e50]: 毕业审核表
+    - generic [ref=e52]: 说明：这是按系统核心表手工整理的数据库 ER 展示版，适合文档插图使用。

@@ -1,0 +1,301 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e179]:
+    - generic [ref=e180]:
+      - generic [ref=e182]:
+        - img [ref=e184]
+        - generic [ref=e188]: 教务管理系统
+      - generic [ref=e189]:
+        - generic [ref=e190]: admin
+        - generic [ref=e192]: 系统管理员
+        - button "退出登录" [ref=e193] [cursor=pointer]:
+          - generic [ref=e194]: 退出登录
+    - generic [ref=e195]:
+      - complementary [ref=e196]:
+        - menubar [ref=e197]:
+          - menuitem "系统管理" [expanded] [ref=e198]:
+            - generic [ref=e199] [cursor=pointer]:
+              - img [ref=e201]
+              - generic [ref=e203]: 系统管理
+              - img [ref=e205]
+            - menu [ref=e207]:
+              - menuitem "用户管理" [ref=e208] [cursor=pointer]
+              - menuitem "角色管理" [ref=e209] [cursor=pointer]
+              - menuitem "权限管理" [ref=e210] [cursor=pointer]
+          - menuitem "学生管理" [ref=e211]:
+            - generic [ref=e212] [cursor=pointer]:
+              - img [ref=e214]
+              - generic [ref=e216]: 学生管理
+              - img [ref=e218]
+          - menuitem "教师管理" [ref=e220]:
+            - generic [ref=e221] [cursor=pointer]:
+              - img [ref=e223]
+              - generic [ref=e225]: 教师管理
+              - img [ref=e227]
+          - menuitem "课程管理" [ref=e229]:
+            - generic [ref=e230] [cursor=pointer]:
+              - img [ref=e232]
+              - generic [ref=e235]: 课程管理
+              - img [ref=e237]
+          - menuitem "排课管理" [ref=e239]:
+            - generic [ref=e240] [cursor=pointer]:
+              - img [ref=e242]
+              - generic [ref=e244]: 排课管理
+              - img [ref=e246]
+          - menuitem "成绩管理" [ref=e248]:
+            - generic [ref=e249] [cursor=pointer]:
+              - img [ref=e251]
+              - generic [ref=e253]: 成绩管理
+              - img [ref=e255]
+          - menuitem "考勤管理" [ref=e257]:
+            - generic [ref=e258] [cursor=pointer]:
+              - img [ref=e260]
+              - generic [ref=e264]: 考勤管理
+              - img [ref=e266]
+          - menuitem "毕业管理" [ref=e268] [cursor=pointer]:
+            - img [ref=e270]
+            - generic [ref=e272]: 毕业管理
+      - main [ref=e273]:
+        - generic [ref=e275]:
+          - generic [ref=e276]:
+            - generic [ref=e277]:
+              - img [ref=e280]
+              - generic [ref=e282]:
+                - generic [ref=e283]: 用户管理
+                - generic [ref=e284]: 管理系统用户账号与角色分配
+            - button "新增用户" [ref=e285] [cursor=pointer]:
+              - generic [ref=e286]:
+                - img [ref=e288]
+                - text: 新增用户
+          - generic [ref=e291]:
+            - generic [ref=e292]:
+              - generic [ref=e294]:
+                - img [ref=e297]
+                - textbox "搜索用户名" [ref=e299]
+              - generic [ref=e301] [cursor=pointer]:
+                - generic:
+                  - combobox [ref=e303]
+                  - generic [ref=e304]: 筛选角色
+                - img [ref=e307]
+              - button "查询" [ref=e309] [cursor=pointer]:
+                - generic [ref=e310]: 查询
+              - button "重置" [ref=e311] [cursor=pointer]:
+                - generic [ref=e312]: 重置
+            - generic [ref=e314]:
+              - table [ref=e316]:
+                - rowgroup [ref=e325]:
+                  - row "用户ID 用户名 姓名 角色 关联ID 最后登录 操作" [ref=e326]:
+                    - columnheader "用户ID" [ref=e327]:
+                      - generic [ref=e328]: 用户ID
+                    - columnheader "用户名" [ref=e329]:
+                      - generic [ref=e330]: 用户名
+                    - columnheader "姓名" [ref=e331]:
+                      - generic [ref=e332]: 姓名
+                    - columnheader "角色" [ref=e333]:
+                      - generic [ref=e334]: 角色
+                    - columnheader "关联ID" [ref=e335]:
+                      - generic [ref=e336]: 关联ID
+                    - columnheader "最后登录" [ref=e337]:
+                      - generic [ref=e338]: 最后登录
+                    - columnheader "操作" [ref=e339]:
+                      - generic [ref=e340]: 操作
+              - table [ref=e345]:
+                - rowgroup [ref=e354]:
+                  - row "9 cc 曹操 教师 2026-04-26T13:19:20 编辑 重置密码 删除" [ref=e355]:
+                    - cell "9" [ref=e356]:
+                      - generic [ref=e357]: "9"
+                    - cell "cc" [ref=e358]:
+                      - generic [ref=e359]: cc
+                    - cell "曹操" [ref=e360]:
+                      - generic [ref=e361]: 曹操
+                    - cell "教师" [ref=e362]:
+                      - generic [ref=e365]: 教师
+                    - cell [ref=e366]
+                    - cell "2026-04-26T13:19:20" [ref=e367]:
+                      - generic [ref=e368]: 2026-04-26T13:19:20
+                    - cell "编辑 重置密码 删除" [ref=e369]:
+                      - generic [ref=e370]:
+                        - button "编辑" [ref=e371] [cursor=pointer]:
+                          - generic [ref=e372]: 编辑
+                        - button "重置密码" [ref=e373] [cursor=pointer]:
+                          - generic [ref=e374]: 重置密码
+                        - button "删除" [ref=e375] [cursor=pointer]:
+                          - generic [ref=e376]: 删除
+                  - row "8 qq 企鹅 闲杂人等 1 编辑 重置密码 删除" [ref=e377]:
+                    - cell "8" [ref=e378]:
+                      - generic [ref=e379]: "8"
+                    - cell "qq" [ref=e380]:
+                      - generic [ref=e381]: qq
+                    - cell "企鹅" [ref=e382]:
+                      - generic [ref=e383]: 企鹅
+                    - cell "闲杂人等" [ref=e384]:
+                      - generic [ref=e387]: 闲杂人等
+                    - cell "1" [ref=e388]:
+                      - generic [ref=e389]: "1"
+                    - cell [ref=e390]
+                    - cell "编辑 重置密码 删除" [ref=e391]:
+                      - generic [ref=e392]:
+                        - button "编辑" [ref=e393] [cursor=pointer]:
+                          - generic [ref=e394]: 编辑
+                        - button "重置密码" [ref=e395] [cursor=pointer]:
+                          - generic [ref=e396]: 重置密码
+                        - button "删除" [ref=e397] [cursor=pointer]:
+                          - generic [ref=e398]: 删除
+                  - row "7 demo 刘备 院系管理员 2026-04-21T15:43:20 编辑 重置密码 删除" [ref=e399]:
+                    - cell "7" [ref=e400]:
+                      - generic [ref=e401]: "7"
+                    - cell "demo" [ref=e402]:
+                      - generic [ref=e403]: demo
+                    - cell "刘备" [ref=e404]:
+                      - generic [ref=e405]: 刘备
+                    - cell "院系管理员" [ref=e406]:
+                      - generic [ref=e409]: 院系管理员
+                    - cell [ref=e410]
+                    - cell "2026-04-21T15:43:20" [ref=e411]:
+                      - generic [ref=e412]: 2026-04-21T15:43:20
+                    - cell "编辑 重置密码 删除" [ref=e413]:
+                      - generic [ref=e414]:
+                        - button "编辑" [ref=e415] [cursor=pointer]:
+                          - generic [ref=e416]: 编辑
+                        - button "重置密码" [ref=e417] [cursor=pointer]:
+                          - generic [ref=e418]: 重置密码
+                        - button "删除" [ref=e419] [cursor=pointer]:
+                          - generic [ref=e420]: 删除
+                  - row "1 admin 系统管理员 系统管理员 2026-04-26T22:06:49 编辑 重置密码 删除" [ref=e421]:
+                    - cell "1" [ref=e422]:
+                      - generic [ref=e423]: "1"
+                    - cell "admin" [ref=e424]:
+                      - generic [ref=e425]: admin
+                    - cell "系统管理员" [ref=e426]:
+                      - generic [ref=e427]: 系统管理员
+                    - cell "系统管理员" [ref=e428]:
+                      - generic [ref=e431]: 系统管理员
+                    - cell [ref=e432]
+                    - cell "2026-04-26T22:06:49" [ref=e433]:
+                      - generic [ref=e434]: 2026-04-26T22:06:49
+                    - cell "编辑 重置密码 删除" [ref=e435]:
+                      - generic [ref=e436]:
+                        - button "编辑" [ref=e437] [cursor=pointer]:
+                          - generic [ref=e438]: 编辑
+                        - button "重置密码" [ref=e439] [cursor=pointer]:
+                          - generic [ref=e440]: 重置密码
+                        - button "删除" [ref=e441] [cursor=pointer]:
+                          - generic [ref=e442]: 删除
+                  - row "2 jwc 教务处管理员 教务处管理员 001 2026-04-26T13:20:15 编辑 重置密码 删除" [ref=e443]:
+                    - cell "2" [ref=e444]:
+                      - generic [ref=e445]: "2"
+                    - cell "jwc" [ref=e446]:
+                      - generic [ref=e447]: jwc
+                    - cell "教务处管理员" [ref=e448]:
+                      - generic [ref=e449]: 教务处管理员
+                    - cell "教务处管理员" [ref=e450]:
+                      - generic [ref=e453]: 教务处管理员
+                    - cell "001" [ref=e454]:
+                      - generic [ref=e455]: "001"
+                    - cell "2026-04-26T13:20:15" [ref=e456]:
+                      - generic [ref=e457]: 2026-04-26T13:20:15
+                    - cell "编辑 重置密码 删除" [ref=e458]:
+                      - generic [ref=e459]:
+                        - button "编辑" [ref=e460] [cursor=pointer]:
+                          - generic [ref=e461]: 编辑
+                        - button "重置密码" [ref=e462] [cursor=pointer]:
+                          - generic [ref=e463]: 重置密码
+                        - button "删除" [ref=e464] [cursor=pointer]:
+                          - generic [ref=e465]: 删除
+                  - row "3 dept 院系管理员 院系管理员 编辑 重置密码 删除" [ref=e466]:
+                    - cell "3" [ref=e467]:
+                      - generic [ref=e468]: "3"
+                    - cell "dept" [ref=e469]:
+                      - generic [ref=e470]: dept
+                    - cell "院系管理员" [ref=e471]:
+                      - generic [ref=e472]: 院系管理员
+                    - cell "院系管理员" [ref=e473]:
+                      - generic [ref=e476]: 院系管理员
+                    - cell [ref=e477]
+                    - cell [ref=e478]
+                    - cell "编辑 重置密码 删除" [ref=e479]:
+                      - generic [ref=e480]:
+                        - button "编辑" [ref=e481] [cursor=pointer]:
+                          - generic [ref=e482]: 编辑
+                        - button "重置密码" [ref=e483] [cursor=pointer]:
+                          - generic [ref=e484]: 重置密码
+                        - button "删除" [ref=e485] [cursor=pointer]:
+                          - generic [ref=e486]: 删除
+                  - row "4 teacher1 张老师 教师 T001 编辑 重置密码 删除" [ref=e487]:
+                    - cell "4" [ref=e488]:
+                      - generic [ref=e489]: "4"
+                    - cell "teacher1" [ref=e490]:
+                      - generic [ref=e491]: teacher1
+                    - cell "张老师" [ref=e492]:
+                      - generic [ref=e493]: 张老师
+                    - cell "教师" [ref=e494]:
+                      - generic [ref=e497]: 教师
+                    - cell "T001" [ref=e498]:
+                      - generic [ref=e499]: T001
+                    - cell [ref=e500]
+                    - cell "编辑 重置密码 删除" [ref=e501]:
+                      - generic [ref=e502]:
+                        - button "编辑" [ref=e503] [cursor=pointer]:
+                          - generic [ref=e504]: 编辑
+                        - button "重置密码" [ref=e505] [cursor=pointer]:
+                          - generic [ref=e506]: 重置密码
+                        - button "删除" [ref=e507] [cursor=pointer]:
+                          - generic [ref=e508]: 删除
+                  - row "5 student1 李同学 学生 S001 2026-04-26T19:21:16 编辑 重置密码 删除" [ref=e509]:
+                    - cell "5" [ref=e510]:
+                      - generic [ref=e511]: "5"
+                    - cell "student1" [ref=e512]:
+                      - generic [ref=e513]: student1
+                    - cell "李同学" [ref=e514]:
+                      - generic [ref=e515]: 李同学
+                    - cell "学生" [ref=e516]:
+                      - generic [ref=e519]: 学生
+                    - cell "S001" [ref=e520]:
+                      - generic [ref=e521]: S001
+                    - cell "2026-04-26T19:21:16" [ref=e522]:
+                      - generic [ref=e523]: 2026-04-26T19:21:16
+                    - cell "编辑 重置密码 删除" [ref=e524]:
+                      - generic [ref=e525]:
+                        - button "编辑" [ref=e526] [cursor=pointer]:
+                          - generic [ref=e527]: 编辑
+                        - button "重置密码" [ref=e528] [cursor=pointer]:
+                          - generic [ref=e529]: 重置密码
+                        - button "删除" [ref=e530] [cursor=pointer]:
+                          - generic [ref=e531]: 删除
+                  - row "6 wda 王同学 学生 W001 编辑 重置密码 删除" [ref=e532]:
+                    - cell "6" [ref=e533]:
+                      - generic [ref=e534]: "6"
+                    - cell "wda" [ref=e535]:
+                      - generic [ref=e536]: wda
+                    - cell "王同学" [ref=e537]:
+                      - generic [ref=e538]: 王同学
+                    - cell "学生" [ref=e539]:
+                      - generic [ref=e542]: 学生
+                    - cell "W001" [ref=e543]:
+                      - generic [ref=e544]: W001
+                    - cell [ref=e545]
+                    - cell "编辑 重置密码 删除" [ref=e546]:
+                      - generic [ref=e547]:
+                        - button "编辑" [ref=e548] [cursor=pointer]:
+                          - generic [ref=e549]: 编辑
+                        - button "重置密码" [ref=e550] [cursor=pointer]:
+                          - generic [ref=e551]: 重置密码
+                        - button "删除" [ref=e552] [cursor=pointer]:
+                          - generic [ref=e553]: 删除
+            - generic [ref=e554]:
+              - generic [ref=e555]: Total 9
+              - generic [ref=e558] [cursor=pointer]:
+                - generic:
+                  - combobox [ref=e560]
+                  - generic [ref=e561]: 10/page
+                - img [ref=e564]
+              - button "Go to previous page" [disabled] [ref=e566]:
+                - generic:
+                  - img
+              - list [ref=e567]:
+                - listitem "page 1" [ref=e568]: "1"
+              - button "Go to next page" [disabled] [ref=e569]:
+                - generic:
+                  - img
+  - alert [ref=e570]:
+    - img [ref=e572]
+    - paragraph [ref=e574]: 登录成功
