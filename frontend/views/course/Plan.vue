@@ -3,7 +3,7 @@
   <div class="page-container">
     <div class="page-header">
       <div class="page-header-left">
-        <div class="page-header-icon" style="background: linear-gradient(135deg, #ec4899, #f472b6);">
+        <div class="page-header-icon">
           <el-icon :size="22"><Notebook /></el-icon>
         </div>
         <div>
@@ -17,20 +17,24 @@
       </el-button>
     </div>
 
-    <el-card>
+    <PageErrorState v-if="listError" :retrying="loading" title="教学计划加载失败" @retry="getPlanList" />
+    <el-card v-else>
       <div class="search-bar">
         <el-select v-model="searchForm.majorId" placeholder="筛选专业" clearable style="width: 180px">
           <el-option v-for="m in majorList" :key="m.majorId" :label="m.name" :value="m.majorId" />
         </el-select>
-        <el-input v-model="searchForm.grade" placeholder="搜索年级" style="width: 130px" clearable />
         <el-button type="primary" @click="search">查询</el-button>
         <el-button @click="resetSearch">重置</el-button>
       </div>
 
       <el-table :data="planList" stripe v-loading="loading">
         <el-table-column prop="planId" label="计划ID" width="110" />
-        <el-table-column prop="majorId" label="专业" width="150" />
-        <el-table-column prop="courseId" label="课程" width="150" />
+        <el-table-column label="专业" min-width="180">
+          <template #default="{ row }">{{ majorLabel(row.majorId) }}</template>
+        </el-table-column>
+        <el-table-column label="课程" min-width="200">
+          <template #default="{ row }">{{ courseLabel(row.courseId) }}</template>
+        </el-table-column>
         <el-table-column prop="semesterType" label="建议学期" width="100" />
         <el-table-column prop="courseNature" label="课程性质" width="120">
           <template #default="scope">
@@ -46,7 +50,9 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="prerequisiteIds" label="先修课程ID" show-overflow-tooltip />
+        <el-table-column label="先修课程" min-width="220" show-overflow-tooltip>
+          <template #default="{ row }">{{ prerequisiteLabel(row.prerequisiteIds) }}</template>
+        </el-table-column>
         <el-table-column label="操作" width="200">
           <template #default="scope">
             <el-button size="small" type="primary" link @click="editPlan(scope.row)">编辑</el-button>
@@ -75,7 +81,7 @@
         </el-form-item>
         <el-form-item label="课程" prop="courseId">
           <el-select v-model="planForm.courseId" style="width: 100%" filterable>
-            <el-option v-for="c in courseOptions" :key="c.courseId" :label="c.name" :value="c.courseId" />
+            <el-option v-for="c in courseOptions" :key="c.courseId" :label="courseLabel(c.courseId)" :value="c.courseId" />
           </el-select>
         </el-form-item>
         <el-form-item label="建议学期" prop="semesterType">
@@ -88,14 +94,33 @@
             <el-option label="公共选修" value="elective_public" />
           </el-select>
         </el-form-item>
-        <el-form-item label="是否先修" prop="isPrerequisite">
+        <el-form-item label="设置先修课程" prop="isPrerequisite">
           <el-select v-model="planForm.isPrerequisite" style="width: 100%">
             <el-option label="否" :value="0" />
             <el-option label="是" :value="1" />
           </el-select>
         </el-form-item>
-        <el-form-item label="先修课程ID" prop="prerequisiteIds">
-          <el-input v-model="planForm.prerequisiteIds" placeholder="多个用逗号分隔，如：CO001,CO002" />
+        <el-form-item v-if="planForm.isPrerequisite === 1" label="先修课程" prop="prerequisiteIds">
+          <el-select
+            v-model="selectedPrerequisiteIds"
+            multiple
+            filterable
+            clearable
+            collapse-tags
+            collapse-tags-tooltip
+            placeholder="按课程名称或课程代码搜索"
+            :disabled="!planForm.courseId"
+            style="width: 100%"
+            @change="syncPrerequisiteIds"
+          >
+            <el-option
+              v-for="course in prerequisiteCourseOptions"
+              :key="course.courseId"
+              :label="courseLabel(course.courseId)"
+              :value="course.courseId"
+            />
+          </el-select>
+          <div class="form-tip">系统保存课程技术 ID；此处可按课程名称或课程代码选择。</div>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -107,16 +132,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Notebook, Plus } from '@element-plus/icons-vue'
 import request from '../../utils/request'
 
 const loading = ref(false)
+const listError = ref(false)
 const planList = ref([])
 const majorList = ref([])
 const courseOptions = ref([])
-const searchForm = ref({ majorId: '', grade: '' })
+const searchForm = ref({ majorId: '' })
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
@@ -124,6 +150,11 @@ const dialogVisible = ref(false)
 const editMode = ref(false)
 const planFormRef = ref(null)
 const planForm = ref({ planId: '', majorId: '', courseId: '', semesterType: 1, courseNature: 'compulsory', isPrerequisite: 0, prerequisiteIds: '' })
+const selectedPrerequisiteIds = ref([])
+
+// 当前课程不能作为自身的先修课，其他候选项保持名称和课程代码可检索。
+const prerequisiteCourseOptions = computed(() => courseOptions.value
+  .filter(course => course.courseId !== planForm.value.courseId))
 
 const planRules = {
   majorId: [{ required: true, message: '请选择专业', trigger: 'change' }],
@@ -151,22 +182,40 @@ const loadCourses = async () => {
   catch {}
 }
 
+const majorLabel = (majorId) => {
+  const major = majorList.value.find(item => item.majorId === majorId)
+  return major ? `${major.name}（${major.majorId}）` : majorId || '-'
+}
+
+const courseLabel = (courseId) => {
+  const course = courseOptions.value.find(item => item.courseId === courseId)
+  return course ? `${course.name}（${course.code || course.courseId}）` : courseId || '-'
+}
+
+const prerequisiteLabel = (ids) => {
+  if (!ids) return '无'
+  return ids.split(',').map(id => courseLabel(id.trim())).join('；')
+}
+
 // 获取计划列表
 const getPlanList = async () => {
   loading.value = true
+  listError.value = false
   try {
     const res = await request.get('/teaching-plan/page', {
       params: {
         current: currentPage.value,
         size: pageSize.value,
         majorId: searchForm.value.majorId || undefined
-      }
+      },
+      skipErrorMessage: true
     })
     planList.value = res.data.records || []
     total.value = res.data.total || 0
   } catch {
     planList.value = []
     total.value = 0
+    listError.value = true
   } finally {
     loading.value = false
   }
@@ -175,12 +224,13 @@ const getPlanList = async () => {
 // 按条件查询课程
 const search = () => { currentPage.value = 1; getPlanList() }
 // 重置查询条件
-const resetSearch = () => { searchForm.value = { majorId: '', grade: '' }; currentPage.value = 1; getPlanList() }
+const resetSearch = () => { searchForm.value = { majorId: '' }; currentPage.value = 1; getPlanList() }
 
 // 添加计划
 const addPlan = () => {
   editMode.value = false
   planForm.value = { planId: '', majorId: '', courseId: '', semesterType: 1, courseNature: 'compulsory', isPrerequisite: 0, prerequisiteIds: '' }
+  selectedPrerequisiteIds.value = []
   dialogVisible.value = true
 }
 
@@ -188,8 +238,31 @@ const addPlan = () => {
 const editPlan = (row) => {
   editMode.value = true
   planForm.value = { ...row }
+  // 后端仍使用逗号分隔的技术 ID；编辑时转换为多选组件需要的数组。
+  selectedPrerequisiteIds.value = (row.prerequisiteIds || '').split(',').map(id => id.trim()).filter(Boolean)
   dialogVisible.value = true
 }
+
+// 将用户选择转换为既有接口使用的逗号分隔 ID，不改变后端字段协议。
+const syncPrerequisiteIds = () => {
+  planForm.value.prerequisiteIds = selectedPrerequisiteIds.value.join(',')
+}
+
+watch(() => planForm.value.courseId, (courseId) => {
+  // 课程变更后移除自身，避免出现无效的自引用先修关系。
+  if (courseId && selectedPrerequisiteIds.value.includes(courseId)) {
+    selectedPrerequisiteIds.value = selectedPrerequisiteIds.value.filter(id => id !== courseId)
+    syncPrerequisiteIds()
+  }
+})
+
+watch(() => planForm.value.isPrerequisite, (enabled) => {
+  // 关闭先修课程时清空提交值，避免历史选择残留到接口请求中。
+  if (enabled !== 1) {
+    selectedPrerequisiteIds.value = []
+    planForm.value.prerequisiteIds = ''
+  }
+})
 
 // 删除计划
 const deletePlan = async (planId) => {
@@ -204,6 +277,11 @@ const deletePlan = async (planId) => {
 // 保存计划
 const savePlan = async () => {
   if (!planFormRef.value) return
+  if (planForm.value.isPrerequisite === 1 && selectedPrerequisiteIds.value.length === 0) {
+    ElMessage.warning('请至少选择一门先修课程')
+    return
+  }
+  syncPrerequisiteIds()
   try {
     await planFormRef.value.validate()
   } catch { return }
@@ -227,4 +305,5 @@ const handleCurrentChange = (current) => { currentPage.value = current; getPlanL
 
 <style scoped>
 .page-container { width: 100%; }
+.form-tip { margin-top: 6px; color: var(--text-secondary); font-size: 12px; line-height: 1.5; }
 </style>

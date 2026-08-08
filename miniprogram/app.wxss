@@ -1,0 +1,445 @@
+page {
+  min-height: 100%;
+  color: #24322d;
+  background: #f6f8f7;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button,
+input,
+textarea {
+  font-family: inherit;
+}
+
+button {
+  box-sizing: border-box;
+  padding: 0 24rpx;
+  border: 0;
+}
+
+.page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 30rpx 32rpx 160rpx;
+  background: #f6f8f7;
+}
+
+.page-title {
+  color: #24322d;
+  font-size: 54rpx;
+  font-weight: 800;
+  line-height: 1.12;
+}
+
+.page-subtitle {
+  margin-top: 10rpx;
+  color: #75817b;
+  font-size: 27rpx;
+  line-height: 1.5;
+}
+
+.hero-card {
+  margin-bottom: 26rpx;
+  padding: 30rpx 28rpx;
+  background: #ffffff;
+  border: 1rpx solid #e3e9e5;
+  border-radius: 18rpx;
+  box-shadow: 0 14rpx 34rpx rgba(36, 50, 45, 0.07);
+}
+
+.eyebrow {
+  display: block;
+  color: #2c9b64;
+  font-size: 22rpx;
+  font-weight: 700;
+  letter-spacing: 3rpx;
+}
+
+.hero-title {
+  display: block;
+  margin-top: 14rpx;
+  color: #24322d;
+  font-size: 48rpx;
+  font-weight: 800;
+  line-height: 1.12;
+}
+
+.hero-subtitle {
+  display: block;
+  margin-top: 12rpx;
+  color: #75817b;
+  font-size: 26rpx;
+  line-height: 1.55;
+}
+
+.panel,
+.section-card,
+.info-card,
+.stats-card,
+.item,
+.state {
+  background: #ffffff;
+  border: 1rpx solid #e3e9e5;
+  border-radius: 18rpx;
+  box-shadow: 0 12rpx 28rpx rgba(36, 50, 45, 0.06);
+}
+
+.panel,
+.section-card,
+.info-card,
+.stats-card {
+  padding: 28rpx;
+}
+
+.field {
+  margin-top: 24rpx;
+}
+
+.field-label,
+.field-title {
+  display: block;
+  margin-bottom: 10rpx;
+  color: #75817b;
+  font-size: 25rpx;
+}
+
+.input,
+.textarea,
+.picker {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 88rpx;
+  padding: 0 24rpx;
+  color: #24322d;
+  background: #fbfcfb;
+  border: 1rpx solid #dfe7e1;
+  border-radius: 14rpx;
+  font-size: 28rpx;
+}
+
+.picker {
+  display: flex;
+  align-items: center;
+}
+
+.textarea {
+  min-height: 220rpx;
+  padding-top: 20rpx;
+  padding-bottom: 20rpx;
+  line-height: 1.5;
+}
+
+.primary-button,
+.secondary-button,
+.danger-button {
+  min-height: 86rpx;
+  border-radius: 14rpx;
+  font-size: 29rpx;
+  font-weight: 700;
+  line-height: 86rpx;
+}
+
+.primary-button {
+  color: #ffffff;
+  background: #2c9b64;
+}
+
+.secondary-button {
+  color: #2c8b5c;
+  background: #edf5ef;
+}
+
+.danger-button {
+  color: #c2534b;
+  background: #fff0ee;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 26rpx;
+}
+
+.toolbar .picker {
+  flex: 1;
+  margin-right: 16rpx;
+}
+
+.refresh-button {
+  width: 150rpx;
+  flex: 0 0 150rpx;
+  padding: 0;
+}
+
+.state {
+  margin-top: 24rpx;
+  padding: 42rpx 28rpx;
+  text-align: center;
+  box-shadow: none;
+}
+
+.state-title {
+  display: block;
+  color: #34423b;
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+.state-desc {
+  display: block;
+  margin-top: 10rpx;
+  color: #75817b;
+  font-size: 25rpx;
+  line-height: 1.5;
+}
+
+.state-button {
+  width: 220rpx;
+  margin: 24rpx auto 0;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.item {
+  margin-bottom: 18rpx;
+  padding: 26rpx;
+}
+
+.item-title {
+  color: #24322d;
+  font-size: 31rpx;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.item-meta,
+.info-row {
+  margin-top: 12rpx;
+  color: #75817b;
+  font-size: 25rpx;
+  line-height: 1.5;
+}
+
+.status {
+  display: inline-block;
+  margin-left: 12rpx;
+  padding: 5rpx 12rpx;
+  border-radius: 999rpx;
+  font-size: 21rpx;
+  font-weight: 700;
+}
+
+.status-ok {
+  color: #2d8858;
+  background: #eaf6ee;
+}
+
+.status-warn {
+  color: #a66a16;
+  background: #fff4db;
+}
+
+.status-danger {
+  color: #b84b43;
+  background: #ffedeb;
+}
+
+.summary {
+  display: flex;
+  margin-bottom: 26rpx;
+}
+
+.summary-cell {
+  width: 33.3333%;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.summary-value,
+.summary-label {
+  display: block;
+}
+
+.summary-value {
+  color: #24322d;
+  font-size: 38rpx;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.summary-label {
+  margin-top: 8rpx;
+  color: #75817b;
+  font-size: 23rpx;
+}
+
+.grade-grid {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 20rpx;
+  color: #75817b;
+  font-size: 25rpx;
+  line-height: 1.45;
+}
+
+.grade-grid view {
+  width: 50%;
+  margin-bottom: 12rpx;
+}
+
+.tabs {
+  display: flex;
+  margin-bottom: 20rpx;
+  padding: 8rpx;
+  background: #eaf1ec;
+  border-radius: 16rpx;
+}
+
+.tab {
+  width: 50%;
+  min-height: 76rpx;
+  padding: 0;
+  color: #607069;
+  background: transparent;
+  border-radius: 12rpx;
+  font-size: 27rpx;
+  font-weight: 600;
+  line-height: 76rpx;
+}
+
+.tab.active {
+  color: #ffffff;
+  background: #2c9b64;
+  box-shadow: 0 8rpx 18rpx rgba(44, 155, 100, 0.18);
+}
+
+.two-cols {
+  display: flex;
+}
+
+.two-cols .date-field {
+  flex: 1;
+}
+
+.two-cols .date-field-right {
+  margin-left: 16rpx;
+}
+
+.submit-button,
+.reload-button {
+  margin-top: 24rpx;
+}
+
+.reload-button {
+  display: block;
+  width: 260rpx;
+}
+
+.cancel-button {
+  width: 230rpx;
+  min-height: 70rpx;
+  margin-top: 22rpx;
+  font-size: 25rpx;
+  line-height: 70rpx;
+}
+
+.section-title {
+  color: #24322d;
+  font-size: 31rpx;
+  font-weight: 800;
+}
+
+.profile-name {
+  margin-bottom: 20rpx;
+  color: #24322d;
+  font-size: 38rpx;
+  font-weight: 800;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 12rpx;
+  border-bottom: 1rpx solid #edf1ee;
+}
+
+.info-label {
+  width: 130rpx;
+  color: #8a958f;
+}
+
+.info-value {
+  flex: 1;
+  color: #39463f;
+  text-align: right;
+  word-break: break-all;
+}
+
+.save-button,
+.logout-button {
+  margin-top: 26rpx;
+}
+
+.login-page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 48rpx 32rpx 64rpx;
+  background: #f6f8f7;
+}
+
+.login-hero {
+  margin-bottom: 24rpx;
+  padding: 28rpx 6rpx 18rpx;
+}
+
+.login-kicker {
+  display: block;
+  color: #2c9b64;
+  font-size: 22rpx;
+  font-weight: 700;
+  letter-spacing: 3rpx;
+}
+
+.login-title {
+  display: block;
+  margin-top: 14rpx;
+  color: #24322d;
+  font-size: 56rpx;
+  font-weight: 800;
+  line-height: 1.12;
+}
+
+.login-subtitle {
+  display: block;
+  margin-top: 14rpx;
+  color: #75817b;
+  font-size: 27rpx;
+  line-height: 1.55;
+}
+
+.login-card {
+  padding: 30rpx 28rpx 34rpx;
+  background: #ffffff;
+  border: 1rpx solid #e3e9e5;
+  border-radius: 18rpx;
+  box-shadow: 0 16rpx 40rpx rgba(36, 50, 45, 0.08);
+}
+
+.login-card .field {
+  margin-top: 24rpx;
+}
+
+.login-button {
+  margin-top: 32rpx;
+}
+
+.hint {
+  display: block;
+  margin-top: 18rpx;
+  color: #8a958f;
+  font-size: 23rpx;
+  line-height: 1.5;
+}

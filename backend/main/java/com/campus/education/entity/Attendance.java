@@ -19,6 +19,8 @@ public class Attendance {
     private String attendanceId;
     private String studentId;
     @TableField(exist = false)
+    private String studentNo;
+    @TableField(exist = false)
     private String studentName;
     private String courseId;
     @TableField(exist = false)
@@ -26,6 +28,13 @@ public class Attendance {
     private String semesterId;
     private LocalDate date;
     private String status;
+    /** manual-人工录入；leave_request-请假审批同步。 */
+    private String recordSource;
+    private String sourceRequestId;
+    private String approvedBy;
+    private LocalDateTime syncedAt;
+    /** 人工锁定后，任何自动同步和普通编辑都不得覆盖。 */
+    private Boolean manualLocked;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

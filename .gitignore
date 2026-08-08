@@ -6,7 +6,9 @@
 node_modules/
 frontend/node_modules/
 frontend/dist/
+frontend/test-results/
 backend/target/
+backend/main/resources/application-local.yml
 *.log
 backend-run.out.log
 backend-run.err.log
@@ -15,3 +17,5 @@ spring-run.err.log
 *.iml
 Thumbs.db
 .DS_Store
+
+/backups/

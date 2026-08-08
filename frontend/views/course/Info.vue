@@ -3,7 +3,7 @@
   <div class="page-container">
     <div class="page-header">
       <div class="page-header-left">
-        <div class="page-header-icon" style="background: linear-gradient(135deg, #f59e0b, #fbbf24);">
+        <div class="page-header-icon">
           <el-icon :size="22"><Document /></el-icon>
         </div>
         <div>
@@ -17,7 +17,8 @@
       </el-button>
     </div>
 
-    <el-card>
+    <PageErrorState v-if="listError" :retrying="loading" title="课程列表加载失败" @retry="getCourseList" />
+    <el-card v-else>
       <div class="search-bar">
         <el-input v-model="searchForm.code" placeholder="搜索课程代码" style="width: 150px" clearable>
           <template #prefix><el-icon><Search /></el-icon></template>
@@ -35,8 +36,8 @@
       </div>
 
       <el-table :data="courseList" stripe v-loading="loading">
-        <el-table-column prop="courseId" label="课程ID" width="100" />
         <el-table-column prop="code" label="课程代码" width="120" />
+        <el-table-column prop="courseId" label="技术ID" width="100" show-overflow-tooltip />
         <el-table-column prop="name" label="课程名称" width="160" />
         <el-table-column prop="credits" label="学分" width="70" />
         <el-table-column prop="hours" label="课时" width="70" />
@@ -71,7 +72,7 @@
     <el-dialog :title="editMode ? '编辑课程' : '添加课程'" v-model="dialogVisible" width="560px">
       <el-form ref="courseFormRef" :model="courseForm" :rules="courseRules" label-width="100px">
         <el-form-item label="课程代码" prop="code">
-          <el-input v-model="courseForm.code" placeholder="请输入课程代码" />
+          <el-input v-model="courseForm.code" :placeholder="editMode ? '请输入课程代码' : '留空后自动生成，如 C0001'" />
         </el-form-item>
         <el-form-item label="课程名称" prop="name">
           <el-input v-model="courseForm.name" placeholder="请输入课程名称" />
@@ -124,6 +125,7 @@ import { Document, Plus, Search } from '@element-plus/icons-vue'
 import request from '../../utils/request'
 
 const loading = ref(false)
+const listError = ref(false)
 const courseList = ref([])
 const deptList = ref([])
 const searchForm = ref({ code: '', name: '', departmentId: '', type: '' })
@@ -138,7 +140,6 @@ const courseForm = ref({
 })
 
 const courseRules = {
-  code: [{ required: true, message: '请输入课程代码', trigger: 'blur' }],
   name: [{ required: true, message: '请输入课程名称', trigger: 'blur' }],
   credits: [{ required: true, message: '请输入学分', trigger: 'blur' }],
   hours: [{ required: true, message: '请输入课时', trigger: 'blur' }],
@@ -158,12 +159,18 @@ const loadDepts = async () => {
 // 获取课程列表
 const getCourseList = async () => {
   loading.value = true
+  listError.value = false
   try {
     const res = await request.get('/course/page', {
-      params: { current: currentPage.value, size: pageSize.value, ...searchForm.value }
+      params: { current: currentPage.value, size: pageSize.value, ...searchForm.value },
+      skipErrorMessage: true
     })
     courseList.value = res.data.records
     total.value = res.data.total
+  } catch {
+    courseList.value = []
+    total.value = 0
+    listError.value = true
   } finally { loading.value = false }
 }
 

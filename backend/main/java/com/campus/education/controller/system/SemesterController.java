@@ -22,7 +22,7 @@ public class SemesterController {
     // 查询学期列表
     @GetMapping("/list")
     public Result<List<Semester>> list() {
-        return Result.success(semesterService.list());
+        return Result.success(semesterService.listWithRealtimeStatus());
     }
 
     // 添加学期

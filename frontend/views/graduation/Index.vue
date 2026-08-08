@@ -12,7 +12,8 @@
       </div>
     </div>
 
-    <div class="stats-grid">
+    <PageErrorState v-if="listError" :retrying="loading" title="毕业审核数据加载失败" @retry="loadData" />
+    <div v-if="!listError" class="stats-grid">
       <el-card class="stat-card">
         <div class="stat-label">学生总数</div>
         <div class="stat-value">{{ stats.totalStudents || 0 }}</div>
@@ -31,7 +32,7 @@
       </el-card>
     </div>
 
-    <el-card>
+    <el-card v-if="!listError">
       <div class="search-bar">
         <el-input v-model="searchForm.studentId" placeholder="学号" clearable style="width: 180px" />
         <el-select v-model="searchForm.majorId" placeholder="专业" clearable style="width: 180px">
@@ -161,6 +162,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '../../utils/request'
 
 const loading = ref(false)
+const listError = ref(false)
 const tableData = ref([])
 const majorOptions = ref([])
 const classOptions = ref([])
@@ -204,6 +206,7 @@ const loadOptions = async () => {
 // 加载数据
 const loadData = async () => {
   loading.value = true
+  listError.value = false
   try {
     const [pageRes, statsRes] = await Promise.all([
       request.get('/graduation/page', {
@@ -214,18 +217,25 @@ const loadData = async () => {
           majorId: searchForm.majorId || undefined,
           classId: searchForm.classId || undefined,
           status: searchForm.status || undefined
-        }
+        },
+        skipErrorMessage: true
       }),
       request.get('/graduation/statistics', {
         params: {
           majorId: searchForm.majorId || undefined,
           classId: searchForm.classId || undefined
-        }
+        },
+        skipErrorMessage: true
       })
     ])
     tableData.value = pageRes.data?.records || []
     pagination.total = pageRes.data?.total || 0
     stats.value = statsRes.data || {}
+  } catch {
+    tableData.value = []
+    pagination.total = 0
+    stats.value = {}
+    listError.value = true
   } finally {
     loading.value = false
   }
@@ -396,12 +406,12 @@ const progressStatusTagType = (status) => {
 .page-header-title {
   font-size: 22px;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--ink);
 }
 
 .page-header-desc {
   margin-top: 4px;
-  color: #6b7280;
+  color: var(--text-secondary);
 }
 
 .action-group {
@@ -421,7 +431,7 @@ const progressStatusTagType = (status) => {
 }
 
 .stat-label {
-  color: #6b7280;
+  color: var(--text-secondary);
   font-size: 13px;
 }
 
@@ -429,19 +439,19 @@ const progressStatusTagType = (status) => {
   margin-top: 8px;
   font-size: 28px;
   font-weight: 700;
-  color: #111827;
+  color: var(--ink);
 }
 
 .stat-value.success {
-  color: #16a34a;
+  color: var(--sage);
 }
 
 .stat-value.danger {
-  color: #dc2626;
+  color: var(--vermilion);
 }
 
 .stat-value.primary {
-  color: #2563eb;
+  color: var(--blue);
 }
 
 .search-bar {
@@ -464,14 +474,14 @@ const progressStatusTagType = (status) => {
 .remedial-title {
   font-size: 16px;
   font-weight: 700;
-  color: #111827;
+  color: var(--ink);
 }
 
 .remedial-metrics {
   display: flex;
   gap: 20px;
   margin-top: 10px;
-  color: #4b5563;
+  color: var(--text-secondary);
   font-size: 13px;
   flex-wrap: wrap;
 }

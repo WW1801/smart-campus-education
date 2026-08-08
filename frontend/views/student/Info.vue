@@ -3,7 +3,7 @@
   <div class="page-container">
     <div class="page-header">
       <div class="page-header-left">
-        <div class="page-header-icon" style="background: linear-gradient(135deg, #6366f1, #818cf8);">
+        <div class="page-header-icon">
           <el-icon :size="22"><User /></el-icon>
         </div>
         <div>
@@ -17,9 +17,10 @@
       </el-button>
     </div>
 
-    <el-card>
+    <PageErrorState v-if="listError" :retrying="loading" title="学生列表加载失败" @retry="loadData" />
+    <el-card v-else>
       <div class="search-bar">
-        <el-input v-model="searchForm.studentId" placeholder="搜索学号" style="width: 150px" clearable>
+        <el-input v-model="searchForm.studentNo" placeholder="搜索学号" style="width: 150px" clearable>
           <template #prefix><el-icon><Search /></el-icon></template>
         </el-input>
         <el-input v-model="searchForm.name" placeholder="搜索姓名" style="width: 130px" clearable />
@@ -37,7 +38,7 @@
       </div>
 
       <el-table :data="tableData" stripe v-loading="loading">
-        <el-table-column prop="studentId" label="学号" width="120" />
+        <el-table-column prop="studentNo" label="学号" width="170" />
         <el-table-column prop="name" label="姓名" width="80" />
         <el-table-column prop="gender" label="性别" width="60">
           <template #default="{ row }">{{ row.gender === 'male' ? '男' : '女' }}</template>
@@ -74,8 +75,8 @@
       <el-form ref="formRef" :model="form" :rules="rules" label-width="80px">
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="学号" prop="studentId">
-              <el-input v-model="form.studentId" :disabled="!!form._existing" />
+            <el-form-item label="学号">
+              <el-input v-model="form.studentNo" disabled :placeholder="form._existing ? '' : '保存后自动生成'" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -173,6 +174,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { User, Plus, Search } from '@element-plus/icons-vue'
 
 const loading = ref(false)
+const listError = ref(false)
 const tableData = ref([])
 const deptList = ref([])
 const majorList = ref([])
@@ -184,15 +186,14 @@ const currentStudent = ref(null)
 const targetStatus = ref('')
 const statusReason = ref('')
 
-const searchForm = reactive({ studentId: '', name: '', departmentId: '', status: '' })
+const searchForm = reactive({ studentNo: '', name: '', departmentId: '', status: '' })
 const page = reactive({ current: 1, size: 10, total: 0 })
 const form = reactive({
-  studentId: '', name: '', gender: 'male', birthdate: '', phone: '', email: '',
+  studentId: '', studentNo: '', name: '', gender: 'male', birthdate: '', phone: '', email: '',
   departmentId: '', majorId: '', classId: '', enrollmentDate: '', _existing: false
 })
 
 const rules = {
-  studentId: [{ required: true, message: '请输入学号', trigger: 'blur' }],
   name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
   gender: [{ required: true, message: '请选择性别', trigger: 'change' }],
   birthdate: [{ required: true, message: '请选择出生日期', trigger: 'change' }],
@@ -236,7 +237,7 @@ const onDeptChange = () => {
 
 // 重置查询条件
 const resetSearch = () => {
-  Object.assign(searchForm, { studentId: '', name: '', departmentId: '', status: '' })
+  Object.assign(searchForm, { studentNo: '', name: '', departmentId: '', status: '' })
   page.current = 1
   loadData()
 }
@@ -256,12 +257,18 @@ const loadBasicData = async () => {
 // 加载数据
 const loadData = async () => {
   loading.value = true
+  listError.value = false
   try {
     const res = await request.get('/student/page', {
-      params: { current: page.current, size: page.size, ...searchForm }
+      params: { current: page.current, size: page.size, ...searchForm },
+      skipErrorMessage: true
     })
     tableData.value = res.data.records
     page.total = res.data.total
+  } catch {
+    tableData.value = []
+    page.total = 0
+    listError.value = true
   } finally {
     loading.value = false
   }
@@ -271,7 +278,7 @@ const loadData = async () => {
 const openDialog = (row) => {
   dialogTitle.value = row ? '编辑学生' : '新增学生'
   Object.assign(form, row ? { ...row, _existing: true } : {
-    studentId: '', name: '', gender: 'male', birthdate: '', phone: '', email: '',
+    studentId: '', studentNo: '', name: '', gender: 'male', birthdate: '', phone: '', email: '',
     departmentId: '', majorId: '', classId: '', enrollmentDate: '', _existing: false
   })
   dialogVisible.value = true

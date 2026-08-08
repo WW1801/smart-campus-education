@@ -3,7 +3,7 @@
   <div class="page-container">
     <div class="page-header">
       <div class="page-header-left">
-        <div class="page-header-icon" style="background: linear-gradient(135deg, #06b6d4, #22d3ee);">
+        <div class="page-header-icon">
           <el-icon :size="22"><DataAnalysis /></el-icon>
         </div>
         <div>
@@ -13,9 +13,11 @@
       </div>
     </div>
 
+    <PageErrorState v-if="loadError" :retrying="loading" title="考勤统计加载失败" @retry="loadStatistics" />
+
     <div class="stats-cards">
       <div class="stat-card">
-        <div class="stat-icon" style="background: linear-gradient(135deg, #2ec4b6, #3dd5c6);">
+        <div class="stat-icon" style="background: var(--sage);">
           <el-icon :size="24"><Check /></el-icon>
         </div>
         <div class="stat-info">
@@ -24,7 +26,7 @@
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #fbbf24);">
+        <div class="stat-icon" style="background: var(--text-muted);">
           <el-icon :size="24"><Warning /></el-icon>
         </div>
         <div class="stat-info">
@@ -33,7 +35,7 @@
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background: linear-gradient(135deg, #ef4444, #f87171);">
+        <div class="stat-icon" style="background: var(--vermilion);">
           <el-icon :size="24"><Close /></el-icon>
         </div>
         <div class="stat-info">
@@ -42,7 +44,7 @@
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);">
+        <div class="stat-icon" style="background: var(--ink);">
           <el-icon :size="24"><Document /></el-icon>
         </div>
         <div class="stat-info">
@@ -52,21 +54,47 @@
       </div>
     </div>
 
-    <el-row :gutter="20">
-      <el-col :span="12">
+    <el-row :gutter="20" class="chart-grid">
+      <el-col :xs="24" :sm="24" :md="12">
         <el-card>
           <template #header>
             <span class="chart-title">考勤状态分布</span>
           </template>
-          <div ref="pieChartRef" style="height: 350px;"></div>
+          <div
+            v-if="hasAttendanceData"
+            ref="pieChartRef"
+            class="chart-canvas"
+            role="img"
+            aria-label="考勤状态分布图"
+            :aria-description="attendanceSummary"
+          ></div>
+          <el-empty v-else description="当前范围暂无考勤统计数据" :image-size="72" />
+          <table class="visually-hidden">
+            <caption>考勤状态分布</caption>
+            <thead><tr><th>状态</th><th>比例</th></tr></thead>
+            <tbody><tr v-for="item in attendanceRows" :key="item.name"><td>{{ item.name }}</td><td>{{ item.value }}%</td></tr></tbody>
+          </table>
         </el-card>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="24" :md="12">
         <el-card>
           <template #header>
             <span class="chart-title">近7天出勤趋势</span>
           </template>
-          <div ref="trendChartRef" style="height: 350px;"></div>
+          <div
+            v-if="trendData.length"
+            ref="trendChartRef"
+            class="chart-canvas"
+            role="img"
+            aria-label="近7天出勤趋势图"
+            :aria-description="trendSummary"
+          ></div>
+          <el-empty v-else description="接口暂未返回近7天时序数据" :image-size="72" />
+          <table class="visually-hidden">
+            <caption>近7天出勤趋势</caption>
+            <thead><tr><th>日期</th><th>出勤率</th></tr></thead>
+            <tbody><tr v-for="(item, index) in trendRows" :key="item.label"><td>{{ item.label }}</td><td>{{ item.value }}%</td></tr></tbody>
+          </table>
         </el-card>
       </el-col>
     </el-row>
@@ -74,10 +102,16 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { DataAnalysis, Check, Warning, Close, Document } from '@element-plus/icons-vue'
-import * as echarts from 'echarts'
+import { init, use } from 'echarts/core'
+import { LineChart, PieChart } from 'echarts/charts'
+import { AriaComponent, GridComponent, LegendComponent, TooltipComponent } from 'echarts/components'
+import { CanvasRenderer } from 'echarts/renderers'
 import request from '../../utils/request'
+import { getChartTheme } from '../../utils/chartTheme'
+
+use([LineChart, PieChart, AriaComponent, GridComponent, LegendComponent, TooltipComponent, CanvasRenderer])
 
 const pieChartRef = ref(null)
 const trendChartRef = ref(null)
@@ -86,11 +120,29 @@ let trendChart = null
 
 const stats = ref({ presentRate: 0, lateRate: 0, absentRate: 0, leaveRate: 0 })
 const trendData = ref([])
+const loading = ref(false)
+const loadError = ref(false)
+const weekDays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+const attendanceRows = computed(() => [
+  { name: '出勤', value: stats.value.presentRate },
+  { name: '迟到', value: stats.value.lateRate },
+  { name: '缺勤', value: stats.value.absentRate },
+  { name: '请假', value: stats.value.leaveRate }
+])
+const hasAttendanceData = computed(() => attendanceRows.value.some(item => Number(item.value) > 0))
+const attendanceSummary = computed(() => attendanceRows.value.map(item => `${item.name}${item.value}%`).join('；'))
+const trendRows = computed(() => trendData.value.map((item, index) => ({
+  label: item.label || item.date || weekDays[index] || `第${index + 1}天`,
+  value: item.rate ?? 0
+})))
+const trendSummary = computed(() => trendRows.value.map(item => `${item.label}${item.value}%`).join('；'))
 
 // 加载统计
 const loadStatistics = async () => {
+  loading.value = true
+  loadError.value = false
   try {
-    const res = await request.get('/attendance/statistics')
+    const res = await request.get('/attendance/statistics', { skipErrorMessage: true })
     if (res?.data) {
       const data = res.data
       const total = data.totalClasses || 1
@@ -104,7 +156,13 @@ const loadStatistics = async () => {
         trendData.value = data.trend
       }
     }
-  } catch {}
+  } catch {
+    stats.value = { presentRate: 0, lateRate: 0, absentRate: 0, leaveRate: 0 }
+    trendData.value = []
+    loadError.value = true
+  } finally {
+    loading.value = false
+  }
   nextTick(() => {
     initPieChart()
     initTrendChart()
@@ -114,22 +172,25 @@ const loadStatistics = async () => {
 // 初始化饼图图表
 const initPieChart = () => {
   if (!pieChartRef.value) return
-  pieChart = echarts.init(pieChartRef.value)
+  pieChart?.dispose()
+  pieChart = init(pieChartRef.value)
+  const theme = getChartTheme()
   pieChart.setOption({
+    aria: { enabled: true, decal: { show: true } },
     tooltip: { trigger: 'item' },
-    legend: { bottom: '5%', left: 'center', textStyle: { color: '#8d99ae' } },
+    legend: { bottom: '5%', left: 'center', textStyle: { color: theme.text } },
     series: [{
       type: 'pie',
       radius: ['40%', '70%'],
       avoidLabelOverlap: false,
-      itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 2 },
+      itemStyle: { borderRadius: 8, borderColor: theme.surface, borderWidth: 2 },
       label: { show: false },
       emphasis: { label: { show: true, fontSize: 16, fontWeight: 'bold' } },
       data: [
-        { value: parseFloat(stats.value.presentRate) || 0, name: '出勤', itemStyle: { color: '#2ec4b6' } },
-        { value: parseFloat(stats.value.lateRate) || 0, name: '迟到', itemStyle: { color: '#f59e0b' } },
-        { value: parseFloat(stats.value.absentRate) || 0, name: '缺勤', itemStyle: { color: '#ef4444' } },
-        { value: parseFloat(stats.value.leaveRate) || 0, name: '请假', itemStyle: { color: '#8b5cf6' } }
+        { value: parseFloat(stats.value.presentRate) || 0, name: '出勤', itemStyle: { color: theme.sage } },
+        { value: parseFloat(stats.value.lateRate) || 0, name: '迟到', itemStyle: { color: theme.text } },
+        { value: parseFloat(stats.value.absentRate) || 0, name: '缺勤', itemStyle: { color: theme.vermilion } },
+        { value: parseFloat(stats.value.leaveRate) || 0, name: '请假', itemStyle: { color: theme.ink } }
       ]
     }]
   })
@@ -138,30 +199,23 @@ const initPieChart = () => {
 // 初始化趋势图表
 const initTrendChart = () => {
   if (!trendChartRef.value) return
-  trendChart = echarts.init(trendChartRef.value)
-  const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
-  const trendValues = trendData.value.length > 0
-    ? trendData.value.map(d => d.rate)
-    : [0, 0, 0, 0, 0, 0, 0]
+  trendChart?.dispose()
+  trendChart = init(trendChartRef.value)
+  const theme = getChartTheme()
   trendChart.setOption({
+    aria: { enabled: true, decal: { show: true } },
     tooltip: { trigger: 'axis' },
-    legend: { data: ['出勤率'], textStyle: { color: '#8d99ae' } },
+    legend: { data: ['出勤率'], textStyle: { color: theme.text } },
     grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-    xAxis: { type: 'category', data: days, axisLabel: { color: '#8d99ae' }, axisLine: { lineStyle: { color: '#e8ecf1' } } },
-    yAxis: { type: 'value', min: 0, max: 100, axisLabel: { color: '#8d99ae', formatter: '{value}%' }, splitLine: { lineStyle: { color: '#f0f2f5' } } },
+    xAxis: { type: 'category', data: trendRows.value.map(item => item.label), axisLabel: { color: theme.text }, axisLine: { lineStyle: { color: theme.line } } },
+    yAxis: { type: 'value', min: 0, max: 100, axisLabel: { color: theme.text, formatter: '{value}%' }, splitLine: { lineStyle: { color: theme.line } } },
     series: [{
       name: '出勤率',
       type: 'line',
-      data: trendValues,
-      smooth: true,
-      lineStyle: { color: '#4361ee', width: 3 },
-      itemStyle: { color: '#4361ee' },
-      areaStyle: {
-        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-          { offset: 0, color: 'rgba(67, 97, 238, 0.3)' },
-          { offset: 1, color: 'rgba(67, 97, 238, 0.02)' }
-        ])
-      }
+      data: trendRows.value.map(item => item.value),
+      smooth: false,
+      lineStyle: { color: theme.blue, width: 3 },
+      itemStyle: { color: theme.blue }
     }]
   })
 }
@@ -200,10 +254,9 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 16px;
   box-shadow: var(--shadow-card);
-  transition: transform 0.2s ease;
 }
 
-.stat-card:hover { transform: translateY(-2px); }
+.stat-card:hover { box-shadow: var(--shadow-card); }
 
 .stat-icon {
   width: 52px;
@@ -212,11 +265,22 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--surface);
   flex-shrink: 0;
 }
 
 .stat-value { font-size: 24px; font-weight: 700; color: var(--text-primary); }
 .stat-label { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
 .chart-title { font-weight: 600; font-size: 15px; color: var(--text-primary); }
+
+.chart-canvas { width: 100%; height: 350px; }
+
+@media (max-width: 768px) {
+  .stats-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .chart-grid :deep(.el-col + .el-col) { margin-top: 16px; }
+}
+
+@media (max-width: 480px) {
+  .stats-cards { grid-template-columns: 1fr; }
+}
 </style>

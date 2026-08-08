@@ -23,16 +23,12 @@ class JwtUtilsTest {
     }
 
     @Test
-    void shouldUseFallbackJwtSecretWhenMissing() {
+    void shouldRejectMissingJwtSecret() {
         JwtUtils jwtUtils = new JwtUtils();
         ReflectionTestUtils.setField(jwtUtils, "secret", "");
         ReflectionTestUtils.setField(jwtUtils, "expiration", 7200000L);
 
-        jwtUtils.init();
-
-        String token = jwtUtils.generateToken("U001", "student1", "5");
-
-        assertTrue(jwtUtils.validateToken(token));
+        assertThrows(IllegalStateException.class, jwtUtils::init);
     }
 
     @Test

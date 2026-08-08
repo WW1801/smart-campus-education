@@ -3,7 +3,7 @@
   <div class="page-container">
     <div class="page-header">
       <div class="page-header-left">
-        <div class="page-header-icon" style="background: linear-gradient(135deg, #14b8a6, #2dd4bf);">
+        <div class="page-header-icon">
           <el-icon :size="22"><Search /></el-icon>
         </div>
         <div>
@@ -13,12 +13,13 @@
       </div>
     </div>
 
-    <el-card>
+    <PageErrorState v-if="listError" :retrying="loading" title="成绩列表加载失败" @retry="loadData" />
+    <el-card v-else>
       <div class="search-bar">
         <el-input v-model="searchForm.studentId" placeholder="学号" style="width: 150px" clearable />
         <el-input v-model="searchForm.courseId" placeholder="课程ID" style="width: 150px" clearable />
         <el-select v-model="searchForm.status" placeholder="审核状态" clearable style="width: 130px">
-          <el-option label="待审核" value="pending" />
+          <el-option label="待审核" value="submitted" />
           <el-option label="已通过" value="approved" />
           <el-option label="已驳回" value="rejected" />
         </el-select>
@@ -44,15 +45,15 @@
         <el-table-column prop="totalScore" label="总评" width="80" />
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="row.status === 'pending' ? 'warning' : row.status === 'approved' ? 'success' : 'danger'" size="small">
-              {{ row.status === 'pending' ? '待审核' : row.status === 'approved' ? '已通过' : '已驳回' }}
+            <el-tag :type="row.status === 'submitted' ? 'warning' : row.status === 'approved' ? 'success' : 'danger'" size="small">
+              {{ row.status === 'submitted' ? '待审核' : row.status === 'approved' ? '已通过' : '已驳回' }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="150">
           <template #default="{ row }">
-            <el-button v-if="row.status === 'pending'" size="small" type="success" link @click="approveGrade(row)">通过</el-button>
-            <el-button v-if="row.status === 'pending'" size="small" type="danger" link @click="rejectGrade(row)">驳回</el-button>
+            <el-button v-if="row.status === 'submitted'" size="small" type="success" link @click="approveGrade(row)">通过</el-button>
+            <el-button v-if="row.status === 'submitted'" size="small" type="danger" link @click="rejectGrade(row)">驳回</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -76,6 +77,7 @@ import { Search } from '@element-plus/icons-vue'
 import request from '../../utils/request'
 
 const loading = ref(false)
+const listError = ref(false)
 const tableData = ref([])
 const searchForm = reactive({ studentId: '', courseId: '', status: '' })
 const page = reactive({ current: 1, size: 10, total: 0 })
@@ -93,10 +95,15 @@ const resetSearch = () => {
 // 加载数据
 const loadData = async () => {
   loading.value = true
+  listError.value = false
   try {
-    const res = await request.get('/grade/page', { params: { current: page.current, size: page.size, ...searchForm } }).catch(() => null)
-    if (res?.data?.records) { tableData.value = res.data.records; page.total = res.data.total }
-    else { tableData.value = []; page.total = 0 }
+    const res = await request.get('/grade/page', { params: { current: page.current, size: page.size, ...searchForm }, skipErrorMessage: true })
+    tableData.value = res.data?.records || []
+    page.total = res.data?.total || 0
+  } catch {
+    tableData.value = []
+    page.total = 0
+    listError.value = true
   } finally { loading.value = false }
 }
 

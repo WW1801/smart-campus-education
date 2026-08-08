@@ -23,4 +23,10 @@ public interface GradeService extends IService<Grade> {
     Map<String, Object> calculateGpa(String studentId, String semesterId);
     // 获取统计
     Map<String, Object> getStatistics(String semesterId, String courseId, String classId);
+
+    /**
+     * 学业预警的固定成绩数据源：只返回指定学生已审核的成绩。
+     * Agent 只能消费该方法的返回值，不接收或拼接 SQL。
+     */
+    List<Grade> listApprovedGradesByStudent(String studentId);
 }

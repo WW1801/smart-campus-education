@@ -459,7 +459,7 @@ public class GraduationAuditServiceImpl extends ServiceImpl<GraduationAuditMappe
         if (grade == null) {
             return "not_taken";
         }
-        if ("pending".equals(grade.getStatus())) {
+        if ("submitted".equals(grade.getStatus())) {
             return "pending_review";
         }
         if ("rejected".equals(grade.getStatus())) {

@@ -7,6 +7,7 @@ package com.campus.education.controller.course;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.campus.education.common.BusinessIdGenerator;
 import com.campus.education.common.Result;
 import com.campus.education.entity.Course;
 import com.campus.education.service.CourseService;
@@ -23,6 +24,9 @@ public class CourseController {
 
     @Autowired
     private CourseService courseService;
+
+    @Autowired
+    private BusinessIdGenerator businessIdGenerator;
 
     @GetMapping("/list")
     public Result<List<Course>> list(@RequestParam(required = false) String departmentId) {
@@ -67,6 +71,9 @@ public class CourseController {
     // 添加课程
     @PostMapping
     public Result<Void> add(@RequestBody Course course) {
+        if (course.getCode() == null || course.getCode().trim().isEmpty()) {
+            course.setCode(businessIdGenerator.nextPrefixedId("course", "code", "C", 4));
+        }
         courseService.save(course);
         return Result.success("添加成功", null);
     }

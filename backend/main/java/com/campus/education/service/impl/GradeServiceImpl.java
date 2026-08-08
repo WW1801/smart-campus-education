@@ -9,12 +9,15 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.campus.education.common.BusinessException;
 import com.campus.education.entity.Course;
 import com.campus.education.entity.Grade;
+import com.campus.education.entity.Student;
 import com.campus.education.entity.TeachingPlan;
 import com.campus.education.mapper.CourseMapper;
 import com.campus.education.mapper.GradeMapper;
+import com.campus.education.mapper.StudentMapper;
 import com.campus.education.mapper.TeachingPlanMapper;
 import com.campus.education.service.GradeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +38,9 @@ public class GradeServiceImpl extends ServiceImpl<GradeMapper, Grade> implements
     @Autowired
     private TeachingPlanMapper teachingPlanMapper;
 
+    @Autowired
+    private StudentMapper studentMapper;
+
     private static final Map<String, double[]> SCORE_WEIGHTS = createWeights();
 
     // 创建权重
@@ -52,9 +58,9 @@ public class GradeServiceImpl extends ServiceImpl<GradeMapper, Grade> implements
     public void submitGrade(Grade grade) {
         validateScore(grade);
         calculateTotalScore(grade);
-        grade.setStatus("pending");
+        grade.setStatus("submitted");
         grade.setIsPass(null);
-        upsertGrade(grade);
+        persistSubmittedGrade(grade);
     }
 
     // 批量提交成绩
@@ -64,9 +70,9 @@ public class GradeServiceImpl extends ServiceImpl<GradeMapper, Grade> implements
         for (Grade grade : grades) {
             validateScore(grade);
             calculateTotalScore(grade);
-            grade.setStatus("pending");
+            grade.setStatus("submitted");
             grade.setIsPass(null);
-            upsertGrade(grade);
+            persistSubmittedGrade(grade);
         }
     }
 
@@ -78,7 +84,7 @@ public class GradeServiceImpl extends ServiceImpl<GradeMapper, Grade> implements
         if (grade == null) {
             throw new BusinessException("成绩记录不存在");
         }
-        if (!"pending".equals(grade.getStatus())) {
+        if (!"submitted".equals(grade.getStatus())) {
             throw new BusinessException("只能审核待审核状态的成绩");
         }
         grade.setStatus("approved");
@@ -94,7 +100,7 @@ public class GradeServiceImpl extends ServiceImpl<GradeMapper, Grade> implements
         if (grade == null) {
             throw new BusinessException("成绩记录不存在");
         }
-        if (!"pending".equals(grade.getStatus())) {
+        if (!"submitted".equals(grade.getStatus())) {
             throw new BusinessException("只能驳回待审核状态的成绩");
         }
         grade.setStatus("rejected");
@@ -154,18 +160,27 @@ public class GradeServiceImpl extends ServiceImpl<GradeMapper, Grade> implements
     public Map<String, Object> getStatistics(String semesterId, String courseId, String classId) {
         LambdaQueryWrapper<Grade> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Grade::getStatus, "approved");
-        if (semesterId != null) {
+        if (semesterId != null && !semesterId.trim().isEmpty()) {
             wrapper.eq(Grade::getSemesterId, semesterId);
         }
-        if (courseId != null) {
+        if (courseId != null && !courseId.trim().isEmpty()) {
             wrapper.eq(Grade::getCourseId, courseId);
+        }
+        if (classId != null && !classId.trim().isEmpty()) {
+            List<String> studentIds = studentMapper.selectList(new LambdaQueryWrapper<Student>()
+                            .eq(Student::getClassId, classId.trim()))
+                    .stream()
+                    .map(Student::getStudentId)
+                    .collect(java.util.stream.Collectors.toList());
+            if (studentIds.isEmpty()) {
+                return emptyStatistics();
+            }
+            wrapper.in(Grade::getStudentId, studentIds);
         }
         List<Grade> grades = this.list(wrapper);
 
         if (grades.isEmpty()) {
-            Map<String, Object> empty = new LinkedHashMap<>();
-            empty.put("total", 0);
-            return empty;
+            return emptyStatistics();
         }
 
         DoubleSummaryStatistics stats = grades.stream()
@@ -217,6 +232,30 @@ public class GradeServiceImpl extends ServiceImpl<GradeMapper, Grade> implements
         result.put("courseAvgList", courseAvgList);
 
         return result;
+    }
+
+    /**
+     * 固定服务查询：为学业预警提供单个学生的已审核成绩，避免 Agent 直接操作 Mapper。
+     */
+    @Override
+    public List<Grade> listApprovedGradesByStudent(String studentId) {
+        if (studentId == null || studentId.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
+        return this.list(new LambdaQueryWrapper<Grade>()
+                .eq(Grade::getStudentId, studentId.trim())
+                .eq(Grade::getStatus, "approved"));
+    }
+
+    private Map<String, Object> emptyStatistics() {
+        Map<String, Object> empty = new LinkedHashMap<>();
+        empty.put("total", 0);
+        empty.put("average", 0);
+        empty.put("passRate", "0%");
+        empty.put("excellentRate", "0%");
+        empty.put("distribution", new LinkedHashMap<String, Object>());
+        empty.put("courseAvgList", new ArrayList<Map<String, Object>>());
+        return empty;
     }
 
     // 校验分数
@@ -274,6 +313,33 @@ public class GradeServiceImpl extends ServiceImpl<GradeMapper, Grade> implements
         }
 
         this.save(grade);
+    }
+
+    private void persistSubmittedGrade(Grade grade) {
+        try {
+            upsertGrade(grade);
+        } catch (DataIntegrityViolationException exception) {
+            if (isLegacyStatusSchema(exception)) {
+                throw new BusinessException(500, "成绩状态配置尚未升级，请系统管理员执行 20260726_grade_status.sql 后重试");
+            }
+            throw exception;
+        }
+    }
+
+    private boolean isLegacyStatusSchema(Throwable error) {
+        Throwable current = error;
+        while (current != null) {
+            String message = current.getMessage();
+            if (message != null) {
+                String normalized = message.toLowerCase();
+                if ((normalized.contains("data truncated") || normalized.contains("incorrect enum value"))
+                        && normalized.contains("status")) {
+                    return true;
+                }
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
     // 查找现有成绩

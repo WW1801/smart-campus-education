@@ -3,7 +3,7 @@
   <div class="page-container">
     <div class="page-header">
       <div class="page-header-left">
-        <div class="page-header-icon" style="background: linear-gradient(135deg, #06b6d4, #22d3ee);">
+        <div class="page-header-icon">
           <el-icon :size="22"><Stamp /></el-icon>
         </div>
         <div>
@@ -17,9 +17,10 @@
       </el-button>
     </div>
 
-    <el-card>
+    <PageErrorState v-if="listError" :retrying="loading" title="注册列表加载失败" @retry="getRegisterList" />
+    <el-card v-else>
       <div class="search-bar">
-        <el-input v-model="searchForm.studentId" placeholder="搜索学号" style="width: 150px" clearable>
+        <el-input v-model="searchForm.studentNo" placeholder="搜索学号" style="width: 150px" clearable>
           <template #prefix><el-icon><Search /></el-icon></template>
         </el-input>
         <el-input v-model="searchForm.name" placeholder="搜索姓名" style="width: 130px" clearable />
@@ -34,7 +35,7 @@
 
       <el-table :data="registerList" stripe v-loading="loading">
         <el-table-column prop="registerId" label="注册ID" width="120" />
-        <el-table-column prop="studentId" label="学号" width="120" />
+        <el-table-column prop="studentNo" label="学号" width="170" />
         <el-table-column prop="name" label="姓名" width="100" />
         <el-table-column prop="departmentName" label="院系" width="150" />
         <el-table-column prop="majorName" label="专业" width="150" />
@@ -69,8 +70,8 @@
 
     <el-dialog title="添加注册" v-model="dialogVisible" width="600px">
       <el-form ref="registerFormRef" :model="registerForm" :rules="registerRules" label-width="100px">
-        <el-form-item label="学号" prop="studentId">
-          <el-input v-model="registerForm.studentId" placeholder="请输入学号" />
+        <el-form-item label="学号">
+          <el-input disabled placeholder="保存后自动生成" />
         </el-form-item>
         <el-form-item label="姓名" prop="name">
           <el-input v-model="registerForm.name" placeholder="请输入姓名" />
@@ -106,7 +107,7 @@
     <el-dialog title="注册详情" v-model="viewDialogVisible" width="600px">
       <el-descriptions :column="1" border>
         <el-descriptions-item label="注册ID">{{ viewForm.registerId }}</el-descriptions-item>
-        <el-descriptions-item label="学号">{{ viewForm.studentId }}</el-descriptions-item>
+        <el-descriptions-item label="学号">{{ viewForm.studentNo }}</el-descriptions-item>
         <el-descriptions-item label="姓名">{{ viewForm.name }}</el-descriptions-item>
         <el-descriptions-item label="院系">{{ viewForm.departmentName }}</el-descriptions-item>
         <el-descriptions-item label="专业">{{ viewForm.majorName }}</el-descriptions-item>
@@ -129,11 +130,12 @@ import { Stamp, Plus, Search } from '@element-plus/icons-vue'
 import request from '../../utils/request'
 
 const loading = ref(false)
+const listError = ref(false)
 const registerList = ref([])
 const deptList = ref([])
 const majorList = ref([])
 const classList = ref([])
-const searchForm = ref({ studentId: '', name: '', status: '' })
+const searchForm = ref({ studentNo: '', name: '', status: '' })
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
@@ -141,15 +143,14 @@ const dialogVisible = ref(false)
 const viewDialogVisible = ref(false)
 const registerFormRef = ref(null)
 const registerForm = ref({
-  registerId: '', studentId: '', name: '', departmentId: '', majorId: '', classId: '', registerDate: '', remark: ''
+  registerId: '', name: '', departmentId: '', majorId: '', classId: '', registerDate: '', remark: ''
 })
 
 const viewForm = ref({
-  registerId: '', studentId: '', name: '', departmentName: '', majorName: '', className: '', registerDate: '', status: '', remark: ''
+  registerId: '', studentNo: '', name: '', departmentName: '', majorName: '', className: '', registerDate: '', status: '', remark: ''
 })
 
 const registerRules = {
-  studentId: [{ required: true, message: '请输入学号', trigger: 'blur' }],
   name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
   departmentId: [{ required: true, message: '请选择院系', trigger: 'change' }],
   majorId: [{ required: true, message: '请选择专业', trigger: 'change' }],
@@ -178,19 +179,21 @@ onMounted(() => {
 // 获取注册列表
 const getRegisterList = async () => {
   loading.value = true
+  listError.value = false
   try {
     const res = await request.get('/student/page', {
       params: {
         current: currentPage.value,
         size: pageSize.value,
-        studentId: searchForm.value.studentId || undefined,
+        studentNo: searchForm.value.studentNo || undefined,
         name: searchForm.value.name || undefined,
         status: searchForm.value.status || undefined
-      }
+      },
+      skipErrorMessage: true
     })
     registerList.value = (res.data.records || []).map(s => ({
       registerId: s.studentId,
-      studentId: s.studentId,
+      studentNo: s.studentNo,
       name: s.name,
       departmentName: s.departmentId,
       majorName: s.majorId,
@@ -203,6 +206,7 @@ const getRegisterList = async () => {
   } catch {
     registerList.value = []
     total.value = 0
+    listError.value = true
   } finally {
     loading.value = false
   }
@@ -211,11 +215,11 @@ const getRegisterList = async () => {
 // 按条件查询学生
 const search = () => { currentPage.value = 1; getRegisterList() }
 // 重置查询条件
-const resetSearch = () => { searchForm.value = { studentId: '', name: '', status: '' }; currentPage.value = 1; getRegisterList() }
+const resetSearch = () => { searchForm.value = { studentNo: '', name: '', status: '' }; currentPage.value = 1; getRegisterList() }
 
 // 添加注册
 const addRegister = () => {
-  registerForm.value = { registerId: '', studentId: '', name: '', departmentId: '', majorId: '', classId: '', registerDate: '', remark: '' }
+  registerForm.value = { registerId: '', name: '', departmentId: '', majorId: '', classId: '', registerDate: '', remark: '' }
   dialogVisible.value = true
 }
 
@@ -249,8 +253,7 @@ const saveRegister = async () => {
     await registerFormRef.value.validate()
   } catch { return }
   try {
-    await request.post('/student', {
-      studentId: registerForm.value.studentId,
+    const res = await request.post('/student', {
       name: registerForm.value.name,
       gender: 'male',
       birthdate: '2000-01-01',
@@ -261,7 +264,7 @@ const saveRegister = async () => {
       status: 'active'
     })
     dialogVisible.value = false
-    ElMessage.success('添加成功')
+    ElMessage.success(res.message || '添加成功')
     getRegisterList()
   } catch { ElMessage.error('保存失败') }
 }

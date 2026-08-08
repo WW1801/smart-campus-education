@@ -3,7 +3,7 @@
   <div class="page-container">
     <div class="page-header">
       <div class="page-header-left">
-        <div class="page-header-icon" style="background: linear-gradient(135deg, #2ec4b6, #3dd5c6);">
+        <div class="page-header-icon">
           <el-icon :size="22"><Setting /></el-icon>
         </div>
         <div>
@@ -17,8 +17,9 @@
       </el-button>
     </div>
 
-    <el-card>
-      <el-table :data="roleList" stripe>
+    <PageErrorState v-if="listError" :retrying="loading" title="角色列表加载失败" @retry="getRoleList" />
+    <el-card v-else>
+      <el-table :data="roleList" stripe v-loading="loading">
         <el-table-column prop="roleId" label="角色ID" width="100" />
         <el-table-column prop="name" label="角色名称" width="150" />
         <el-table-column prop="description" label="角色描述" />
@@ -68,10 +69,12 @@
 <script setup>
 import { nextTick, ref, onMounted } from 'vue'
 import request from '../../utils/request'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { Setting, Plus } from '@element-plus/icons-vue'
 
 const roleList = ref([])
+const loading = ref(false)
+const listError = ref(false)
 const dialogVisible = ref(false)
 const permissionDialogVisible = ref(false)
 const editMode = ref(false)
@@ -114,10 +117,17 @@ onMounted(() => { getRoleList(); loadPermissionTree() })
 
 // 获取角色列表
 const getRoleList = async () => {
+  loading.value = true
+  listError.value = false
   try {
-    const res = await request.get('/system/role/list')
+    const res = await request.get('/system/role/list', { skipErrorMessage: true })
     roleList.value = res.data
-  } catch (error) { ElMessage.error('获取角色列表失败') }
+  } catch {
+    roleList.value = []
+    listError.value = true
+  } finally {
+    loading.value = false
+  }
 }
 
 // 添加角色
@@ -127,8 +137,14 @@ const editRole = (row) => { editMode.value = true; roleForm.value = { ...row }; 
 
 // 删除角色
 const deleteRole = async (roleId) => {
-  try { await request.delete(`/system/role/${roleId}`); ElMessage.success('删除成功'); getRoleList() }
-  catch (error) { ElMessage.error('删除失败') }
+  try {
+    await ElMessageBox.confirm('确认删除该角色？删除后无法继续分配此角色。', '删除角色', { type: 'warning' })
+    await request.delete(`/system/role/${roleId}`, { skipErrorMessage: true })
+    ElMessage.success('删除成功')
+    getRoleList()
+  } catch (error) {
+    if (error !== 'cancel' && error !== 'close') ElMessage.error(error?.message || '删除失败')
+  }
 }
 
 // 保存角色

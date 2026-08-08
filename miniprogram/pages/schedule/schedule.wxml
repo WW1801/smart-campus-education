@@ -1,0 +1,42 @@
+<view class="page">
+  <view class="hero-card">
+    <text class="eyebrow">课程安排</text>
+    <text class="hero-title">我的课表</text>
+    <text class="hero-subtitle">仅展示当前学生课表，不提供选课或退课入口</text>
+  </view>
+
+  <view class="toolbar">
+    <picker class="picker" mode="selector" range="{{ semesterOptions }}" range-key="name" value="{{ semesterIndex }}" bindchange="onSemesterChange">
+      <view>{{ currentSemesterName || "选择学期" }}</view>
+    </picker>
+    <button class="secondary-button refresh-button" loading="{{ loading }}" bindtap="loadSchedule">刷新</button>
+  </view>
+
+  <view wx:if="{{ !loggedIn }}" class="state">
+    <text class="state-title">未登录</text>
+    <text class="state-desc">请先登录学生账号</text>
+  </view>
+  <view wx:elif="{{ loading }}" class="state">
+    <text class="state-title">正在加载</text>
+    <text class="state-desc">正在读取课表数据</text>
+  </view>
+  <view wx:elif="{{ error }}" class="state">
+    <text class="state-title">请求失败</text>
+    <text class="state-desc">{{ error }}</text>
+    <button class="secondary-button state-button" bindtap="loadSchedule">重试</button>
+  </view>
+  <view wx:elif="{{ schedules.length === 0 }}" class="state">
+    <text class="state-title">暂无课表</text>
+    <text class="state-desc">当前学期没有可展示课程</text>
+  </view>
+
+  <view wx:else class="list">
+    <view wx:for="{{ schedules }}" wx:key="scheduleId" class="item schedule-item">
+      <view class="item-title">{{ item.courseName || "未命名课程" }}</view>
+      <view class="item-meta">任课教师：{{ item.teacherName || "-" }}</view>
+      <view class="item-meta">上课时间：周{{ item.dayOfWeek }} 第{{ item.startPeriod }}-{{ item.endPeriod }}节</view>
+      <view class="item-meta">教室：{{ item.classroom || item.classroomName || "-" }}</view>
+      <view class="item-meta">周次：{{ item.weeks || "-" }}</view>
+    </view>
+  </view>
+</view>

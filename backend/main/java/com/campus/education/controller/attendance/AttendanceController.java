@@ -10,6 +10,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.education.common.BusinessException;
 import com.campus.education.common.Result;
 import com.campus.education.common.StudentAccessGuard;
+import com.campus.education.common.StudentNoResolver;
+import com.campus.education.dto.attendance.BatchAttendanceRequest;
 import com.campus.education.entity.Attendance;
 import com.campus.education.entity.Course;
 import com.campus.education.entity.Semester;
@@ -34,6 +36,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -77,6 +80,7 @@ public class AttendanceController {
                                             @RequestParam(required = false) String semesterId,
                                             @RequestParam(required = false) String courseId,
                                             @RequestParam(required = false) String studentId,
+                                            @RequestParam(required = false) String studentNo,
                                             @RequestParam(required = false) String classId,
                                             @RequestParam(required = false) String date,
                                             @RequestParam(required = false) String status,
@@ -91,6 +95,23 @@ public class AttendanceController {
         }
         if (studentId != null && !studentId.trim().isEmpty()) {
             wrapper.eq(Attendance::getStudentId, studentId);
+        }
+        if (studentNo != null && !studentNo.trim().isEmpty()) {
+            List<Student> candidates = studentMapper.selectList(null);
+            StudentNoResolver.fillDisplayStudentNos(candidates);
+            List<String> matchedStudentIds = candidates.stream()
+                    .filter(student -> student.getStudentNo() != null
+                            && student.getStudentNo().contains(studentNo.trim()))
+                    .map(Student::getStudentId).collect(Collectors.toList());
+            if (matchedStudentIds.isEmpty()) {
+                Map<String, Object> empty = new HashMap<>();
+                empty.put("records", java.util.Collections.emptyList());
+                empty.put("total", 0);
+                empty.put("current", page.longValue());
+                empty.put("size", limit.longValue());
+                return Result.success("查询成功", empty);
+            }
+            wrapper.in(Attendance::getStudentId, matchedStudentIds);
         }
         if (classId != null && !classId.trim().isEmpty()) {
             List<String> studentIds = studentMapper.selectList(new LambdaQueryWrapper<Student>()
@@ -145,7 +166,8 @@ public class AttendanceController {
         }
 
         String resolvedTeacherId = resolveTeacherId(authentication, teacherId);
-        List<Student> rosterStudents = courseRosterService.listActiveStudents(courseId, resolvedSemesterId, resolvedTeacherId);
+        List<Student> rosterStudents = resolveDisplayStudentNos(
+                courseRosterService.listActiveStudents(courseId, resolvedSemesterId, resolvedTeacherId));
 
         LambdaQueryWrapper<Attendance> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Attendance::getCourseId, courseId)
@@ -176,6 +198,7 @@ public class AttendanceController {
                 attendance.setDate(attendanceDate);
             }
             attendance.setStudentName(student.getName());
+            attendance.setStudentNo(student.getStudentNo());
             attendance.setCourseName(course != null ? course.getName() : courseId);
             result.add(attendance);
             includedStudentIds.add(student.getStudentId());
@@ -198,41 +221,31 @@ public class AttendanceController {
     @PostMapping
     public Result<Void> add(@RequestBody Attendance attendance) {
         normalizeAttendancePayload(attendance, false);
-        Attendance existingAttendance = attendanceService.getOne(new LambdaQueryWrapper<Attendance>()
-                .eq(Attendance::getStudentId, attendance.getStudentId())
-                .eq(Attendance::getCourseId, attendance.getCourseId())
-                .eq(Attendance::getSemesterId, attendance.getSemesterId())
-                .eq(Attendance::getDate, attendance.getDate())
-                .last("LIMIT 1"), false);
-        if (existingAttendance != null) {
-            attendance.setAttendanceId(existingAttendance.getAttendanceId());
-            attendanceService.updateById(attendance);
-            return Result.success("鏇存柊鎴愬姛", null);
-        }
-
-        attendanceService.save(attendance);
-        return Result.success("娣诲姞鎴愬姛", null);
+        attendanceService.saveManual(attendance);
+        return Result.success("保存成功", null);
     }
 
     // 更新考勤
     @PutMapping
     public Result<Void> update(@RequestBody Attendance attendance) {
         normalizeAttendancePayload(attendance, true);
-        attendanceService.updateById(attendance);
-        return Result.success("鏇存柊鎴愬姛", null);
+        attendanceService.updateManual(attendance);
+        return Result.success("更新成功", null);
     }
 
     // 删除考勤
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
-        attendanceService.removeById(id);
-        return Result.success("鍒犻櫎鎴愬姛", null);
+        attendanceService.removeManual(id);
+        return Result.success("删除成功", null);
     }
 
     // 批量保存
     @PostMapping("/batch-save")
-    public Result<Void> batchSave(@RequestBody Map<String, Object> params) {
-        return Result.success("鎵归噺淇濆瓨鎴愬姛", null);
+    public Result<Map<String, Object>> batchSave(@RequestBody BatchAttendanceRequest request,
+                                                  Authentication authentication) {
+        String teacherId = resolveTeacherId(authentication, null);
+        return Result.success("批量考勤处理完成", attendanceService.batchSave(request, teacherId));
     }
 
     @GetMapping("/statistics")
@@ -319,7 +332,7 @@ public class AttendanceController {
 
         Map<String, Student> studentMap = studentIds.isEmpty()
                 ? java.util.Collections.emptyMap()
-                : studentMapper.selectBatchIds(studentIds).stream()
+                : resolveDisplayStudentNos(studentMapper.selectBatchIds(studentIds)).stream()
                 .collect(Collectors.toMap(Student::getStudentId, Function.identity(), (left, right) -> left));
         Map<String, Course> courseMap = courseIds.isEmpty()
                 ? java.util.Collections.emptyMap()
@@ -330,12 +343,24 @@ public class AttendanceController {
             Student student = studentMap.get(attendance.getStudentId());
             if (student != null) {
                 attendance.setStudentName(student.getName());
+                attendance.setStudentNo(student.getStudentNo());
             }
             Course course = courseMap.get(attendance.getCourseId());
             if (course != null) {
                 attendance.setCourseName(course.getName());
             }
         }
+    }
+
+    private List<Student> resolveDisplayStudentNos(List<Student> students) {
+        if (students == null || students.isEmpty()) return java.util.Collections.emptyList();
+        if (students.stream().allMatch(StudentNoResolver::isStandard)) return students;
+        List<Student> allStudents = studentMapper.selectList(null);
+        StudentNoResolver.fillDisplayStudentNos(allStudents);
+        Map<String, Student> resolved = allStudents.stream()
+                .collect(Collectors.toMap(Student::getStudentId, Function.identity(), (left, right) -> left));
+        return students.stream().map(student -> resolved.getOrDefault(student.getStudentId(), student))
+                .collect(Collectors.toList());
     }
 
     // 选取最新考勤记录
@@ -373,27 +398,15 @@ public class AttendanceController {
         }
 
         LocalDate queryDate = parseDate(date);
-        if (queryDate != null) {
-            Semester matchedSemester = semesterMapper.selectOne(new LambdaQueryWrapper<Semester>()
-                    .le(Semester::getStartDate, queryDate)
-                    .ge(Semester::getEndDate, queryDate)
-                    .last("LIMIT 1"));
-            if (matchedSemester != null) {
-                return matchedSemester.getSemesterId();
-            }
+        if (queryDate == null) {
+            queryDate = LocalDate.now(ZoneId.of("Asia/Shanghai"));
         }
-
-        Semester currentSemester = semesterMapper.selectOne(new LambdaQueryWrapper<Semester>()
-                .eq(Semester::getStatus, "current")
-                .last("LIMIT 1"));
-        if (currentSemester != null) {
-            return currentSemester.getSemesterId();
-        }
-
-        Semester latestSemester = semesterMapper.selectOne(new LambdaQueryWrapper<Semester>()
+        Semester matchedSemester = semesterMapper.selectOne(new LambdaQueryWrapper<Semester>()
+                .le(Semester::getStartDate, queryDate)
+                .ge(Semester::getEndDate, queryDate)
                 .orderByDesc(Semester::getStartDate)
                 .last("LIMIT 1"));
-        return latestSemester != null ? latestSemester.getSemesterId() : null;
+        return matchedSemester != null ? matchedSemester.getSemesterId() : null;
     }
 
     // 解析日期

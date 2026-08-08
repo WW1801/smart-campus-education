@@ -1,0 +1,34 @@
+{
+  "title": "选择管理员工作台的视觉方向",
+  "question": "我会用选定方向完成可打开的 HTML 原型；三种方向都保留现有业务功能与中文教务语境。",
+  "options": [
+    {
+      "id": "assigned-academic-ledger",
+      "label": "教务审计台账",
+      "kicker": "推荐构图",
+      "lineage": "教务档案盒、学期进度表与批注贴纸",
+      "body": "把待办事项做成可处理的“台账行”，关键指标像盖章后的学期摘要；侧栏像档案索引。首屏优先展示异常、截止节点和行动入口。风险：比常见后台更有个性，需要克制装饰以保持高密度可读性。",
+      "hero": "https://impeccable.style/worlds/cards/fashion-folded-worlds-sewing-pattern-envelope-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/fashion-folded-worlds-sewing-pattern-envelope.webp"
+    },
+    {
+      "id": "challenger-one-bit",
+      "label": "单色教务终端",
+      "lineage": "早期单色桌面系统",
+      "body": "用像素边框、标题栏和黑白点阵组织模块；适合做很强的“管理终端”记忆点。风险：可访问性和日常阅读压力更高。",
+      "hero": "https://impeccable.style/worlds/cards/medium-native-one-bit-desktop-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/medium-native-one-bit-desktop.webp"
+    },
+    {
+      "id": "challenger-bauhaus",
+      "label": "教务基础课工作台",
+      "lineage": "包豪斯基础课程工作台",
+      "body": "用明确的几何色块分隔信息层级：蓝色承载结构、红色指向当前任务、黄色提示风险。风险：品牌气质更强，需要严格控制色彩占比。",
+      "hero": "https://impeccable.style/worlds/cards/design-canon-bauhaus-foundation-workshop-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/design-canon-bauhaus-foundation-workshop.webp"
+    }
+  ],
+  "reroll": true,
+  "canon": true,
+  "steer": true
+}

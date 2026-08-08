@@ -71,6 +71,17 @@ public class CourseRosterServiceImpl implements CourseRosterService {
                 .collect(Collectors.toList());
     }
 
+    // 按排课主键获取单个教学班名单。
+    @Override
+    public List<Student> listActiveStudentsBySchedule(String scheduleId) {
+        if (isBlank(scheduleId)) return Collections.emptyList();
+        CourseSchedule schedule = courseScheduleMapper.selectById(scheduleId.trim());
+        if (schedule == null) return Collections.emptyList();
+        return "class_based".equals(schedule.getMode())
+                ? listActiveStudentsByClass(schedule.getClassId())
+                : listActiveStudentsBySelection(schedule.getScheduleId());
+    }
+
     // 查询在籍学生按班级列表
     private List<Student> listActiveStudentsByClass(String classId) {
         if (isBlank(classId)) {

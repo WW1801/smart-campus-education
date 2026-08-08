@@ -5,7 +5,11 @@ package com.campus.education.service;
  */
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.campus.education.dto.schedule.AutoArrangeRequest;
 import com.campus.education.entity.Schedule;
 
+import java.util.Map;
+
 public interface ScheduleService extends IService<Schedule> {
+    Map<String, Object> autoArrange(AutoArrangeRequest request);
 }
