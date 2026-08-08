@@ -42,7 +42,7 @@
             <el-form-item prop="username">
               <el-input
                 v-model="loginForm.username"
-                placeholder="请输入用户名"
+                placeholder="请输入学号、工号或管理员用户名"
                 size="large"
                 @keyup.enter="login"
               >
@@ -98,14 +98,14 @@ const loginForm = ref({ username: '', password: '' })
 const loginFormRef = ref(null)
 
 const loginRules = {
-  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+  username: [{ required: true, message: '请输入学号、工号或管理员用户名', trigger: 'blur' }],
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
 }
 
 // 获取默认首页路径
 const getDefaultHomePath = (roleId) => {
   const map = {
-    '1': '/home/system/user',
+    '1': '/home/dashboard',
     '2': '/home/student/info',
     '3': '/home/student/info',
     '4': '/home/grade/query',
@@ -142,7 +142,7 @@ const login = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--paper);
   position: relative;
   overflow: hidden;
 }
@@ -157,10 +157,7 @@ const login = async () => {
 }
 
 .bg-shape {
-  position: absolute;
-  border-radius: 50%;
-  opacity: 0.1;
-  background: #fff;
+  display: none;
 }
 
 .shape-1 {
@@ -168,7 +165,6 @@ const login = async () => {
   height: 600px;
   top: -200px;
   right: -100px;
-  animation: float 8s ease-in-out infinite;
 }
 
 .shape-2 {
@@ -176,7 +172,6 @@ const login = async () => {
   height: 400px;
   bottom: -150px;
   left: -100px;
-  animation: float 6s ease-in-out infinite reverse;
 }
 
 .shape-3 {
@@ -185,58 +180,30 @@ const login = async () => {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  animation: float 10s ease-in-out infinite;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-30px); }
 }
 
 .login-wrapper {
   display: flex;
   width: 900px;
   min-height: 500px;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 18px 44px rgba(16, 32, 56, 0.14);
   position: relative;
   z-index: 1;
-  backdrop-filter: blur(20px);
 }
 
 .login-left {
   flex: 1;
-  background: linear-gradient(135deg, #4361ee 0%, #6b83f2 50%, #764ba2 100%);
+  background: var(--sidebar-grad);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 60px 40px;
   position: relative;
   overflow: hidden;
-}
-
-.login-left::before {
-  content: '';
-  position: absolute;
-  width: 300px;
-  height: 300px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  top: -80px;
-  right: -80px;
-}
-
-.login-left::after {
-  content: '';
-  position: absolute;
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.05);
-  bottom: -60px;
-  left: -60px;
 }
 
 .brand-content {
@@ -250,15 +217,16 @@ const login = async () => {
   width: 80px;
   height: 80px;
   margin: 0 auto 24px;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 20px;
+  background: var(--button-grad);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(10px);
 }
 
 .brand-title {
+  font-family: var(--display-font);
   font-size: 28px;
   font-weight: 700;
   margin-bottom: 12px;
@@ -290,7 +258,7 @@ const login = async () => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #2ec4b6;
+  background: var(--blue-bright);
   flex-shrink: 0;
 }
 
@@ -312,6 +280,7 @@ const login = async () => {
 }
 
 .login-header h2 {
+  font-family: var(--display-font);
   font-size: 24px;
   font-weight: 700;
   color: var(--text-primary);
@@ -327,7 +296,7 @@ const login = async () => {
   border-radius: 10px !important;
   padding: 4px 12px !important;
   box-shadow: 0 0 0 1px var(--border-color) inset !important;
-  transition: all 0.3s ease;
+  transition: box-shadow 160ms ease-out;
 }
 
 .login-form :deep(.el-input__wrapper:hover) {
@@ -335,7 +304,7 @@ const login = async () => {
 }
 
 .login-form :deep(.el-input__wrapper.is-focus) {
-  box-shadow: 0 0 0 1px var(--primary-color) inset, 0 0 0 3px rgba(67, 97, 238, 0.1) !important;
+  box-shadow: 0 0 0 1px var(--primary-color) inset !important;
 }
 
 .login-form :deep(.el-input__prefix .el-icon) {
@@ -350,18 +319,13 @@ const login = async () => {
   font-size: 16px;
   font-weight: 600;
   letter-spacing: 4px;
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-light)) !important;
+  background: var(--button-grad) !important;
   border: none !important;
-  transition: all 0.3s ease;
+  transition: background-color 160ms ease-out;
 }
 
 .login-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(67, 97, 238, 0.4);
-}
-
-.login-btn:active {
-  transform: translateY(0);
+  background: var(--blue-bright) !important;
 }
 
 @media (max-width: 768px) {
@@ -371,7 +335,7 @@ const login = async () => {
     min-height: auto;
   }
   .login-left {
-    padding: 40px 30px;
+    display: none;
   }
   .login-right {
     padding: 40px 30px;

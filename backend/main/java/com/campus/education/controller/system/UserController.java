@@ -9,8 +9,13 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.education.common.BusinessIdGenerator;
 import com.campus.education.common.Result;
+import com.campus.education.entity.Student;
+import com.campus.education.entity.Teacher;
 import com.campus.education.entity.User;
+import com.campus.education.mapper.StudentMapper;
+import com.campus.education.mapper.TeacherMapper;
 import com.campus.education.service.UserService;
+import com.campus.education.service.AccountProvisioningService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +40,12 @@ public class UserController {
 
     @Autowired
     private BusinessIdGenerator businessIdGenerator;
+
+    @Autowired
+    private TeacherMapper teacherMapper;
+
+    @Autowired
+    private StudentMapper studentMapper;
 
     // 分页查询用户
     @GetMapping("/page")
@@ -78,6 +89,10 @@ public class UserController {
     // 添加用户
     @PostMapping
     public Result<Map<String, String>> add(@RequestBody User user) {
+        String accountError = synchronizeBusinessAccount(user);
+        if (accountError != null) {
+            return Result.badRequest(accountError);
+        }
         User existing = userService.findByUsername(user.getUsername());
         if (existing != null) {
             return Result.badRequest("用户名已存在");
@@ -105,6 +120,20 @@ public class UserController {
         if (existing == null) {
             return Result.badRequest("用户不存在");
         }
+        if (user.getRoleId() == null || user.getRoleId().trim().isEmpty()) {
+            user.setRoleId(existing.getRoleId());
+        }
+        if (user.getRelatedId() == null) {
+            user.setRelatedId(existing.getRelatedId());
+        }
+        String accountError = synchronizeBusinessAccount(user);
+        if (accountError != null) {
+            return Result.badRequest(accountError);
+        }
+        User usernameOwner = userService.findByUsername(user.getUsername());
+        if (usernameOwner != null && !usernameOwner.getUserId().equals(user.getUserId())) {
+            return Result.badRequest("登录账号已存在，请检查关联的学生或教师信息");
+        }
         if (user.getPassword() != null && !user.getPassword().trim().isEmpty()) {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
         } else {
@@ -128,10 +157,10 @@ public class UserController {
         if (user == null) {
             return Result.badRequest("用户不存在");
         }
-        String temporaryPassword = generateTemporaryPassword();
-        user.setPassword(passwordEncoder.encode(temporaryPassword));
+        String resetPassword = AccountProvisioningService.INITIAL_PASSWORD;
+        user.setPassword(passwordEncoder.encode(resetPassword));
         userService.updateById(user);
-        return Result.success("密码已重置为临时密码", passwordResult(temporaryPassword));
+        return Result.success("密码已重置为系统初始密码", null);
     }
 
     // 处理生成临时密码
@@ -148,5 +177,36 @@ public class UserController {
         Map<String, String> data = new HashMap<>();
         data.put("temporaryPassword", password);
         return data;
+    }
+
+    /**
+     * 教师与学生的登录账号属于业务标识，不允许由前端自行编辑，以免账号与人员信息脱节。
+     */
+    private String synchronizeBusinessAccount(User user) {
+        if ("4".equals(user.getRoleId())) {
+            if (user.getRelatedId() == null || user.getRelatedId().trim().isEmpty()) {
+                return "教师账号必须关联有效教师，请填写教师工号";
+            }
+            Teacher teacher = teacherMapper.selectById(user.getRelatedId());
+            if (teacher == null) {
+                return "未找到关联的教师，请确认工号后再保存";
+            }
+            user.setUsername(teacher.getTeacherId());
+            user.setName(teacher.getName());
+        } else if ("5".equals(user.getRoleId())) {
+            if (user.getRelatedId() == null || user.getRelatedId().trim().isEmpty()) {
+                return "学生账号必须关联有效学生，请填写学生ID";
+            }
+            Student student = studentMapper.selectById(user.getRelatedId());
+            if (student == null) {
+                return "未找到关联的学生，请确认学生ID后再保存";
+            }
+            if (student.getStudentNo() == null || student.getStudentNo().trim().isEmpty()) {
+                return "关联学生尚未生成学号，请先完善学生信息";
+            }
+            user.setUsername(student.getStudentNo());
+            user.setName(student.getName());
+        }
+        return null;
     }
 }

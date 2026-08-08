@@ -9,8 +9,11 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.education.common.Result;
 import com.campus.education.entity.Teacher;
+import com.campus.education.service.AccountProvisioningService;
 import com.campus.education.service.TeacherService;
+import com.campus.education.service.PersonnelLifecycleService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -23,6 +26,12 @@ public class TeacherController {
 
     @Autowired
     private TeacherService teacherService;
+
+    @Autowired
+    private AccountProvisioningService accountProvisioningService;
+
+    @Autowired
+    private PersonnelLifecycleService personnelLifecycleService;
 
     @GetMapping("/list")
     public Result<List<Teacher>> list(@RequestParam(required = false) String departmentId) {
@@ -62,9 +71,13 @@ public class TeacherController {
 
     // 添加教师
     @PostMapping
+    @Transactional(rollbackFor = Exception.class)
     public Result<Void> add(@RequestBody Teacher teacher) {
-        teacherService.save(teacher);
-        return Result.success("添加成功", null);
+        if (!teacherService.save(teacher)) {
+            return Result.error("新增教师失败，请稍后重试");
+        }
+        accountProvisioningService.provisionTeacherAccount(teacher);
+        return Result.success("新增成功，已自动开通账号；初始密码为123456，请首次登录后及时修改", null);
     }
 
     // 更新教师
@@ -74,9 +87,18 @@ public class TeacherController {
         return Result.success("更新成功", null);
     }
 
+    @PutMapping("/{id}/status")
+    public Result<Void> changeStatus(@PathVariable String id, @RequestBody Map<String, String> params) {
+        String status = params.get("status");
+        if (status == null || status.trim().isEmpty()) return Result.badRequest("目标状态不能为空，请选择在职、停用或离职。");
+        teacherService.changeStatus(id, status);
+        return Result.success("教师状态已更新；停用或离职后将不能登录和办理业务。", null);
+    }
+
     // 删除教师
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
+        personnelLifecycleService.verifyTeacherCanDelete(id);
         teacherService.removeById(id);
         return Result.success("删除成功", null);
     }

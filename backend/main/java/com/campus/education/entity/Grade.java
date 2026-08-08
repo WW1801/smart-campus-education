@@ -22,6 +22,10 @@ public class Grade {
     private String courseId;
     @TableField(exist = false)
     private String courseName;
+    @TableField(exist = false)
+    private Double credits;
+    @TableField(exist = false)
+    private Double gradePoint;
     private String semesterId;
     private String teacherId;
     private Double usualScore;

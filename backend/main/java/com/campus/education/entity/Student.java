@@ -16,6 +16,8 @@ import java.time.LocalDateTime;
 public class Student {
     @TableId(type = IdType.ASSIGN_ID)
     private String studentId;
+    /** 对外展示的业务学号：入学年份 + 院系代码 + 专业代码 + 专业内三位序号。 */
+    private String studentNo;
     private String name;
     private String gender;
     private LocalDate birthdate;

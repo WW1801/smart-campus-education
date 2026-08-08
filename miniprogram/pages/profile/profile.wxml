@@ -1,0 +1,45 @@
+<view class="page">
+  <view class="hero-card">
+    <text class="eyebrow">账户设置</text>
+    <text class="hero-title">个人中心</text>
+    <text class="hero-subtitle">查看学生信息、修改密码和退出登录</text>
+  </view>
+
+  <view wx:if="{{ loading }}" class="state">
+    <text class="state-title">正在加载</text>
+    <text class="state-desc">正在读取个人信息</text>
+  </view>
+  <view wx:elif="{{ error }}" class="state">
+    <text class="state-title">请求失败</text>
+    <text class="state-desc">{{ error }}</text>
+    <button class="secondary-button state-button" bindtap="loadProfile">重试</button>
+  </view>
+  <view wx:else class="info-card">
+    <view class="profile-name">{{ profile.name || account.name || account.username || "-" }}</view>
+    <view class="info-row"><text class="info-label">学号</text><text class="info-value">{{ profile.studentNo || "-" }}</text></view>
+    <view class="info-row"><text class="info-label">班级</text><text class="info-value">{{ profile.className || "-" }}</text></view>
+    <view class="info-row"><text class="info-label">专业</text><text class="info-value">{{ profile.majorName || "-" }}</text></view>
+    <view class="info-row"><text class="info-label">院系</text><text class="info-value">{{ profile.departmentName || "-" }}</text></view>
+    <view class="info-row"><text class="info-label">手机号</text><text class="info-value">{{ profile.phone || "-" }}</text></view>
+    <view class="info-row"><text class="info-label">邮箱</text><text class="info-value">{{ profile.email || "-" }}</text></view>
+  </view>
+
+  <view class="section-card password-card">
+    <view class="section-title">修改密码</view>
+    <view class="field">
+      <view class="field-label">原密码</view>
+      <input class="input" password value="{{ passwordForm.oldPassword }}" placeholder="请输入原密码" bindinput="onOldPasswordInput" />
+    </view>
+    <view class="field">
+      <view class="field-label">新密码</view>
+      <input class="input" password value="{{ passwordForm.newPassword }}" placeholder="8-64 位，包含字母和数字" bindinput="onNewPasswordInput" />
+    </view>
+    <view class="field">
+      <view class="field-label">确认新密码</view>
+      <input class="input" password value="{{ passwordForm.confirmPassword }}" placeholder="请再次输入新密码" bindinput="onConfirmPasswordInput" />
+    </view>
+    <button class="primary-button save-button" loading="{{ savingPassword }}" bindtap="changePassword">确认修改</button>
+  </view>
+
+  <button class="danger-button logout-button" bindtap="logout">退出登录</button>
+</view>

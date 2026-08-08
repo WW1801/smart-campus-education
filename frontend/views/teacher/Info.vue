@@ -3,7 +3,7 @@
   <div class="page-container">
     <div class="page-header">
       <div class="page-header-left">
-        <div class="page-header-icon" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);">
+        <div class="page-header-icon">
           <el-icon :size="22"><UserFilled /></el-icon>
         </div>
         <div>
@@ -17,7 +17,8 @@
       </el-button>
     </div>
 
-    <el-card>
+    <PageErrorState v-if="listError" :retrying="loading" title="教师列表加载失败" @retry="getTeacherList" />
+    <el-card v-else>
       <div class="search-bar">
         <el-input v-model="searchForm.teacherId" placeholder="搜索工号" style="width: 150px" clearable>
           <template #prefix><el-icon><Search /></el-icon></template>
@@ -153,6 +154,7 @@ import { UserFilled, Plus, Search } from '@element-plus/icons-vue'
 import request from '../../utils/request'
 
 const loading = ref(false)
+const listError = ref(false)
 const teacherList = ref([])
 const deptList = ref([])
 const searchForm = ref({ teacherId: '', name: '', departmentId: '' })
@@ -189,14 +191,18 @@ onMounted(() => { getTeacherList(); loadDepts() })
 // 获取教师列表
 const getTeacherList = async () => {
   loading.value = true
+  listError.value = false
   try {
     const res = await request.get('/teacher/page', {
-      params: { current: currentPage.value, size: pageSize.value, ...searchForm.value }
+      params: { current: currentPage.value, size: pageSize.value, ...searchForm.value },
+      skipErrorMessage: true
     })
     teacherList.value = res.data.records
     total.value = res.data.total
-  } catch (error) {
-    ElMessage.error('获取教师列表失败')
+  } catch {
+    teacherList.value = []
+    total.value = 0
+    listError.value = true
   } finally {
     loading.value = false
   }
@@ -232,10 +238,11 @@ const saveTeacher = async () => {
   if (!teacherFormRef.value) return
   try { await teacherFormRef.value.validate() } catch { return }
   try {
-    if (editMode.value) { await request.put('/teacher', teacherForm.value) }
-    else { await request.post('/teacher', teacherForm.value) }
+    const res = editMode.value
+      ? await request.put('/teacher', teacherForm.value)
+      : await request.post('/teacher', teacherForm.value)
     dialogVisible.value = false
-    ElMessage.success(editMode.value ? '更新成功' : '添加成功')
+    ElMessage.success(res.message || (editMode.value ? '更新成功' : '添加成功'))
     getTeacherList()
   } catch (error) { ElMessage.error('保存教师失败') }
 }

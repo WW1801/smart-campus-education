@@ -116,10 +116,12 @@ public class CourseScheduleController {
     @GetMapping("/query/by-teacher")
     public Result<List<CourseSchedule>> queryByTeacher(
             @RequestParam String teacherId,
-            @RequestParam String semesterId) {
+            @RequestParam(required = false) String semesterId) {
         LambdaQueryWrapper<CourseSchedule> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(CourseSchedule::getTeacherId, teacherId);
-        wrapper.eq(CourseSchedule::getSemesterId, semesterId);
+        if (semesterId != null && !semesterId.trim().isEmpty()) {
+            wrapper.eq(CourseSchedule::getSemesterId, semesterId);
+        }
         wrapper.orderByAsc(CourseSchedule::getDayOfWeek, CourseSchedule::getStartPeriod);
         return Result.success(courseScheduleService.list(wrapper));
     }

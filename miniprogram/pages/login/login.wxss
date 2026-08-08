@@ -1,0 +1,3 @@
+.login-card .field + .field {
+  margin-top: 24rpx;
+}

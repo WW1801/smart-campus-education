@@ -1,0 +1,20 @@
+<view class="login-page">
+  <view class="login-hero">
+    <text class="login-kicker">STUDENT PORTAL</text>
+    <text class="login-title">学生教务</text>
+    <text class="login-subtitle">课表、成绩、请假和个人信息查询</text>
+  </view>
+
+  <view class="login-card">
+    <view class="field">
+      <view class="field-label">账号</view>
+      <input class="input" value="{{ username }}" placeholder="请输入账号" bindinput="onUsernameInput" />
+    </view>
+    <view class="field">
+      <view class="field-label">密码</view>
+      <input class="input" value="{{ password }}" password placeholder="请输入密码" bindinput="onPasswordInput" confirm-type="done" bindconfirm="handleLogin" />
+    </view>
+    <button class="primary-button login-button" loading="{{ loading }}" bindtap="handleLogin">登录</button>
+    <text class="hint">仅学生账号可以使用小程序学生端</text>
+  </view>
+</view>

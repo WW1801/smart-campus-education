@@ -15,7 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -43,6 +45,9 @@ public class StudentCourseSelectionServiceImpl extends ServiceImpl<StudentCourse
 
     @Autowired
     private SemesterMapper semesterMapper;
+
+    @Autowired
+    private ClassroomMapper classroomMapper;
 
     // 处理选课
     @Override
@@ -177,6 +182,10 @@ public class StudentCourseSelectionServiceImpl extends ServiceImpl<StudentCourse
                 .map(CourseSchedule::getCourseId).collect(Collectors.toSet());
         Set<String> teacherIds = scheduleMap.values().stream()
                 .map(CourseSchedule::getTeacherId).collect(Collectors.toSet());
+        Set<String> classroomIds = scheduleMap.values().stream()
+                .map(CourseSchedule::getClassroomId).filter(Objects::nonNull).collect(Collectors.toSet());
+        Set<String> semesterIds = scheduleMap.values().stream()
+                .map(CourseSchedule::getSemesterId).filter(Objects::nonNull).collect(Collectors.toSet());
 
         Map<String, Course> courseMap = new HashMap<>();
         if (!courseIds.isEmpty()) {
@@ -189,6 +198,16 @@ public class StudentCourseSelectionServiceImpl extends ServiceImpl<StudentCourse
             teacherMapper.selectBatchIds(teacherIds).forEach(t ->
                     teacherMap.put(t.getTeacherId(), t));
         }
+        Map<String, Classroom> classroomMap = new HashMap<>();
+        if (!classroomIds.isEmpty()) {
+            classroomMapper.selectBatchIds(classroomIds).forEach(c ->
+                    classroomMap.put(c.getClassroomId(), c));
+        }
+        Map<String, Semester> semesterMap = new HashMap<>();
+        if (!semesterIds.isEmpty()) {
+            semesterMapper.selectBatchIds(semesterIds).forEach(s ->
+                    semesterMap.put(s.getSemesterId(), s));
+        }
 
         List<Map<String, Object>> scheduleList = new ArrayList<>();
         for (StudentCourseSelection sel : selections) {
@@ -197,6 +216,8 @@ public class StudentCourseSelectionServiceImpl extends ServiceImpl<StudentCourse
 
             Course course = courseMap.get(cs.getCourseId());
             Teacher teacher = teacherMap.get(cs.getTeacherId());
+            Classroom classroom = classroomMap.get(cs.getClassroomId());
+            Semester semester = semesterMap.get(cs.getSemesterId());
 
             Map<String, Object> item = new LinkedHashMap<>();
             item.put("selectionId", sel.getSelectionId());
@@ -204,6 +225,10 @@ public class StudentCourseSelectionServiceImpl extends ServiceImpl<StudentCourse
             item.put("courseName", course != null ? course.getName() : "");
             item.put("credits", course != null ? course.getCredits() : 0);
             item.put("teacherName", teacher != null ? teacher.getName() : "");
+            item.put("classroomId", cs.getClassroomId());
+            item.put("classroomName", classroom != null ? classroom.getName() : "");
+            item.put("classroom", classroom != null ? classroom.getName() : cs.getClassroomId());
+            item.put("weeks", formatWeeks(semester));
             item.put("dayOfWeek", cs.getDayOfWeek());
             item.put("startPeriod", cs.getStartPeriod());
             item.put("endPeriod", cs.getEndPeriod());
@@ -257,6 +282,14 @@ public class StudentCourseSelectionServiceImpl extends ServiceImpl<StudentCourse
         Set<String> teacherIds = mergedSchedules.values().stream()
                 .map(CourseSchedule::getTeacherId)
                 .collect(Collectors.toSet());
+        Set<String> classroomIds = mergedSchedules.values().stream()
+                .map(CourseSchedule::getClassroomId)
+                .filter(id -> id != null && !id.trim().isEmpty())
+                .collect(Collectors.toSet());
+        Set<String> semesterIds = mergedSchedules.values().stream()
+                .map(CourseSchedule::getSemesterId)
+                .filter(id -> id != null && !id.trim().isEmpty())
+                .collect(Collectors.toSet());
 
         Map<String, Course> courseMap = courseIds.isEmpty()
                 ? Collections.emptyMap()
@@ -266,6 +299,14 @@ public class StudentCourseSelectionServiceImpl extends ServiceImpl<StudentCourse
                 ? Collections.emptyMap()
                 : teacherMapper.selectBatchIds(teacherIds).stream()
                 .collect(Collectors.toMap(Teacher::getTeacherId, item -> item, (left, right) -> left));
+        Map<String, Classroom> classroomMap = classroomIds.isEmpty()
+                ? Collections.emptyMap()
+                : classroomMapper.selectBatchIds(classroomIds).stream()
+                .collect(Collectors.toMap(Classroom::getClassroomId, item -> item, (left, right) -> left));
+        Map<String, Semester> semesterMap = semesterIds.isEmpty()
+                ? Collections.emptyMap()
+                : semesterMapper.selectBatchIds(semesterIds).stream()
+                .collect(Collectors.toMap(Semester::getSemesterId, item -> item, (left, right) -> left));
 
         return mergedSchedules.values().stream()
                 .sorted(Comparator.comparing(CourseSchedule::getDayOfWeek)
@@ -274,6 +315,8 @@ public class StudentCourseSelectionServiceImpl extends ServiceImpl<StudentCourse
                 .map(schedule -> {
                     Course course = courseMap.get(schedule.getCourseId());
                     Teacher teacher = teacherMap.get(schedule.getTeacherId());
+                    Classroom classroom = classroomMap.get(schedule.getClassroomId());
+                    Semester semester = semesterMap.get(schedule.getSemesterId());
 
                     Map<String, Object> item = new LinkedHashMap<>();
                     item.put("scheduleId", schedule.getScheduleId());
@@ -282,6 +325,10 @@ public class StudentCourseSelectionServiceImpl extends ServiceImpl<StudentCourse
                     item.put("credits", course != null ? course.getCredits() : 0);
                     item.put("teacherName", teacher != null ? teacher.getName() : schedule.getTeacherId());
                     item.put("semesterId", schedule.getSemesterId());
+                    item.put("classroomId", schedule.getClassroomId());
+                    item.put("classroomName", classroom != null ? classroom.getName() : "");
+                    item.put("classroom", classroom != null ? classroom.getName() : schedule.getClassroomId());
+                    item.put("weeks", formatWeeks(semester));
                     item.put("dayOfWeek", schedule.getDayOfWeek());
                     item.put("startPeriod", schedule.getStartPeriod());
                     item.put("endPeriod", schedule.getEndPeriod());
@@ -343,6 +390,7 @@ public class StudentCourseSelectionServiceImpl extends ServiceImpl<StudentCourse
             item.put("courseCode", course != null ? course.getCode() : "");
             item.put("credits", course != null ? course.getCredits() : 0);
             item.put("teacherName", teacher != null ? teacher.getName() : "");
+            item.put("classroomId", cs.getClassroomId());
             item.put("dayOfWeek", cs.getDayOfWeek());
             item.put("startPeriod", cs.getStartPeriod());
             item.put("endPeriod", cs.getEndPeriod());
@@ -363,6 +411,13 @@ public class StudentCourseSelectionServiceImpl extends ServiceImpl<StudentCourse
             availableList.add(item);
         }
         return availableList;
+    }
+
+    private String formatWeeks(Semester semester) {
+        if (semester == null || semester.getTeachingWeeks() == null || semester.getTeachingWeeks() <= 0) {
+            return "";
+        }
+        return "1-" + semester.getTeachingWeeks() + "周";
     }
 
     // 获取前置课程名称
@@ -481,15 +536,18 @@ public class StudentCourseSelectionServiceImpl extends ServiceImpl<StudentCourse
             return semesterId.trim();
         }
 
+        LocalDate businessDate = LocalDate.now(ZoneId.of("Asia/Shanghai"));
         Semester currentSemester = semesterMapper.selectOne(new LambdaQueryWrapper<Semester>()
-                .eq(Semester::getStatus, "current")
+                .le(Semester::getStartDate, businessDate)
+                .ge(Semester::getEndDate, businessDate)
+                .orderByDesc(Semester::getStartDate)
                 .last("LIMIT 1"));
         if (currentSemester != null) {
             return currentSemester.getSemesterId();
         }
 
         Semester upcomingSemester = semesterMapper.selectOne(new LambdaQueryWrapper<Semester>()
-                .eq(Semester::getStatus, "upcoming")
+                .gt(Semester::getStartDate, businessDate)
                 .orderByAsc(Semester::getStartDate)
                 .last("LIMIT 1"));
         if (upcomingSemester != null) {

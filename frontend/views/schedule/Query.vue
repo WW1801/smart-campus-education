@@ -3,7 +3,7 @@
   <div class="page-container">
     <div class="page-header">
       <div class="page-header-left">
-        <div class="page-header-icon" style="background: linear-gradient(135deg, #0ea5e9, #38bdf8);">
+        <div class="page-header-icon">
           <el-icon :size="22"><Calendar /></el-icon>
         </div>
         <div>
@@ -63,7 +63,8 @@
         <el-button type="primary" @click="search">查询</el-button>
       </div>
 
-      <div v-if="scheduleData.length > 0" class="schedule-grid-wrapper">
+      <PageErrorState v-if="listError" :retrying="loading" title="课表加载失败" @retry="search" />
+      <div v-else-if="scheduleData.length > 0" class="schedule-grid-wrapper">
         <div class="schedule-grid">
           <div class="grid-header">
             <div class="grid-cell header-cell">节次/星期</div>
@@ -94,10 +95,12 @@ import { Calendar } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useStore } from 'vuex'
 import request from '../../utils/request'
+import appData from '../../config/appData.json'
 
 const store = useStore()
 
 const loading = ref(false)
+const listError = ref(false)
 const searched = ref(false)
 const scheduleData = ref([])
 const semesterList = ref([])
@@ -115,24 +118,8 @@ const searchForm = reactive({
   studentId: ''
 })
 
-const weekDays = [
-  { label: '周一', value: 1 },
-  { label: '周二', value: 2 },
-  { label: '周三', value: 3 },
-  { label: '周四', value: 4 },
-  { label: '周五', value: 5 },
-  { label: '周六', value: 6 },
-  { label: '周日', value: 7 }
-]
-
-const periodGroups = [
-  { start: 1, end: 2, label: '1-2节' },
-  { start: 3, end: 4, label: '3-4节' },
-  { start: 5, end: 6, label: '5-6节' },
-  { start: 7, end: 8, label: '7-8节' },
-  { start: 9, end: 10, label: '9-10节' },
-  { start: 11, end: 12, label: '11-12节' }
-]
+const weekDays = appData.schedule.weekDays
+const periodGroups = appData.schedule.periodGroups
 
 const currentRoleId = computed(() => store.state.user?.roleId || '')
 const relatedId = computed(() => store.state.user?.relatedId || '')
@@ -251,6 +238,7 @@ const search = async () => {
   }
 
   loading.value = true
+  listError.value = false
   try {
     let res
     if (searchForm.queryType === 'teacher') {
@@ -258,21 +246,24 @@ const search = async () => {
         params: {
           teacherId: searchForm.teacherId,
           semesterId: searchForm.semesterId
-        }
+        },
+        skipErrorMessage: true
       })
     } else if (searchForm.queryType === 'class') {
       res = await request.get('/schedule/query/by-class', {
         params: {
           classId: searchForm.classId,
           semesterId: searchForm.semesterId
-        }
+        },
+        skipErrorMessage: true
       })
     } else {
       res = await request.get('/schedule/query/by-student', {
         params: {
           studentId: searchForm.studentId,
           semesterId: searchForm.semesterId
-        }
+        },
+        skipErrorMessage: true
       })
     }
 
@@ -281,6 +272,7 @@ const search = async () => {
   } catch {
     scheduleData.value = []
     searched.value = true
+    listError.value = true
   } finally {
     loading.value = false
   }
@@ -347,7 +339,7 @@ onMounted(async () => {
 }
 
 .header-cell {
-  background: #f0f4ff;
+  background: var(--bg-soft);
   color: var(--text-primary);
   font-size: 13px;
   font-weight: 600;
@@ -355,7 +347,7 @@ onMounted(async () => {
 }
 
 .period-cell {
-  background: #f8f9fc;
+  background: var(--paper);
   color: var(--text-secondary);
   font-size: 12px;
   font-weight: 600;
@@ -372,9 +364,9 @@ onMounted(async () => {
   width: 100%;
   margin-bottom: 4px;
   padding: 6px 8px;
-  border-left: 3px solid var(--primary-color);
+  border: 1px solid var(--line);
   border-radius: 4px;
-  background: linear-gradient(135deg, #eef1ff, #e8ecff);
+  background: var(--bg-soft);
 }
 
 .course-name {

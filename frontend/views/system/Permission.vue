@@ -3,7 +3,7 @@
   <div class="page-container">
     <div class="page-header">
       <div class="page-header-left">
-        <div class="page-header-icon" style="background: linear-gradient(135deg, #ff9f1c, #ffb74d);">
+        <div class="page-header-icon">
           <el-icon :size="22"><Lock /></el-icon>
         </div>
         <div>
@@ -17,8 +17,9 @@
       </el-button>
     </div>
 
-    <el-card>
-      <el-table :data="permissionList" stripe>
+    <PageErrorState v-if="listError" :retrying="loading" title="权限列表加载失败" @retry="getPermissionList" />
+    <el-card v-else>
+      <el-table :data="permissionList" stripe v-loading="loading">
         <el-table-column prop="permissionId" label="权限ID" width="100" />
         <el-table-column prop="name" label="权限名称" width="150" />
         <el-table-column prop="code" label="权限代码" width="150" />
@@ -55,10 +56,12 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import request from '../../utils/request'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { Lock, Plus } from '@element-plus/icons-vue'
 
 const permissionList = ref([])
+const loading = ref(false)
+const listError = ref(false)
 const dialogVisible = ref(false)
 const editMode = ref(false)
 const permissionFormRef = ref(null)
@@ -74,8 +77,17 @@ onMounted(() => { getPermissionList() })
 
 // 获取权限列表
 const getPermissionList = async () => {
-  try { const res = await request.get('/system/permission/list'); permissionList.value = res.data }
-  catch (error) { ElMessage.error('获取权限列表失败') }
+  loading.value = true
+  listError.value = false
+  try {
+    const res = await request.get('/system/permission/list', { skipErrorMessage: true })
+    permissionList.value = res.data
+  } catch {
+    permissionList.value = []
+    listError.value = true
+  } finally {
+    loading.value = false
+  }
 }
 
 // 添加权限
@@ -85,8 +97,14 @@ const editPermission = (row) => { editMode.value = true; permissionForm.value = 
 
 // 删除权限
 const deletePermission = async (permissionId) => {
-  try { await request.delete(`/system/permission/${permissionId}`); ElMessage.success('删除成功'); getPermissionList() }
-  catch (error) { ElMessage.error('删除失败') }
+  try {
+    await ElMessageBox.confirm('确认删除该权限？已绑定角色可能受到影响。', '删除权限', { type: 'warning' })
+    await request.delete(`/system/permission/${permissionId}`, { skipErrorMessage: true })
+    ElMessage.success('删除成功')
+    getPermissionList()
+  } catch (error) {
+    if (error !== 'cancel' && error !== 'close') ElMessage.error(error?.message || '删除失败')
+  }
 }
 
 // 保存权限

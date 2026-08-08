@@ -12,7 +12,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import java.util.stream.Collectors;
@@ -23,8 +26,11 @@ public class GlobalExceptionHandler {
 
     // 处理业务异常
     @ExceptionHandler(BusinessException.class)
-    public Result<Void> handleBusinessException(BusinessException e) {
+    public Result<Void> handleBusinessException(BusinessException e, HttpServletResponse response) {
         log.warn("业务异常: code={}, message={}", e.getCode(), e.getMessage());
+        if (e.getCode() >= 100 && e.getCode() <= 599) {
+            response.setStatus(e.getCode());
+        }
         return Result.error(e.getCode(), e.getMessage());
     }
 
@@ -57,6 +63,20 @@ public class GlobalExceptionHandler {
                 .map(ConstraintViolation::getMessage)
                 .collect(Collectors.joining(", "));
         return Result.badRequest(message);
+    }
+
+    // 处理请求方法不支持异常
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result<Void> handleMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
+        return Result.badRequest("请求方法不支持");
+    }
+
+    // 处理请求体无法读取异常
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result<Void> handleMessageNotReadableException(HttpMessageNotReadableException e) {
+        return Result.badRequest("请求体格式不正确");
     }
 
     // 处理异常

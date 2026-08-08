@@ -1,0 +1,63 @@
+<view class="page">
+  <view class="hero-card">
+    <text class="eyebrow">学业结果</text>
+    <text class="hero-title">我的成绩</text>
+    <text class="hero-subtitle">成绩只读展示，不允许学生修改成绩</text>
+  </view>
+
+  <view class="toolbar">
+    <picker class="picker" mode="selector" range="{{ semesterOptions }}" range-key="name" value="{{ semesterIndex }}" bindchange="onSemesterChange">
+      <view>{{ currentSemesterName || "全部学期" }}</view>
+    </picker>
+    <button class="secondary-button refresh-button" loading="{{ loading }}" bindtap="loadGrades">刷新</button>
+  </view>
+
+  <view class="summary panel">
+    <view class="summary-cell">
+      <text class="summary-value">{{ gpa.gpa || "0" }}</text>
+      <text class="summary-label">GPA</text>
+    </view>
+    <view class="summary-cell">
+      <text class="summary-value">{{ gpa.averageScore || "0" }}</text>
+      <text class="summary-label">平均分</text>
+    </view>
+    <view class="summary-cell">
+      <text class="summary-value">{{ gpa.totalCredits || "0" }}</text>
+      <text class="summary-label">学分</text>
+    </view>
+  </view>
+
+  <view wx:if="{{ !loggedIn }}" class="state">
+    <text class="state-title">未登录</text>
+    <text class="state-desc">请先登录学生账号</text>
+  </view>
+  <view wx:elif="{{ loading }}" class="state">
+    <text class="state-title">正在加载</text>
+    <text class="state-desc">正在读取成绩数据</text>
+  </view>
+  <view wx:elif="{{ error }}" class="state">
+    <text class="state-title">请求失败</text>
+    <text class="state-desc">{{ error }}</text>
+    <button class="secondary-button state-button" bindtap="loadGrades">重试</button>
+  </view>
+  <view wx:elif="{{ grades.length === 0 }}" class="state">
+    <text class="state-title">暂无成绩</text>
+    <text class="state-desc">当前筛选条件下没有成绩记录</text>
+  </view>
+
+  <view wx:else class="list">
+    <view wx:for="{{ grades }}" wx:key="gradeId" class="item">
+      <view class="item-title">
+        {{ item.courseName || item.courseId || "课程" }}
+        <text class="status {{ item.statusClass }}">{{ item.statusText }}</text>
+      </view>
+      <view class="grade-grid">
+        <view>学分：{{ item.credits || "-" }}</view>
+        <view>平时：{{ item.usualScore === null ? "-" : item.usualScore }}</view>
+        <view>期末：{{ item.examScore === null ? "-" : item.examScore }}</view>
+        <view>总评：{{ item.totalScore === null ? "-" : item.totalScore }}</view>
+        <view>绩点：{{ item.gradePoint === null ? "-" : item.gradePoint }}</view>
+      </view>
+    </view>
+  </view>
+</view>

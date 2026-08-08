@@ -15,8 +15,8 @@ docker-compose up
 
 ## 数据库配置
 
-- 建表脚本：`backend/db/create_tables.sql`（18 张表）
-- 种子数据：`backend/main/resources/init.sql`（演示用户、课程等）
+- 建表脚本：`backend/db/schema/schema.sql`
+- 种子数据：`backend/db/seed/seed.sql`（演示用户、课程等）
 - Spring Boot **不会自动初始化**（`spring.sql.init.mode=never`）；需手动执行两个 SQL 文件或通过 Docker 初始化。
 - ID 策略为 `assign_id`（雪花算法）— 不要使用自增主键。
 
@@ -63,7 +63,7 @@ cd backend; mvn test
 
 前端**无测试配置**（未配置测试运行器）。
 
-## 已知问题（来自 docs/设计与测试文档.md）
+## 已知问题（详见 docs/campus-education-system.md）
 
 | Bug | 模块 | 问题 |
 |-----|------|------|

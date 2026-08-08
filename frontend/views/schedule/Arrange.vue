@@ -3,7 +3,7 @@
   <div class="page-container">
     <div class="page-header">
       <div class="page-header-left">
-        <div class="page-header-icon" style="background: linear-gradient(135deg, #10b981, #34d399);">
+        <div class="page-header-icon">
           <el-icon :size="22"><Calendar /></el-icon>
         </div>
         <div>
@@ -11,13 +11,17 @@
           <div class="page-header-desc">管理排课信息并检测冲突</div>
         </div>
       </div>
-      <el-button type="primary" @click="openDialog()">
-        <el-icon><Plus /></el-icon>
-        新增排课
-      </el-button>
+      <div>
+        <el-button type="success" @click="openAutoArrangeDialog">自动排课</el-button>
+        <el-button type="primary" @click="openDialog()">
+          <el-icon><Plus /></el-icon>
+          新增排课
+        </el-button>
+      </div>
     </div>
 
-    <el-card>
+    <PageErrorState v-if="listError" :retrying="loading" title="排课列表加载失败" @retry="loadData" />
+    <el-card v-else>
       <div class="search-bar">
         <el-select v-model="searchForm.semesterId" placeholder="选择学期" clearable style="width: 220px">
           <el-option
@@ -185,6 +189,77 @@
       </template>
     </el-dialog>
 
+    <el-dialog v-model="autoArrangeDialogVisible" title="自动排课" width="min(1040px, 94vw)" :close-on-click-modal="false">
+      <el-alert title="可一次提交多个教学任务和多个候选时间段；部分成功后仅重试未完成任务。" type="info" :closable="false" show-icon />
+      <el-form :model="autoArrangeForm" label-width="90px" class="auto-arrange-form">
+        <el-form-item label="学期" required>
+          <el-select v-model="autoArrangeForm.semesterId" style="width: 100%">
+            <el-option v-for="semester in semesterList" :key="semester.semesterId" :label="semester.name" :value="semester.semesterId" />
+          </el-select>
+        </el-form-item>
+        <div class="auto-arrange-section-header">
+          <strong>排课任务</strong>
+          <el-button type="primary" plain size="small" @click="addAutoArrangeTask">新增任务</el-button>
+        </div>
+        <div v-for="(task, index) in autoArrangeForm.tasks" :key="task.key" class="auto-arrange-row" :class="{ 'is-completed': task.completed }">
+          <div class="auto-arrange-row-title">
+            <span>任务 {{ index + 1 }}<el-tag v-if="task.completed" type="success" size="small">已排课</el-tag></span>
+            <el-button type="danger" link :disabled="autoArrangeForm.tasks.length === 1" @click="removeAutoArrangeTask(index)">删除任务</el-button>
+          </div>
+          <el-row :gutter="12">
+            <el-col :xs="24" :md="8"><el-form-item label="课程" required>
+              <el-select v-model="task.courseId" filterable :disabled="task.completed" style="width: 100%">
+                <el-option v-for="course in courseList" :key="course.courseId" :label="course.name" :value="course.courseId" />
+              </el-select>
+            </el-form-item></el-col>
+            <el-col :xs="24" :md="8"><el-form-item label="教师" required>
+              <el-select v-model="task.teacherId" filterable :disabled="task.completed" style="width: 100%">
+                <el-option v-for="teacher in teacherList" :key="teacher.teacherId" :label="teacher.name" :value="teacher.teacherId" />
+              </el-select>
+            </el-form-item></el-col>
+            <el-col :xs="24" :md="8"><el-form-item label="模式" required>
+              <el-select v-model="task.mode" :disabled="task.completed" style="width: 100%">
+                <el-option label="按班级排课" value="class_based" /><el-option label="开放选课" value="open_selection" />
+              </el-select>
+            </el-form-item></el-col>
+            <el-col :xs="24" :md="12"><el-form-item label="班级" :required="task.mode === 'class_based'">
+              <el-select v-model="task.classId" filterable clearable :disabled="task.completed || task.mode !== 'class_based'" style="width: 100%">
+                <el-option v-for="item in classList" :key="item.classId" :label="item.name" :value="item.classId" />
+              </el-select>
+            </el-form-item></el-col>
+            <el-col :xs="24" :md="12"><el-form-item label="容量" :required="task.mode === 'open_selection'">
+              <el-input-number v-model="task.maxStudents" :min="1" :max="10000" :disabled="task.completed || task.mode !== 'open_selection'" style="width: 100%" />
+            </el-form-item></el-col>
+          </el-row>
+        </div>
+        <el-form-item label="候选教室" required>
+          <el-select v-model="autoArrangeForm.classroomIds" multiple filterable style="width: 100%">
+            <el-option v-for="item in classroomList" :key="item.classroomId" :label="formatClassroomLabel(item)" :value="item.classroomId" />
+          </el-select>
+        </el-form-item>
+        <div class="auto-arrange-section-header">
+          <strong>候选时间段</strong>
+          <el-button type="primary" plain size="small" @click="addAutoArrangeTimeSlot">新增时间段</el-button>
+        </div>
+        <div v-for="(slot, index) in autoArrangeForm.timeSlots" :key="slot.key" class="auto-arrange-time-row">
+          <span class="time-row-index">{{ index + 1 }}</span>
+          <el-select v-model="slot.dayOfWeek" aria-label="星期"><el-option v-for="day in weekdayOptions" :key="day.value" :label="day.label" :value="day.value" /></el-select>
+          <el-input-number v-model="slot.startPeriod" :min="1" :max="12" aria-label="开始节次" />
+          <span>至</span>
+          <el-input-number v-model="slot.endPeriod" :min="1" :max="12" aria-label="结束节次" />
+          <el-button type="danger" link :disabled="autoArrangeForm.timeSlots.length === 1" @click="removeAutoArrangeTimeSlot(index)">删除</el-button>
+        </div>
+      </el-form>
+      <div v-if="autoArrangeFailures.length" class="auto-arrange-result">
+        <div class="auto-arrange-result-title">排课未完成：请根据以下冲突调整后直接重试</div>
+        <ConflictTip :conflicts="autoArrangeFailureConflicts" />
+      </div>
+      <template #footer>
+        <el-button @click="autoArrangeDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="autoArranging" @click="submitAutoArrange">开始排课</el-button>
+      </template>
+    </el-dialog>
+
     <el-dialog v-model="conflictDialogVisible" title="冲突检测结果" width="600px">
       <ConflictTip v-if="conflictResult.length > 0" :conflicts="conflictResult" />
       <el-empty v-else description="未检测到冲突" />
@@ -200,7 +275,11 @@ import request from '../../utils/request'
 import ConflictTip from '../../components/ConflictTip.vue'
 
 const loading = ref(false)
+const listError = ref(false)
 const dialogVisible = ref(false)
+const autoArrangeDialogVisible = ref(false)
+const autoArranging = ref(false)
+const autoArrangeFailures = ref([])
 const conflictDialogVisible = ref(false)
 const formRef = ref(null)
 const tableData = ref([])
@@ -240,6 +319,20 @@ const createEmptyForm = () => ({
 })
 
 const form = reactive(createEmptyForm())
+const autoArrangeForm = reactive({
+  semesterId: '',
+  classroomIds: [],
+  tasks: [],
+  timeSlots: []
+})
+
+let autoArrangeRowKey = 0
+const createAutoArrangeTask = () => ({ key: ++autoArrangeRowKey, courseId: '', teacherId: '', classId: '', mode: 'class_based', maxStudents: 50, completed: false })
+const createAutoArrangeTimeSlot = () => ({ key: ++autoArrangeRowKey, dayOfWeek: 1, startPeriod: 1, endPeriod: 2 })
+const addAutoArrangeTask = () => autoArrangeForm.tasks.push(createAutoArrangeTask())
+const removeAutoArrangeTask = index => autoArrangeForm.tasks.splice(index, 1)
+const addAutoArrangeTimeSlot = () => autoArrangeForm.timeSlots.push(createAutoArrangeTimeSlot())
+const removeAutoArrangeTimeSlot = index => autoArrangeForm.timeSlots.splice(index, 1)
 
 const weekdayOptions = [
   { label: '周1', value: 1 },
@@ -389,19 +482,22 @@ const loadSelectData = async () => {
 // 加载数据
 const loadData = async () => {
   loading.value = true
+  listError.value = false
   try {
     const res = await request.get('/schedule/page', {
       params: {
         current: page.current,
         size: page.size,
         semesterId: searchForm.semesterId || undefined
-      }
+      },
+      skipErrorMessage: true
     })
     tableData.value = enrichScheduleRows(res.data?.records || [])
     page.total = res.data?.total || 0
   } catch {
     tableData.value = []
     page.total = 0
+    listError.value = true
   } finally {
     loading.value = false
   }
@@ -423,6 +519,71 @@ const openDialog = row => {
   resetForm(row)
   dialogVisible.value = true
   nextTick(() => formRef.value?.clearValidate())
+}
+
+const openAutoArrangeDialog = () => {
+  Object.assign(autoArrangeForm, {
+    semesterId: searchForm.semesterId || semesterList.value[0]?.semesterId || '',
+    classroomIds: [],
+    tasks: [createAutoArrangeTask()],
+    timeSlots: [createAutoArrangeTimeSlot()]
+  })
+  autoArrangeFailures.value = []
+  autoArrangeDialogVisible.value = true
+}
+
+const autoArrangeFailureConflicts = computed(() => autoArrangeFailures.value.map(failure => ({
+  ...failure,
+  message: failure.reason || '未找到可用排课方案'
+})))
+
+const submitAutoArrange = async () => {
+  if (!autoArrangeForm.semesterId) { ElMessage.warning('请选择学期'); return }
+  if (autoArrangeForm.classroomIds.length === 0) { ElMessage.warning('请至少选择一个候选教室'); return }
+  const pendingTasks = autoArrangeForm.tasks.map((task, index) => ({ task, index })).filter(item => !item.task.completed)
+  if (pendingTasks.length === 0) { ElMessage.warning('当前任务均已排课，请新增任务后再提交'); return }
+  const invalidTask = pendingTasks.find(({ task }) => !task.courseId || !task.teacherId
+    || (task.mode === 'class_based' && !task.classId)
+    || (task.mode === 'open_selection' && (!task.maxStudents || task.maxStudents < 1)))
+  if (invalidTask) {
+    ElMessage.warning(`请完整填写任务 ${invalidTask.index + 1} 的课程、教师、模式及班级或容量`)
+    return
+  }
+  const invalidSlotIndex = autoArrangeForm.timeSlots.findIndex(slot => !slot.dayOfWeek || !slot.startPeriod || !slot.endPeriod || slot.startPeriod > slot.endPeriod)
+  if (invalidSlotIndex >= 0) {
+    ElMessage.warning(`候选时间段 ${invalidSlotIndex + 1} 的开始节次不能大于结束节次`)
+    return
+  }
+  autoArranging.value = true
+  try {
+    const res = await request.post('/schedule-basic/auto-arrange', {
+      semesterId: autoArrangeForm.semesterId,
+      classroomIds: autoArrangeForm.classroomIds,
+      timeSlots: autoArrangeForm.timeSlots.map(({ dayOfWeek, startPeriod, endPeriod }) => ({ dayOfWeek, startPeriod, endPeriod })),
+      tasks: pendingTasks.map(({ task }) => ({
+        courseId: task.courseId, teacherId: task.teacherId, classId: task.mode === 'class_based' ? task.classId : null,
+        mode: task.mode, maxStudents: task.mode === 'open_selection' ? task.maxStudents : null
+      }))
+    })
+    const data = res.data || {}
+    const failed = Number(data.failedCount || data.failureCount || 0)
+    const responseFailures = Array.isArray(data.failureDetails) ? data.failureDetails : []
+    const failedIndexes = new Set(responseFailures.map(item => Number(item.index)))
+    pendingTasks.forEach((item, responseIndex) => { if (!failedIndexes.has(responseIndex)) item.task.completed = true })
+    autoArrangeFailures.value = responseFailures.map(item => ({ ...item, taskIndex: pendingTasks[Number(item.index)]?.index }))
+    if (failed > 0) {
+      ElMessage.warning(`自动排课部分完成：成功 ${data.arrangedCount || 0} 条，失败 ${failed} 条；请根据窗口中的建议调整后重试`)
+      await loadData()
+      return
+    }
+    ElMessage.success(`自动排课完成：成功 ${data.arrangedCount || 0} 条`)
+    autoArrangeDialogVisible.value = false
+    await loadData()
+  } catch (error) {
+    ElMessage.error(error?.message || '自动排课失败，已保留当前填写内容，请检查后重试')
+  } finally {
+    autoArranging.value = false
+  }
 }
 
 // 执行检查冲突
@@ -484,10 +645,51 @@ onMounted(async () => {
   await Promise.all([loadSemesters(), loadSelectData()])
   await loadData()
 })
+
 </script>
 
 <style scoped>
 .page-container {
   width: 100%;
+}
+
+.auto-arrange-result {
+  margin-top: 16px;
+}
+
+.auto-arrange-result-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--el-color-danger);
+}
+
+.auto-arrange-form { margin-top: 18px; }
+.auto-arrange-section-header, .auto-arrange-row-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.auto-arrange-section-header { margin: 18px 0 10px; }
+.auto-arrange-row {
+  margin-bottom: 12px;
+  padding: 12px 14px 0;
+  border: 1px solid var(--el-border-color);
+  border-radius: 10px;
+}
+.auto-arrange-row.is-completed { background: var(--el-color-success-light-9); }
+.auto-arrange-row-title { margin-bottom: 8px; font-weight: 600; }
+.auto-arrange-row-title span { display: flex; align-items: center; gap: 8px; }
+.auto-arrange-time-row {
+  display: grid;
+  grid-template-columns: 28px minmax(120px, 1fr) minmax(130px, 1fr) auto minmax(130px, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.time-row-index { text-align: center; color: var(--el-text-color-secondary); }
+@media (max-width: 720px) {
+  .auto-arrange-time-row { grid-template-columns: 24px 1fr 1fr; }
+  .auto-arrange-time-row > span:nth-of-type(2) { display: none; }
 }
 </style>

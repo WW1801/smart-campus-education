@@ -3,7 +3,7 @@
   <div class="page-container">
     <div class="page-header">
       <div class="page-header-left">
-        <div class="page-header-icon" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);">
+        <div class="page-header-icon">
           <el-icon :size="22"><List /></el-icon>
         </div>
         <div>
@@ -22,7 +22,8 @@
             </el-input>
             <el-button type="primary" @click="loadAvailable">查询</el-button>
           </div>
-          <el-table :data="filteredAvailableList" stripe v-loading="loading">
+          <PageErrorState v-if="availableError" :retrying="loading" title="可选课程加载失败" @retry="loadAvailable" />
+          <el-table v-else :data="filteredAvailableList" stripe v-loading="loading">
             <el-table-column prop="courseName" label="课程名称" width="160" />
             <el-table-column prop="teacherName" label="授课教师" width="100" />
             <el-table-column label="上课时间" width="150">
@@ -35,7 +36,7 @@
             <el-table-column label="先修课程" width="140">
               <template #default="{ row }">
                 <span v-if="row.prerequisites && row.prerequisites.length">{{ row.prerequisites.join(', ') }}</span>
-                <span v-else style="color: #c0c4cc">无</span>
+                <span v-else class="muted-value">无</span>
               </template>
             </el-table-column>
             <el-table-column label="状态" width="90">
@@ -68,7 +69,8 @@
           <div v-if="selectedTotalCredits > 0" style="margin-bottom: 12px;">
             <el-tag type="success" size="large">已选学分：{{ selectedTotalCredits }}</el-tag>
           </div>
-          <el-table :data="selectedList" stripe>
+          <PageErrorState v-if="selectedError" title="已选课程加载失败" @retry="loadSelected" />
+          <el-table v-else :data="selectedList" stripe>
             <el-table-column prop="courseName" label="课程名称" width="160" />
             <el-table-column prop="teacherName" label="授课教师" width="100" />
             <el-table-column label="上课时间" width="150">
@@ -93,7 +95,8 @@
 
       <el-tab-pane label="我的课表" name="schedule">
         <el-card>
-          <div class="schedule-grid-wrapper" v-if="scheduleList.length > 0">
+          <PageErrorState v-if="scheduleError" title="个人课表加载失败" @retry="loadSchedule" />
+          <div class="schedule-grid-wrapper" v-else-if="scheduleList.length > 0">
             <div class="schedule-grid">
               <div class="grid-header">
                 <div class="grid-cell header-cell">节次\星期</div>
@@ -123,18 +126,22 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { List, Search } from '@element-plus/icons-vue'
 import { useStore } from 'vuex'
 import request from '../../utils/request'
+import appData from '../../config/appData.json'
 
 const store = useStore()
 
 const activeTab = ref('available')
 const loading = ref(false)
+const availableError = ref(false)
+const selectedError = ref(false)
+const scheduleError = ref(false)
 const currentSemesterId = ref('')
 const searchForm = ref({ keyword: '' })
 const availableList = ref([])
 const selectedList = ref([])
 const scheduleList = ref([])
-const weekDays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
-const periods = [1, 3, 5, 7, 9]
+const weekDays = appData.schedule.weekDays.map(day => day.label)
+const periods = appData.schedule.selectionPeriods
 
 const filteredAvailableList = computed(() => {
   if (!searchForm.value.keyword) return availableList.value
@@ -169,16 +176,19 @@ const loadSemesterContext = async () => {
 // 加载可选
 const loadAvailable = async () => {
   loading.value = true
+  availableError.value = false
   try {
     const res = await request.get('/selection/available', {
       params: {
         studentId: store.state.user?.relatedId,
         semesterId: currentSemesterId.value || undefined
-      }
+      },
+      skipErrorMessage: true
     })
     availableList.value = res.data || []
   } catch {
     availableList.value = []
+    availableError.value = true
   } finally {
     loading.value = false
   }
@@ -186,31 +196,37 @@ const loadAvailable = async () => {
 
 // 加载已选课程
 const loadSelected = async () => {
+  selectedError.value = false
   try {
     const res = await request.get('/selection/my-schedule', {
       params: {
         studentId: store.state.user?.relatedId,
         semesterId: currentSemesterId.value || undefined
-      }
+      },
+      skipErrorMessage: true
     })
     selectedList.value = (res.data || []).map(item => ({ ...item, status: item.status || 'selected' }))
   } catch {
     selectedList.value = []
+    selectedError.value = true
   }
 }
 
 // 加载课表
 const loadSchedule = async () => {
+  scheduleError.value = false
   try {
     const res = await request.get('/selection/timetable', {
       params: {
         studentId: store.state.user?.relatedId,
         semesterId: currentSemesterId.value || undefined
-      }
+      },
+      skipErrorMessage: true
     })
     scheduleList.value = res.data || []
   } catch {
     scheduleList.value = []
+    scheduleError.value = true
   }
 }
 
@@ -250,7 +266,7 @@ const dropCourse = async (row) => {
 
 // 获取课程按日期and节次
 const getCourseByDayAndPeriod = (day, period) => {
-  const dayMap = { 周一: 1, 周二: 2, 周三: 3, 周四: 4, 周五: 5, 周六: 6, 周日: 7 }
+  const dayMap = Object.fromEntries(appData.schedule.weekDays.map(item => [item.label, item.value]))
   return scheduleList.value.filter(item =>
     item.dayOfWeek === dayMap[day] &&
     item.startPeriod <= period + 1 &&
@@ -295,12 +311,13 @@ const getCourseByDayAndPeriod = (day, period) => {
   justify-content: center;
 }
 
-.header-cell { background: #f0f4ff; font-weight: 600; font-size: 13px; color: var(--text-primary); min-height: 44px; }
-.period-cell { font-weight: 600; font-size: 12px; color: var(--text-secondary); background: #f8f9fc; }
+.header-cell { background: var(--bg-soft); font-weight: 600; font-size: 13px; color: var(--text-primary); min-height: 44px; }
+.period-cell { font-weight: 600; font-size: 12px; color: var(--text-secondary); background: var(--paper); }
+.muted-value { color: var(--text-secondary); }
 .content-cell { flex-direction: column; align-items: stretch; justify-content: flex-start; padding: 6px; }
 
 .course-card {
-  background: linear-gradient(135deg, #eef1ff, #e8ecff);
+  background: var(--bg-soft);
   border-left: 3px solid var(--primary-color);
   border-radius: 4px;
   padding: 6px 8px;

@@ -8,14 +8,17 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.education.common.Result;
+import com.campus.education.common.BusinessException;
 import com.campus.education.common.StudentAccessGuard;
 import com.campus.education.entity.Course;
+import com.campus.education.entity.CourseSchedule;
 import com.campus.education.entity.Grade;
 import com.campus.education.entity.Student;
 import com.campus.education.entity.User;
 import com.campus.education.mapper.CourseMapper;
 import com.campus.education.mapper.StudentMapper;
 import com.campus.education.service.CourseRosterService;
+import com.campus.education.service.CourseScheduleService;
 import com.campus.education.service.GradeService;
 import com.campus.education.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +63,9 @@ public class GradeController {
     private CourseRosterService courseRosterService;
 
     @Autowired
+    private CourseScheduleService courseScheduleService;
+
+    @Autowired
     private UserService userService;
 
     // 分页查询成绩
@@ -97,21 +103,34 @@ public class GradeController {
     @GetMapping("/roster")
     public Result<List<Grade>> roster(@RequestParam String courseId,
                                       @RequestParam String semesterId,
+                                      @RequestParam String scheduleId,
+                                      @RequestParam(required = false) String classId,
                                       @RequestParam(required = false) String teacherId,
                                       Authentication authentication) {
-        if (courseId == null || courseId.trim().isEmpty() || semesterId == null || semesterId.trim().isEmpty()) {
+        if (courseId == null || courseId.trim().isEmpty() || semesterId == null || semesterId.trim().isEmpty()
+                || scheduleId == null || scheduleId.trim().isEmpty()) {
             return Result.badRequest("璇疯緭鍏ヨ绋婭D鍜屽鏈烮D");
         }
 
+        CourseSchedule schedule = courseScheduleService.getById(scheduleId);
+        if (schedule == null || !courseId.equals(schedule.getCourseId()) || !semesterId.equals(schedule.getSemesterId())
+                || (classId != null && !classId.trim().isEmpty() && !classId.equals(schedule.getClassId()))) {
+            return Result.badRequest("排课上下文与课程、学期或班级不一致");
+        }
         String resolvedTeacherId = resolveTeacherId(authentication, teacherId);
-        List<Student> rosterStudents = courseRosterService.listActiveStudents(courseId, semesterId, resolvedTeacherId);
+        String scheduleTeacherId = schedule.getTeacherId();
+        if (resolvedTeacherId != null && !resolvedTeacherId.trim().isEmpty()
+                && !resolvedTeacherId.equals(scheduleTeacherId)) {
+            return Result.forbidden("当前教师没有该排课的成绩录入权限");
+        }
+        List<Student> rosterStudents = courseRosterService.listActiveStudentsBySchedule(schedule.getScheduleId());
 
         LambdaQueryWrapper<Grade> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Grade::getCourseId, courseId)
                 .eq(Grade::getSemesterId, semesterId)
                 .orderByDesc(Grade::getUpdatedAt, Grade::getCreatedAt);
-        if (resolvedTeacherId != null && !resolvedTeacherId.trim().isEmpty()) {
-            wrapper.eq(Grade::getTeacherId, resolvedTeacherId);
+        if (scheduleTeacherId != null && !scheduleTeacherId.trim().isEmpty()) {
+            wrapper.eq(Grade::getTeacherId, scheduleTeacherId);
         }
         List<Grade> gradeRecords = gradeService.list(wrapper);
         enrichGrades(gradeRecords);
@@ -131,22 +150,13 @@ public class GradeController {
                 grade.setStudentId(student.getStudentId());
                 grade.setCourseId(courseId);
                 grade.setSemesterId(semesterId);
-                grade.setTeacherId(resolvedTeacherId);
-                grade.setStatus("pending");
+                grade.setTeacherId(scheduleTeacherId);
+                grade.setStatus("draft");
             }
             grade.setStudentName(student.getName());
             grade.setCourseName(course != null ? course.getName() : courseId);
             result.add(grade);
             includedStudentIds.add(student.getStudentId());
-        }
-
-        for (Grade grade : gradeMap.values()) {
-            if (includedStudentIds.add(grade.getStudentId())) {
-                if (grade.getCourseName() == null && course != null) {
-                    grade.setCourseName(course.getName());
-                }
-                result.add(grade);
-            }
         }
 
         result.sort(Comparator.comparing(Grade::getStudentId, Comparator.nullsLast(String::compareTo)));
@@ -165,14 +175,21 @@ public class GradeController {
 
     // 处理提交
     @PostMapping
-    public Result<Void> submit(@RequestBody Grade grade) {
+    public Result<Void> submit(@RequestBody Grade grade, Authentication authentication) {
+        grade.setTeacherId(requireTeacherId(authentication, grade.getTeacherId()));
         gradeService.submitGrade(grade);
         return Result.success("鎴愮哗褰曞叆鎴愬姛", null);
     }
 
     // 批量提交
     @PostMapping("/batch")
-    public Result<Void> batchSubmit(@RequestBody List<Grade> grades) {
+    public Result<Void> batchSubmit(@RequestBody List<Grade> grades, Authentication authentication) {
+        if (grades == null || grades.isEmpty()) {
+            return Result.badRequest("成绩记录不能为空");
+        }
+        for (Grade grade : grades) {
+            grade.setTeacherId(requireTeacherId(authentication, grade.getTeacherId()));
+        }
         gradeService.batchSubmitGrades(grades);
         return Result.success("鎵归噺褰曞叆鎴愬姛", null);
     }
@@ -197,7 +214,7 @@ public class GradeController {
         if (!"rejected".equals(grade.getStatus())) {
             return Result.badRequest("鍙兘淇敼宸查┏鍥炵殑鎴愮哗");
         }
-        grade.setStatus("pending");
+        grade.setStatus("submitted");
         grade.setIsPass(null);
         gradeService.updateById(grade);
         return Result.success("淇敼鎴愬姛锛屽凡閲嶆柊鎻愪氦瀹℃牳", null);
@@ -254,6 +271,11 @@ public class GradeController {
             Course course = courseMap.get(grade.getCourseId());
             if (course != null) {
                 grade.setCourseName(course.getName());
+                grade.setCredits(course.getCredits());
+            }
+            if (grade.getTotalScore() != null) {
+                double point = grade.getTotalScore() >= 60 ? (grade.getTotalScore() - 50) / 10 : 0;
+                grade.setGradePoint(Math.round(point * 100) / 100.0);
             }
         }
     }
@@ -284,5 +306,13 @@ public class GradeController {
             return user.getRelatedId();
         }
         return requestedTeacherId;
+    }
+
+    private String requireTeacherId(Authentication authentication, String requestedTeacherId) {
+        String teacherId = resolveTeacherId(authentication, requestedTeacherId);
+        if (teacherId == null || teacherId.trim().isEmpty()) {
+            throw new BusinessException(400, "无法确定授课教师，请重新选择课程后提交");
+        }
+        return teacherId.trim();
     }
 }

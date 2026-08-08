@@ -20,8 +20,6 @@ import java.util.Map;
 @Component
 public class JwtUtils {
 
-    private static final String DEV_FALLBACK_SECRET = "dev-only-jwt-secret-0123456789abcdef";
-
     @Value("${jwt.secret}")
     private String secret;
 
@@ -34,12 +32,14 @@ public class JwtUtils {
     @PostConstruct
     public void init() {
         if (secret == null || secret.trim().isEmpty()) {
-            secret = DEV_FALLBACK_SECRET;
+            throw new IllegalStateException("JWT_SECRET must be configured");
         }
+
         byte[] secretBytes = secret.getBytes(StandardCharsets.UTF_8);
         if (secretBytes.length < 32) {
-            throw new IllegalStateException("jwt.secret must contain at least 32 bytes for HS256");
+            throw new IllegalStateException("JWT_SECRET must contain at least 32 bytes");
         }
+
         this.key = new SecretKeySpec(secretBytes, "HmacSHA256");
     }
 

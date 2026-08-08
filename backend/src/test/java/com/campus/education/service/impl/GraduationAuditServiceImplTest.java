@@ -105,7 +105,7 @@ class GraduationAuditServiceImplTest {
 
         assertEquals("rejected", result.getStatus());
         assertFalse(Boolean.TRUE.equals(result.getCompulsoryPass()));
-        assertTrue(result.getAuditOpinion().contains("必修课未全部通过"));
+        assertTrue(result.getAuditOpinion().contains("必修课程未全部通过"));
     }
 
     private Student buildStudent(String studentId, String majorId, String classId) {

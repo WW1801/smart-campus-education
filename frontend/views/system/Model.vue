@@ -290,7 +290,7 @@ const nodes = [
     id: 'graduation',
     name: 'GraduationAudit',
     type: '毕业审核',
-    variant: 'purple',
+    variant: 'blue',
     left: '780px',
     top: '470px',
     fields: [
@@ -408,9 +408,7 @@ const scrollToStructure = async () => {
 
 .metric-card {
   min-height: 122px;
-  background:
-    radial-gradient(circle at top right, rgba(67, 97, 238, 0.14), transparent 40%),
-    linear-gradient(180deg, #fff, #fbfcff);
+  background: var(--surface);
 }
 
 .metric-label {
@@ -453,10 +451,7 @@ const scrollToStructure = async () => {
 .diagram-canvas {
   position: relative;
   min-height: 1020px;
-  background:
-    linear-gradient(180deg, rgba(67, 97, 238, 0.05), rgba(46, 196, 182, 0.04)),
-    radial-gradient(circle at top left, rgba(255, 159, 28, 0.08), transparent 30%),
-    #fdfdff;
+  background: var(--bg-soft);
   border-radius: 14px;
   overflow: hidden;
 }
@@ -478,7 +473,7 @@ const scrollToStructure = async () => {
 }
 
 .diagram-lines line {
-  stroke: rgba(67, 97, 238, 0.26);
+  stroke: var(--line);
   stroke-width: 3;
   stroke-linecap: round;
   stroke-dasharray: 8 8;
@@ -488,15 +483,14 @@ const scrollToStructure = async () => {
   position: absolute;
   width: 230px;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 14px 32px rgba(26, 26, 46, 0.10);
-  border: 1px solid rgba(226, 232, 240, 0.92);
-  backdrop-filter: blur(6px);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--line);
 }
 
 .entity-header {
   padding: 14px 16px 10px;
-  border-bottom: 1px solid rgba(232, 236, 241, 0.9);
+  border-bottom: 1px solid var(--border-light);
 }
 
 .entity-type {
@@ -504,7 +498,7 @@ const scrollToStructure = async () => {
   padding: 2px 8px;
   border-radius: 999px;
   font-size: 11px;
-  color: #fff;
+  color: var(--surface);
   background: var(--primary-color);
 }
 
@@ -530,7 +524,7 @@ const scrollToStructure = async () => {
 }
 
 .field-row + .field-row {
-  border-top: 1px dashed rgba(232, 236, 241, 0.8);
+  border-top: 1px dashed var(--line);
 }
 
 .field-name {
@@ -543,23 +537,23 @@ const scrollToStructure = async () => {
 }
 
 .entity-primary .entity-type {
-  background: linear-gradient(135deg, #4361ee, #6b83f2);
+  background: var(--blue);
 }
 
 .entity-green .entity-type {
-  background: linear-gradient(135deg, #2ec4b6, #58d4c7);
+  background: var(--sage);
 }
 
 .entity-amber .entity-type {
-  background: linear-gradient(135deg, #ff9f1c, #ffbf69);
+  background: var(--vermilion);
 }
 
 .entity-blue .entity-type {
-  background: linear-gradient(135deg, #3a86ff, #6aa4ff);
+  background: var(--blue-bright);
 }
 
 .entity-purple .entity-type {
-  background: linear-gradient(135deg, #8a5cf6, #a98ef8);
+  background: var(--blue);
 }
 
 .side-stack {
@@ -601,16 +595,13 @@ const scrollToStructure = async () => {
 .structure-canvas {
   position: relative;
   min-height: 560px;
-  background:
-    linear-gradient(180deg, rgba(255, 159, 28, 0.06), rgba(67, 97, 238, 0.04)),
-    radial-gradient(circle at top right, rgba(46, 196, 182, 0.08), transparent 30%),
-    #fdfdff;
+  background: var(--paper);
   border-radius: 14px;
   overflow: hidden;
 }
 
 .structure-lines line {
-  stroke: rgba(67, 97, 238, 0.28);
+  stroke: var(--line);
   stroke-width: 2.5;
   stroke-linecap: round;
 }
@@ -621,27 +612,27 @@ const scrollToStructure = async () => {
   height: 72px;
   padding: 10px 12px;
   border-radius: 12px;
-  background: #fff;
-  border: 1px solid rgba(224, 230, 240, 0.95);
-  box-shadow: 0 10px 24px rgba(26, 26, 46, 0.08);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-card);
   text-align: center;
 }
 
 .structure-node.root {
   width: 130px;
   height: 80px;
-  border-color: rgba(67, 97, 238, 0.22);
-  background: linear-gradient(180deg, #ffffff, #f4f7ff);
+  border-color: var(--blue);
+  background: var(--surface);
 }
 
 .structure-node.module {
-  background: linear-gradient(180deg, #ffffff, #fbfcff);
+  background: var(--surface);
 }
 
 .structure-node.leaf {
   width: 102px;
   height: 66px;
-  background: #fff;
+  background: var(--surface);
 }
 
 .structure-node-title {
@@ -673,7 +664,7 @@ const scrollToStructure = async () => {
   flex-direction: column;
   padding: 20px;
   gap: 16px;
-  background: linear-gradient(180deg, rgba(67, 97, 238, 0.04), rgba(46, 196, 182, 0.03));
+  background: var(--bg-soft);
 }
 
 .diagram-preview-header {

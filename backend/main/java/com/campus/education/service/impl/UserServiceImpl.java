@@ -16,6 +16,10 @@ import com.campus.education.mapper.PermissionMapper;
 import com.campus.education.mapper.RoleMapper;
 import com.campus.education.mapper.RolePermissionMapper;
 import com.campus.education.mapper.UserMapper;
+import com.campus.education.mapper.StudentMapper;
+import com.campus.education.mapper.TeacherMapper;
+import com.campus.education.entity.Student;
+import com.campus.education.entity.Teacher;
 import com.campus.education.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -46,6 +50,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Autowired
     private RolePermissionMapper rolePermissionMapper;
 
+    @Autowired
+    private StudentMapper studentMapper;
+
+    @Autowired
+    private TeacherMapper teacherMapper;
+
     // 处理登录
     @Override
     public Map<String, Object> login(String username, String password) {
@@ -53,6 +63,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (user == null) {
             throw new BusinessException(401, "用户名或密码错误");
         }
+        verifyRelatedPersonAvailable(user);
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new BusinessException(401, "用户名或密码错误");
         }
@@ -78,6 +89,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         result.put("token", token);
         result.put("user", data);
         return result;
+    }
+
+    /**
+     * 登录时二次核验师生状态，避免人员被停用、退学或离职后仍可使用旧令牌重新登录。
+     * 管理员等非师生账号不受此人员生命周期规则影响。
+     */
+    private void verifyRelatedPersonAvailable(User user) {
+        if ("5".equals(user.getRoleId())) {
+            Student student = studentMapper.selectById(user.getRelatedId());
+            if (student == null || !"active".equals(student.getStatus())) {
+                throw new BusinessException(403, "该学生已停用、退学或不存在，不能登录。请联系教务管理员确认学籍状态。");
+            }
+        }
+        if ("4".equals(user.getRoleId())) {
+            Teacher teacher = teacherMapper.selectById(user.getRelatedId());
+            if (teacher == null || !"active".equals(teacher.getStatus())) {
+                throw new BusinessException(403, "该教师已停用、离职或不存在，不能登录。请联系教务管理员确认在职状态。");
+            }
+        }
     }
 
     // 查找按用户名

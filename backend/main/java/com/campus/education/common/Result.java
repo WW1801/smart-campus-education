@@ -49,6 +49,13 @@ public class Result<T> {
         return result;
     }
 
+    // 返回包含业务失败明细的错误结果
+    public static <T> Result<T> error(int code, String message, T data) {
+        Result<T> result = error(code, message);
+        result.setData(data);
+        return result;
+    }
+
     // 返回错误结果
     public static <T> Result<T> error(String message) {
         return error(500, message);

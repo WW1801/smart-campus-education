@@ -11,4 +11,7 @@ import java.util.List;
 public interface CourseRosterService {
     // 查询在籍学生列表
     List<Student> listActiveStudents(String courseId, String semesterId, String teacherId);
+
+    // 按唯一排课查询名单，避免同课程不同班级的学生混入。
+    List<Student> listActiveStudentsBySchedule(String scheduleId);
 }

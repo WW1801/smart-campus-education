@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.education.common.Result;
+import com.campus.education.dto.schedule.AutoArrangeRequest;
 import com.campus.education.entity.Schedule;
 import com.campus.education.service.ScheduleService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,8 +69,8 @@ public class ScheduleController {
 
     // 处理自动排课
     @PostMapping("/auto-arrange")
-    public Result<Void> autoArrange(@RequestBody Map<String, Object> params) {
-        return Result.success("自动排课成功", null);
+    public Result<Map<String, Object>> autoArrange(@RequestBody AutoArrangeRequest request) {
+        return Result.success("自动排课处理完成", scheduleService.autoArrange(request));
     }
 
     // 处理查询

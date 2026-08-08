@@ -1,0 +1,41 @@
+{
+  "pages": [
+    "pages/login/login",
+    "pages/schedule/schedule",
+    "pages/grades/grades",
+    "pages/leave/leave",
+    "pages/profile/profile"
+  ],
+  "window": {
+    "navigationBarTitleText": "学生教务",
+    "navigationBarBackgroundColor": "#f6f8f7",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f6f8f7"
+  },
+  "tabBar": {
+    "color": "#8a958f",
+    "selectedColor": "#2c9b64",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/schedule/schedule",
+        "text": "课表"
+      },
+      {
+        "pagePath": "pages/grades/grades",
+        "text": "成绩"
+      },
+      {
+        "pagePath": "pages/leave/leave",
+        "text": "请假"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

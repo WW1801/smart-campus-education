@@ -5,6 +5,12 @@ package com.campus.education.config;
  */
 
 import com.campus.education.common.JwtUtils;
+import com.campus.education.entity.Student;
+import com.campus.education.entity.Teacher;
+import com.campus.education.entity.User;
+import com.campus.education.mapper.StudentMapper;
+import com.campus.education.mapper.TeacherMapper;
+import com.campus.education.mapper.UserMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -40,6 +46,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
     private JwtUtils jwtUtils;
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @Autowired
+    private StudentMapper studentMapper;
+
+    @Autowired
+    private TeacherMapper teacherMapper;
 
     // 创建密码编码器
     @Bean
@@ -93,10 +108,19 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.PUT, "/attendance", "/attendance/**").hasAnyRole("1", "2", "3", "4")
                 .antMatchers(HttpMethod.DELETE, "/attendance/**").hasAnyRole("1", "2")
                 .antMatchers(HttpMethod.GET, "/attendance/statistics").hasAnyRole("1", "2", "3")
+                .antMatchers(HttpMethod.POST, "/leave-requests").hasRole("5")
+                .antMatchers(HttpMethod.GET, "/leave-requests/my").hasRole("5")
+                .antMatchers(HttpMethod.PUT, "/leave-requests/*/cancel").hasRole("5")
+                .antMatchers(HttpMethod.GET, "/leave-requests/page").hasAnyRole("1", "2", "3")
+                .antMatchers(HttpMethod.PUT, "/leave-requests/batch-approve").hasAnyRole("1", "2", "3")
+                .antMatchers(HttpMethod.PUT, "/leave-requests/*/approve", "/leave-requests/*/reject").hasAnyRole("1", "2", "3")
                 .antMatchers(HttpMethod.POST, "/graduation/audit/**").hasAnyRole("1", "2", "3")
                 .antMatchers(HttpMethod.POST, "/graduation/batch-audit").hasAnyRole("1", "2", "3")
                 .antMatchers(HttpMethod.PUT, "/graduation/degree/**").hasAnyRole("1", "2", "3")
                 .antMatchers(HttpMethod.GET, "/graduation/**").hasAnyRole("1", "2", "3")
+                .antMatchers(HttpMethod.GET, "/agent/**").hasRole("1")
+                .antMatchers(HttpMethod.POST, "/agent/**").hasRole("1")
+                .antMatchers(HttpMethod.PUT, "/agent/**").hasRole("1")
                 .antMatchers("/selection/select").hasAnyRole("5")
                 .antMatchers("/selection/*/drop").hasAnyRole("5")
                 .antMatchers("/selection/my-courses").hasAnyRole("5")
@@ -105,16 +129,22 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/selection/page").hasAnyRole("1", "2")
                 .anyRequest().authenticated()
             .and()
-            .addFilterBefore(new JwtAuthenticationFilter(jwtUtils), UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(new JwtAuthenticationFilter(jwtUtils, userMapper, studentMapper, teacherMapper), UsernamePasswordAuthenticationFilter.class);
     }
 
     static class JwtAuthenticationFilter extends OncePerRequestFilter {
         private final JwtUtils jwtUtils;
+        private final UserMapper userMapper;
+        private final StudentMapper studentMapper;
+        private final TeacherMapper teacherMapper;
         private final ObjectMapper objectMapper = new ObjectMapper();
 
         // 初始化 JWT 认证过滤器
-        JwtAuthenticationFilter(JwtUtils jwtUtils) {
+        JwtAuthenticationFilter(JwtUtils jwtUtils, UserMapper userMapper, StudentMapper studentMapper, TeacherMapper teacherMapper) {
             this.jwtUtils = jwtUtils;
+            this.userMapper = userMapper;
+            this.studentMapper = studentMapper;
+            this.teacherMapper = teacherMapper;
         }
 
         // 执行内部过滤处理
@@ -135,6 +165,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     String userId = jwtUtils.getUserIdFromToken(token);
                     String username = jwtUtils.getUsernameFromToken(token);
                     String roleId = jwtUtils.getRoleIdFromToken(token);
+
+                    if (!isRelatedPersonAvailable(userId, roleId)) {
+                        writeForbidden(response, "关联人员已停用、退学、离职或不存在，当前账号不能继续办理业务。请联系教务管理员。");
+                        return;
+                    }
 
                     List<SimpleGrantedAuthority> authorities = new ArrayList<>();
                     authorities.add(new SimpleGrantedAuthority("ROLE_" + roleId));
@@ -159,6 +194,27 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             Map<String, Object> result = new HashMap<>();
             result.put("code", 401);
             result.put("message", "未登录或登录已过期");
+            result.put("data", null);
+            response.getWriter().write(objectMapper.writeValueAsString(result));
+        }
+
+        private boolean isRelatedPersonAvailable(String userId, String roleId) {
+            if (!"4".equals(roleId) && !"5".equals(roleId)) return true;
+            User user = userMapper.selectById(userId);
+            if (user == null) return false;
+            if ("4".equals(roleId)) {
+                Teacher teacher = teacherMapper.selectById(user.getRelatedId());
+                return teacher != null && "active".equals(teacher.getStatus());
+            }
+            Student student = studentMapper.selectById(user.getRelatedId());
+            return student != null && "active".equals(student.getStatus());
+        }
+
+        private void writeForbidden(HttpServletResponse response, String message) throws IOException {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.setContentType("application/json;charset=UTF-8");
+            Map<String, Object> result = new HashMap<>(); result.put("code", 403); result.put("message", message);
+            result.put("data", null);
             response.getWriter().write(objectMapper.writeValueAsString(result));
         }
     }

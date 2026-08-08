@@ -9,7 +9,8 @@
         <span class="conflict-type">{{ typeLabel(conflict.type) }}</span>
       </div>
       <div class="conflict-body">
-        <p class="conflict-message">{{ conflict.message }}</p>
+        <p class="conflict-message">{{ conflict.reason || conflict.message }}</p>
+        <p v-if="conflict.suggestion" class="conflict-suggestion">建议：{{ conflict.suggestion }}</p>
         <div class="conflict-details" v-if="conflict.conflictCourseName || conflict.conflictTeacherName || conflict.conflictDayOfWeek">
           <span v-if="conflict.conflictCourseName" class="detail-item">
             <el-icon><Document /></el-icon>
@@ -19,10 +20,21 @@
             <el-icon><User /></el-icon>
             教师：{{ conflict.conflictTeacherName }}
           </span>
+          <span v-if="conflict.conflictClassroomName" class="detail-item">
+            <el-icon><OfficeBuilding /></el-icon>
+            教室：{{ conflict.conflictClassroomName }}
+          </span>
           <span v-if="conflict.conflictDayOfWeek" class="detail-item">
             <el-icon><Clock /></el-icon>
             时间：周{{ conflict.conflictDayOfWeek }} 第{{ conflict.conflictStartPeriod }}-{{ conflict.conflictEndPeriod }}节
           </span>
+        </div>
+        <div v-if="conflict.candidateClassroomName" class="conflict-details">
+          <span class="detail-item">
+            <el-icon><OfficeBuilding /></el-icon>
+            候选教室：{{ conflict.candidateClassroomName }}（容量 {{ conflict.candidateClassroomCapacity ?? '未维护' }}）
+          </span>
+          <span v-if="conflict.requiredCapacity != null" class="detail-item">所需容量：{{ conflict.requiredCapacity }}</span>
         </div>
       </div>
     </div>
@@ -30,18 +42,19 @@
 </template>
 
 <script setup>
-import { Document, User, Clock } from '@element-plus/icons-vue'
+import { Document, User, Clock, OfficeBuilding } from '@element-plus/icons-vue'
+import appData from '../config/appData.json'
 
 const props = defineProps({
   conflicts: { type: Array, default: () => [] }
 })
 
 // 获取优先级标签
-const priorityLabel = (p) => ({ P0: '不可调和', P1: '容量不足', P2: '可换教室', P3: '可调时段' }[p] || p)
+const priorityLabel = (p) => appData.conflicts.priorityLabels[p] || p
 // 获取优先级类型
-const priorityType = (p) => ({ P0: 'error', P1: 'warning', P2: 'warning', P3: 'info' }[p] || 'warning')
+const priorityType = (p) => appData.conflicts.priorityTypes[p] || 'warning'
 // 获取类型标签
-const typeLabel = (t) => ({ teacher: '教师冲突', classroom: '教室冲突', class: '班级冲突', capacity: '容量冲突' }[t] || t)
+const typeLabel = (t) => appData.conflicts.typeLabels[t] || t
 </script>
 
 <style scoped>
@@ -58,17 +71,17 @@ const typeLabel = (t) => ({ teacher: '教师冲突', classroom: '教室冲突', 
   border: 1px solid;
 }
 
-.conflict-item.priority-P0 { border-color: #fca5a5; background: #fef2f2; }
-.conflict-item.priority-P1 { border-color: #fcd34d; background: #fffbeb; }
-.conflict-item.priority-P2 { border-color: #fde68a; background: #fefce8; }
-.conflict-item.priority-P3 { border-color: #93c5fd; background: #eff6ff; }
+.conflict-item.priority-P0 { border-color: var(--vermilion); background: var(--surface); }
+.conflict-item.priority-P1 { border-color: var(--vermilion); background: var(--paper); }
+.conflict-item.priority-P2 { border-color: var(--line); background: var(--paper); }
+.conflict-item.priority-P3 { border-color: var(--blue); background: var(--surface); }
 
 .conflict-header {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  background: rgba(0, 0, 0, 0.03);
+  background: var(--bg-soft);
 }
 
 .conflict-type {
@@ -85,6 +98,14 @@ const typeLabel = (t) => ({ teacher: '教师冲突', classroom: '教室冲突', 
   font-size: 13px;
   color: var(--text-regular);
   margin: 0 0 6px 0;
+}
+
+.conflict-suggestion {
+  margin: 0 0 8px;
+  color: var(--text-regular);
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
 .conflict-details {
