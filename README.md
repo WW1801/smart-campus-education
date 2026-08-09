@@ -1,8 +1,8 @@
-# 校园教务系统 — 开发指南
+# 校园教务系统 — 本地开发指南
 
 本项目是一个校园教务管理系统，面向学校教务管理、教师教学管理和学生个人教务查询等场景。当前仓库采用**单体 Spring Boot 后端 + Vue 3 管理端 + 微信小程序学生端**结构，主要覆盖用户认证、学生管理、教师管理、课程班级、选课、成绩、考勤、请假、排课、毕业审核、学业预警和 Agent 学业分析等功能。
 
-> 说明：README 只保留快速了解和启动项目所需内容；完整接口、数据库、Agent、部署和测试细节见 `docs/开发文档.md`。
+> 当前项目以本地开发、课程展示和功能演示为主，暂不提供生产上线方案。README 只保留快速了解和启动项目所需内容；完整接口、数据库、Agent、部署和测试细节见 `docs/开发文档.md`。
 
 ## 功能概览
 
@@ -32,7 +32,7 @@
 | 前端 | Vue 3、Vite、Vue Router、Vuex、Element Plus、Axios、ECharts |
 | 小程序 | 微信小程序原生结构 |
 | 测试 | JUnit 5、Mockito、Vitest、Playwright |
-| 部署 | Docker Compose、Nginx、Dockerfile |
+| 本地容器联调 | Docker Compose、Nginx、Dockerfile |
 
 ## 环境与依赖
 
@@ -100,13 +100,13 @@ http://localhost:3000
 
 前端开发环境通过 Vite 将 `/api` 代理到 `http://localhost:8080`。
 
-### 4. Docker Compose 启动
+### 4. Docker Compose 本地联调
 
 ```powershell
 docker-compose up --build
 ```
 
-Docker Compose 会编排 MySQL、Redis、后端和 Nginx 前端服务。前端容器读取 `frontend/dist`，首次部署前需要先构建前端：
+Docker Compose 用于本地一键联调 MySQL、Redis、后端和 Nginx 前端服务。前端容器读取 `frontend/dist`，首次运行前需要先构建前端：
 
 ```powershell
 cd frontend
@@ -196,7 +196,7 @@ Authorization: Bearer <your-token>
 | 前端构建 | `cd frontend; npm run build` |
 | 前端单元测试 | `cd frontend; npm run test` |
 | 前端 E2E 测试 | `cd frontend; npm run test:e2e` |
-| Docker 启动 | `docker-compose up --build` |
+| Docker 本地联调 | `docker-compose up --build` |
 
 ## 测试
 
@@ -254,4 +254,5 @@ npm run test:e2e
 - 不要提交 `.env`、真实密码、Token、Cookie、API Key。
 - 不要提交 `node_modules/`、`frontend/dist/`、`backend/target/`、日志文件和 Playwright 临时报告。
 - 当前项目是单体 Spring Boot 项目，不要描述为已完成的微服务系统。
+- 当前暂不面向生产上线；Docker Compose 仅作为本地开发和演示联调用途。
 - Jenkins、Redis 深度业务缓存和部分 AI 能力仍是待完善内容。
