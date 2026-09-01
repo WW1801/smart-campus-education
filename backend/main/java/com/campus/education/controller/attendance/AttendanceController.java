@@ -125,7 +125,7 @@ public class AttendanceController {
                 empty.put("total", 0);
                 empty.put("current", page.longValue());
                 empty.put("size", limit.longValue());
-                return Result.success("鏌ヨ鎴愬姛", empty);
+                return Result.success("查询成功", empty);
             }
             wrapper.in(Attendance::getStudentId, studentIds);
         }
@@ -146,7 +146,7 @@ public class AttendanceController {
         data.put("total", result.getTotal());
         data.put("current", result.getCurrent());
         data.put("size", result.getSize());
-        return Result.success("鏌ヨ鎴愬姛", data);
+        return Result.success("查询成功", data);
     }
 
     // 处理名单
@@ -157,12 +157,12 @@ public class AttendanceController {
                                            @RequestParam(required = false) String teacherId,
                                            Authentication authentication) {
         if (courseId == null || courseId.trim().isEmpty()) {
-            return Result.badRequest("璇疯緭鍏ヨ绋婭D");
+            return Result.badRequest("请输入课程ID");
         }
 
         String resolvedSemesterId = resolveSemesterId(semesterId, date);
         if (resolvedSemesterId == null) {
-            return Result.badRequest("鏈壘鍒板搴斿鏈?");
+            return Result.badRequest("未找到对应学期");
         }
 
         String resolvedTeacherId = resolveTeacherId(authentication, teacherId);
@@ -293,7 +293,7 @@ public class AttendanceController {
 
         List<Map<String, Object>> trend = new ArrayList<>();
         LocalDate today = LocalDate.now();
-        String[] dayNames = {"鍛ㄤ竴", "鍛ㄤ簩", "鍛ㄤ笁", "鍛ㄥ洓", "鍛ㄤ簲", "鍛ㄥ叚", "鍛ㄦ棩"};
+        String[] dayNames = {"周一", "周二", "周三", "周四", "周五", "周六", "周日"};
         for (int i = 6; i >= 0; i--) {
             LocalDate queryDate = today.minusDays(i);
             long dayTotal = attendanceService.count(new LambdaQueryWrapper<Attendance>()
@@ -312,7 +312,7 @@ public class AttendanceController {
         }
         data.put("trend", trend);
 
-        return Result.success("鏌ヨ鎴愬姛", data);
+        return Result.success("查询成功", data);
     }
 
     // 补全考勤信息
@@ -420,10 +420,10 @@ public class AttendanceController {
     // 规范化考勤请求数据
     private void normalizeAttendancePayload(Attendance attendance, boolean requireId) {
         if (attendance == null) {
-            throw new BusinessException(400, "璇锋彁渚涙湁鏁堢殑鑰冨嫟鏁版嵁");
+            throw new BusinessException(400, "请提供有效的考勤数据");
         }
         if (requireId && isBlank(attendance.getAttendanceId())) {
-            throw new BusinessException(400, "缂轰慨鑰冨嫟璁板綍ID");
+            throw new BusinessException(400, "缺少考勤记录ID");
         }
 
         attendance.setAttendanceId(trimToNull(attendance.getAttendanceId()));
@@ -433,21 +433,21 @@ public class AttendanceController {
         attendance.setStatus(normalizeAttendanceStatus(attendance.getStatus()));
 
         if (isBlank(attendance.getStudentId())) {
-            throw new BusinessException(400, "璇疯緭鍏ュ鍙?");
+            throw new BusinessException(400, "请输入学号");
         }
         if (studentMapper.selectById(attendance.getStudentId()) == null) {
-            throw new BusinessException(400, "瀛︾敓涓嶅瓨鍦紝璇烽€夋嫨鏈夋晥瀛﹀彿");
+            throw new BusinessException(400, "学生不存在，请选择有效学号");
         }
 
         if (isBlank(attendance.getCourseId())) {
-            throw new BusinessException(400, "璇疯緭鍏ヨ绋婭D");
+            throw new BusinessException(400, "请输入课程ID");
         }
         if (courseMapper.selectById(attendance.getCourseId()) == null) {
-            throw new BusinessException(400, "璇剧▼涓嶅瓨鍦紝璇烽€夋嫨鏈夋晥璇剧▼");
+            throw new BusinessException(400, "课程不存在，请选择有效课程");
         }
 
         if (attendance.getDate() == null) {
-            throw new BusinessException(400, "璇烽€夋嫨鑰冨嫟鏃ユ湡");
+            throw new BusinessException(400, "请选择考勤日期");
         }
 
         attendance.setSemesterId(resolveValidSemesterId(attendance.getSemesterId(), attendance.getDate()));
@@ -464,14 +464,14 @@ public class AttendanceController {
             return resolvedSemesterId;
         }
 
-        throw new BusinessException(400, "璇烽€夋嫨鏈夋晥瀛︽湡");
+        throw new BusinessException(400, "请选择有效学期");
     }
 
     // 规范化考勤状态
     private String normalizeAttendanceStatus(String status) {
         String normalized = trimToNull(status);
         if (normalized == null) {
-            throw new BusinessException(400, "璇烽€夋嫨鑰冨嫟鐘舵€?");
+            throw new BusinessException(400, "请选择考勤状态");
         }
         if ("early_leave".equalsIgnoreCase(normalized)) {
             normalized = "early";
@@ -485,7 +485,7 @@ public class AttendanceController {
             case "leave":
                 return normalized;
             default:
-                throw new BusinessException(400, "璇烽€夋嫨鏈夋晥鐨勮€冨嫟鐘舵€?");
+                throw new BusinessException(400, "请选择有效的考勤状态");
         }
     }
 
