@@ -109,7 +109,7 @@ public class GradeController {
                                       Authentication authentication) {
         if (courseId == null || courseId.trim().isEmpty() || semesterId == null || semesterId.trim().isEmpty()
                 || scheduleId == null || scheduleId.trim().isEmpty()) {
-            return Result.badRequest("璇疯緭鍏ヨ绋婭D鍜屽鏈烮D");
+            return Result.badRequest("请输入课程ID和学期ID");
         }
 
         CourseSchedule schedule = courseScheduleService.getById(scheduleId);
@@ -178,7 +178,7 @@ public class GradeController {
     public Result<Void> submit(@RequestBody Grade grade, Authentication authentication) {
         grade.setTeacherId(requireTeacherId(authentication, grade.getTeacherId()));
         gradeService.submitGrade(grade);
-        return Result.success("鎴愮哗褰曞叆鎴愬姛", null);
+        return Result.success("成绩录入成功", null);
     }
 
     // 批量提交
@@ -191,33 +191,33 @@ public class GradeController {
             grade.setTeacherId(requireTeacherId(authentication, grade.getTeacherId()));
         }
         gradeService.batchSubmitGrades(grades);
-        return Result.success("鎵归噺褰曞叆鎴愬姛", null);
+        return Result.success("批量录入成功", null);
     }
 
     // 处理通过
     @PutMapping("/{id}/approve")
     public Result<Void> approve(@PathVariable String id) {
         gradeService.approveGrade(id);
-        return Result.success("瀹℃牳閫氳繃", null);
+        return Result.success("审核通过", null);
     }
 
     @PutMapping("/{id}/reject")
     public Result<Void> reject(@PathVariable String id, @RequestBody(required = false) Map<String, String> params) {
         String reason = params != null ? params.get("reason") : null;
         gradeService.rejectGrade(id, reason);
-        return Result.success("宸查┏鍥?", null);
+        return Result.success("已驳回", null);
     }
 
     // 更新成绩
     @PutMapping
     public Result<Void> update(@RequestBody Grade grade) {
         if (!"rejected".equals(grade.getStatus())) {
-            return Result.badRequest("鍙兘淇敼宸查┏鍥炵殑鎴愮哗");
+            return Result.badRequest("只能修改已驳回的成绩");
         }
         grade.setStatus("submitted");
         grade.setIsPass(null);
         gradeService.updateById(grade);
-        return Result.success("淇敼鎴愬姛锛屽凡閲嶆柊鎻愪氦瀹℃牳", null);
+        return Result.success("修改成功，已重新提交审核", null);
     }
 
     // 处理绩点

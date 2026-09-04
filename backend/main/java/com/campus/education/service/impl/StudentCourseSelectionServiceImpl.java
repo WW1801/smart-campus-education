@@ -244,7 +244,7 @@ public class StudentCourseSelectionServiceImpl extends ServiceImpl<StudentCourse
     public List<Map<String, Object>> getStudentTimetable(String studentId, String semesterId) {
         Student student = studentMapper.selectById(studentId);
         if (student == null) {
-            throw new BusinessException("瀛︾敓涓嶅瓨鍦?");
+            throw new BusinessException("学生不存在");
         }
 
         String resolvedSemesterId = resolveSemesterId(semesterId);

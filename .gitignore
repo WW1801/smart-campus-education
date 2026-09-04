@@ -2,6 +2,8 @@
 .vscode/
 .codex/
 .m2/
+.impeccable/
+.playwright-mcp/
 .env
 node_modules/
 frontend/node_modules/
@@ -19,3 +21,10 @@ Thumbs.db
 .DS_Store
 
 /backups/
+/tmp/
+/output/
+/Web-Prototype/
+/backend/db/backup/
+/backend/db/backup*/
+/docs/archive/generated/
+/miniprogram/project.private.config.json
