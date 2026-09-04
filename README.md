@@ -60,51 +60,29 @@ DEEPSEEK_API_KEY=<your-optional-api-key>
 
 ## 快速启动
 
-### 1. 初始化数据库
-
-Spring Boot 配置为不自动初始化数据库，需要先执行建表和种子数据脚本：
-
-```text
-backend/db/schema/schema.sql
-backend/db/seed/seed.sql
-```
-
-已有开发库如需升级，请参考 `backend/db/migrations/` 和 `backend/db/README.md`，不要重复执行所有迁移脚本。
-
-### 2. 启动后端
-
 ```powershell
-cd backend
-mvn spring-boot:run
+# 后端（需要 MySQL 在 localhost:3306，数据库 education_system）
+cd backend; mvn spring-boot:run
+
+# 前端（开发服务器 :3000，代理 /api → :8080）
+cd frontend; npm run dev
+
+# Docker 全栈启动（需要 .env 文件配置 MYSQL_ROOT_PASSWORD, REDIS_PASSWORD, JWT_SECRET）
+docker-compose up
 ```
 
-默认地址：
+## 数据库配置
 
-```text
-http://localhost:8080/api
-```
+- 建表脚本：`backend/db/create_tables.sql`（18 张表）
+- 种子数据：`backend/main/resources/init.sql`（演示用户、课程等）
+- Spring Boot **不会自动初始化**（`spring.sql.init.mode=never`）；需手动执行两个 SQL 文件或通过 Docker 初始化。
+- ID 策略为 `assign_id`（雪花算法）— 不要使用自增主键。
 
-### 3. 启动前端
-
-```powershell
-cd frontend
-npm install
-npm run dev
-```
-
-默认地址：
-
-```text
-http://localhost:3000
-```
-
-前端开发环境通过 Vite 将 `/api` 代理到 `http://localhost:8080`。
+## 项目结构
 
 ### 4. Docker Compose 本地联调
 
-```powershell
-docker-compose up --build
-```
+## 关键技术栈细节
 
 Docker Compose 用于本地一键联调 MySQL、Redis、后端和 Nginx 前端服务。前端容器读取 `frontend/dist`，首次运行前需要先构建前端：
 
@@ -200,56 +178,51 @@ Authorization: Bearer <your-token>
 
 ## 测试
 
-后端测试：
+后端测试使用 **JUnit 5 + Mockito**，通过 `ReflectionTestUtils` 注入字段（无 Spring Boot 测试切片注解）。运行：
 
 ```powershell
-cd backend
-mvn test
+cd backend; mvn test
 ```
 
-前端构建：
+仅 3 个测试文件，位于 `backend/src/test/java/`：
+- `JwtUtilsTest` — token 生成/验证
+- `StudentAccessGuardTest` — 访问控制
+- `GraduationAuditServiceImplTest` — 毕业审核逻辑
 
-```powershell
-cd frontend
-npm run build
-```
+前端**无测试配置**（未配置测试运行器）。
 
-前端 E2E：
+## 已知问题（来自 docs/设计与测试文档.md）
 
-```powershell
-cd frontend
-npm run test:e2e
-```
+| Bug | 模块 | 问题 |
+|-----|------|------|
+| B-01 | 学生管理 | 学籍状态变更字段不匹配（前端发送 `targetStatus`，后端期望 `status`） |
+| B-02 | 考勤管理 | 统计 API 要求 `courseId` 必填 — 应改为可选 |
+| B-03 | 考勤管理 | 统计返回硬编码模拟数据 |
+| B-04 | 角色管理 | 权限树保存仅为模拟实现 |
+| B-05 | 排课管理 | 自动排课为空壳 API |
+| B-06 | 教学计划 | 无后端 CRUD API |
 
-说明：
+## 环境要求
 
-- 后端测试使用 JUnit 5 和 Mockito。
-- 前端 E2E 使用 Playwright。
-- 部分 Windows 受限环境执行前端构建或 E2E 时可能出现 `spawn EPERM`，可在正常 PowerShell 或具备权限的终端中重试。
+- `.env` 文件（从 `.env.example` 复制），配置 `MYSQL_ROOT_PASSWORD`、`REDIS_PASSWORD`、`JWT_SECRET`
+- MySQL 8.x 在 `localhost:3306`（或通过 Docker）
+- Redis（可选 — 可不启动，但 Spring Boot 会尝试连接）
+- Maven 3.6+（无 wrapper），Node.js 18+
+- 本地开发：JDK 8；Docker 构建：JDK 17
 
-## 常见问题
+## 开发规范
 
-| 问题 | 可能原因 | 处理方式 |
-|---|---|---|
-| 后端启动失败 | MySQL 未启动或数据库不存在 | 确认 MySQL 8.x 可访问，并初始化 `education_system` |
-| JWT 初始化失败 | `JWT_SECRET` 为空或长度不足 | 配置不少于 32 字节的密钥 |
-| 前端接口 404 | 后端未启动或代理配置不匹配 | 确认后端运行在 `8080`，前端请求以 `/api` 开头 |
-| 登录后接口 401 | Token 缺失、过期或格式错误 | 重新登录，确认请求头为 `Bearer <token>` |
-| Docker MySQL 启动失败 | 环境变量缺失 | 检查 `.env` 中数据库和 Redis 密码配置 |
-| Redis 连接异常 | Redis 未启动或密码不一致 | 检查 `SPRING_REDIS_*` 配置 |
-| 前端 E2E 不稳定 | 端口占用、浏览器权限或旧构建残留 | 确认 `3012` 端口可用，重新执行 `npm run test:e2e` |
+- RESTful JSON API，统一响应格式 `{ code, message, data }`
+- 实体和 DTO 使用 Lombok `@Data` / `@Builder`
+- 后端 controller 按模块组织在 `com.campus.education.controller.*` 下
+- 前端视图按模块分组在 `frontend/views/` 下
+- 路由使用懒加载组件，带角色守卫（`roles: ['1','2',...]`）
+- Vuex store 将 `user` 和 `token` 持久化到 `localStorage`
+- Axios 拦截器自动附加 `Bearer` token，401 时自动登出
 
-## 更多文档
+## 架构说明
 
-| 文档 | 说明 |
-|---|---|
-| `docs/开发文档.md` | 完整开发文档，包含架构、接口、数据库、Agent、部署、测试和已知问题 |
-| `docs/api/agent-api.md` | Agent 相关接口说明 |
-| `docs/database/database.md` | 数据库设计说明 |
-| `docs/testing/testing.md` | 测试说明 |
-| `docs/prototypes/` | 页面原型和设计参考 |
-
-## 提交注意事项
+这是**单模块 Maven 项目**（非微服务，尽管文档提到 Spring Cloud）。根目录的 `src/` 和 `scripts/` 为空 — 所有源码位于 `backend/` 和 `frontend/` 下。
 
 - 不要提交 `.env`、真实密码、Token、Cookie、API Key。
 - 不要提交 `node_modules/`、`frontend/dist/`、`backend/target/`、日志文件和 Playwright 临时报告。
